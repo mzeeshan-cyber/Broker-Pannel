@@ -1,0 +1,679 @@
+import Grid from '@mui/material/Grid';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormHelperText from '@mui/material/FormHelperText';
+import InputLabel from '@mui/material/InputLabel';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import { useTheme } from '@mui/material/styles';
+import * as Yup from 'yup';
+import { Formik } from 'formik';
+import { Box, Button, CircularProgress, FormLabel, OutlinedInput, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { ArrowDown2, Camera } from 'iconsax-react';
+import { createFilterOptions } from '@mui/material/Autocomplete';
+import { Autocomplete as CustomAutocomplete } from '@mui/material';
+import Autocomplete from "react-google-autocomplete";
+import { openSnackbar } from 'api/snackbar';
+import { usStates } from 'constants/constants';
+import Avatar from 'components/@extended/Avatar';
+import { ThemeMode } from 'config';
+import PhoneNumber from 'components/@extended/PhoneNumber';
+import { decryptToken } from 'utils/tokenUtils';
+
+export default function TripReimbursementDriver({ mappedPatients, setOpenModal, getDriversData }) {
+    const API_URL = import.meta.env.VITE_APP_API_URL;
+    const theme = useTheme()
+    const [errorMsg, setErrorMsg] = useState(null);
+    const [driverImage, setDriverImage] = useState(null);
+    const [licenseFrontImage, setLicenseFrontImage] = useState(null);
+    const [licenseBackImage, setLicenseBackImage] = useState(null);
+
+    // Preview images (optional)
+    const [previewAvatar, setPreviewAvatar] = useState();
+    const [previewAvatar1, setPreviewAvatar1] = useState();
+    const [previewAvatar2, setPreviewAvatar2] = useState();
+
+    useEffect(() => {
+        if (driverImage) setPreviewAvatar(URL.createObjectURL(driverImage));
+        if (licenseFrontImage) setPreviewAvatar1(URL.createObjectURL(licenseFrontImage));
+        if (licenseBackImage) setPreviewAvatar2(URL.createObjectURL(licenseBackImage));
+    }, [driverImage, licenseFrontImage, licenseBackImage]);
+
+    const encryptedFromStorage = localStorage.getItem("token");
+    const decryptedToken = decryptToken(encryptedFromStorage);
+
+    const filter = createFilterOptions();
+
+    const fields = ["patient_id", "phone_number", "license_number", "license_expiry", "driver_image", "license_front_image", "license_back_image"];
+    const errorsMessage = fields.reduce((acc, field) => {
+        const key = `${field}Error`;
+        acc[key] = errorMsg?.errors?.[field] ?? null;
+        return acc;
+    }, {});
+
+    const AddReimbursementDriver = async (values, { setSubmitting, setErrors }) => {
+        try {
+            const formData = new FormData();
+            formData.append('driver_image', driverImage);
+            formData.append('license_front_image', licenseFrontImage);
+            formData.append('license_back_image', licenseBackImage);
+
+            Object.keys(values).forEach(key => {
+                formData.append(key, values[key]);
+            });
+
+            const response = await fetch(`${API_URL}store-reimbursement-driver`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${decryptedToken}`,
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setErrorMsg(errorData)
+                openSnackbar({
+                    open: true,
+                    message: errorData?.message || 'Failed to add driver!',
+                    variant: 'alert',
+                    alert: { color: 'error' }
+                });
+                throw new Error(errorData?.message || 'Request failed');
+            }
+
+            openSnackbar({
+                open: true,
+                message: 'Driver added successfully!',
+                variant: 'alert',
+                alert: { color: 'success' }
+            });
+
+            getDriversData()
+            setOpenModal(false)
+
+        } catch (error) {
+            openSnackbar({
+                open: true,
+                message: error?.message || 'Server error',
+                variant: 'alert',
+                alert: { color: 'error' }
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <Formik
+            initialValues={{
+                driver_image: '',
+                license_front_image: '',
+                license_back_image: '',
+                driver_name: '',
+                patient_id: mappedPatients?.id,
+                phone_number: '',
+                license_number: '',
+                license_state: '',
+                license_expiry: '',
+                account_no: '',
+                address: '',
+                notes: '',
+            }}
+            validationSchema={Yup.object().shape({
+                driver_name: Yup.string().max(255).required('Driver name is required'),
+                phone_number: Yup.string()
+                    .required("Phone is required")
+                    .matches(
+                        /^(\+1\s?)?(\([0-9]{3}\)|[0-9]{3})[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}$/,
+                        "Enter a valid US phone number"
+                    ),
+                license_number: Yup.string().max(255).required('License number is required'),
+                license_state: Yup.string().max(255).required('License state is required'),
+                license_expiry: Yup.date()
+                    .min(new Date().toISOString().split("T")[0], "License expiry cannot be a past date")
+                    .required("License expiry is required"),
+                account_no: Yup.string().max(255).required('Account number is required'),
+                address: Yup.string().max(255).required('Address is required'),
+            })}
+            onSubmit={AddReimbursementDriver}
+        >
+            {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue }) => (
+                <form noValidate onSubmit={handleSubmit}>
+                    <Grid container spacing={3} gridColumn={12}>
+                        <Grid item xs={12} sx={{ display: 'flex', gap: '40px' }}>
+                            <Box>
+                                <InputLabel htmlFor="driver_image">Driver image</InputLabel>
+                                <Stack direction="row" sx={{ mt: 1 }}>
+                                    <FormLabel
+                                        htmlFor="change-avtar"
+                                        sx={{
+                                            position: 'relative',
+                                            borderRadius: '50%',
+                                            overflow: 'hidden',
+                                            '&:hover .MuiBox-root': { opacity: 1 },
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Avatar alt="" src={previewAvatar} sx={{ width: 172, height: 172, border: '1px dashed' }} />
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                backgroundColor: theme.palette.mode === ThemeMode.DARK ? 'rgba(255, 255, 255, .75)' : 'rgba(0,0,0,.65)',
+                                                width: '100%',
+                                                height: '100%',
+                                                opacity: 0,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                        >
+                                            <Stack spacing={0.5} alignItems="center">
+                                                <Camera style={{ color: theme.palette.secondary.light, fontSize: '2rem' }} />
+                                                <Typography sx={{ color: 'secondary.lighter' }}>Upload</Typography>
+                                            </Stack>
+                                        </Box>
+                                    </FormLabel>
+                                    <TextField
+                                        type="file"
+                                        id="change-avtar"
+                                        placeholder="Outlined"
+                                        variant="outlined"
+                                        sx={{ display: "none" }}
+                                        accept="image/png,image/jpeg,image/jpg"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const maxSize = 1 * 1024 * 1024; // 1 MB
+                                                const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
+
+                                                // Format validation
+                                                if (!allowedFormats.includes(file.type)) {
+                                                    openSnackbar({
+                                                        open: true,
+                                                        message: "Invalid file format. Only PNG, JPEG, JPG allowed.",
+                                                        variant: "alert",
+                                                        alert: { color: "error" },
+                                                    });
+                                                    e.target.value = null;
+                                                    setFieldError("driver_image", "Invalid file format");
+                                                    setFieldValue("driver_image", null);
+                                                    return;
+                                                }
+
+                                                // Size validation
+                                                if (file.size > maxSize) {
+                                                    openSnackbar({
+                                                        open: true,
+                                                        message: "File size should be less than 1 MB",
+                                                        variant: "alert",
+                                                        alert: { color: "error" },
+                                                    });
+                                                    e.target.value = null;
+                                                    setFieldError("driver_image", "File size must be less than 1 MB");
+                                                    setFieldValue("driver_image", null);
+                                                    return;
+                                                }
+
+                                                // Valid file
+                                                setDriverImage(file);
+                                                setFieldValue("driver_image", file);
+                                                setFieldError("driver_image", "");
+                                            }
+                                        }}
+                                    />
+                                </Stack>
+                                <FormHelperText error id="helper-text-driver_image">
+                                    {errorsMessage.driver_imageError}
+                                </FormHelperText>
+
+                            </Box>
+                            <Box>
+                                <InputLabel htmlFor="license_front_image">License front image</InputLabel>
+                                <Stack direction="row" sx={{ mt: 1 }}>
+                                    <FormLabel
+                                        htmlFor="license_front_image"
+                                        sx={{
+                                            position: 'relative',
+                                            borderRadius: '5px',
+                                            overflow: 'hidden',
+                                            '&:hover .MuiBox-root': { opacity: 1 },
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Avatar alt="" src={previewAvatar1} sx={{ width: 272, height: 272, border: '1px dashed', borderRadius: "5px" }} />
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                backgroundColor: theme.palette.mode === ThemeMode.DARK ? 'rgba(255, 255, 255, 0.98)' : 'rgba(0,0,0,.65)',
+                                                width: '100%',
+                                                height: '100%',
+                                                opacity: 0,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: "5px"
+                                            }}
+                                        >
+                                            <Stack spacing={0.5} alignItems="center">
+                                                <Camera style={{ color: theme.palette.secondary.light, fontSize: '2rem' }} />
+                                                <Typography sx={{ color: 'secondary.lighter' }}>Upload</Typography>
+                                            </Stack>
+                                        </Box>
+                                    </FormLabel>
+                                    <TextField
+                                        type="file"
+                                        id="license_front_image"
+                                        placeholder="Outlined"
+                                        variant="outlined"
+                                        sx={{ display: "none" }}
+                                        accept="image/png,image/jpeg,image/jpg"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const maxSize = 1 * 1024 * 1024; // 1 MB
+                                                const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
+
+                                                // Format validation
+                                                if (!allowedFormats.includes(file.type)) {
+                                                    openSnackbar({
+                                                        open: true,
+                                                        message: "Invalid file format. Only PNG, JPEG, JPG allowed.",
+                                                        variant: "alert",
+                                                        alert: { color: "error" },
+                                                    });
+                                                    e.target.value = null;
+                                                    setFieldError("license_front_image", "Invalid file format");
+                                                    setFieldValue("license_front_image", null);
+                                                    return;
+                                                }
+
+                                                // Size validation
+                                                if (file.size > maxSize) {
+                                                    openSnackbar({
+                                                        open: true,
+                                                        message: "File size should be less than 1 MB",
+                                                        variant: "alert",
+                                                        alert: { color: "error" },
+                                                    });
+                                                    e.target.value = null;
+                                                    setFieldError("license_front_image", "File size must be less than 1 MB");
+                                                    setFieldValue("license_front_image", null);
+                                                    return;
+                                                }
+
+                                                // Valid file
+                                                setLicenseFrontImage(file);
+                                                setFieldValue("license_front_image", file);
+                                                setFieldError("license_front_image", "");
+                                            }
+                                        }}
+                                    />
+                                </Stack>
+                                <FormHelperText error id="helper-text-license_front_image">
+                                    {errorsMessage.license_front_imageError}
+                                </FormHelperText>
+                            </Box>
+                            <Box>
+                                <InputLabel htmlFor="license_back_image">License back image</InputLabel>
+                                <Stack direction="row" sx={{ mt: 1 }}>
+                                    <FormLabel
+                                        htmlFor="license_back_image"
+                                        sx={{
+                                            position: 'relative',
+                                            borderRadius: '5px',
+                                            overflow: 'hidden',
+                                            '&:hover .MuiBox-root': { opacity: 1 },
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Avatar alt="" src={previewAvatar2} sx={{ width: 272, height: 272, border: '1px dashed', borderRadius: "5px" }} />
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                backgroundColor: theme.palette.mode === ThemeMode.DARK ? 'rgba(255, 255, 255, 0.98)' : 'rgba(0,0,0,.65)',
+                                                width: '100%',
+                                                height: '100%',
+                                                opacity: 0,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: "5px"
+                                            }}
+                                        >
+                                            <Stack spacing={0.5} alignItems="center">
+                                                <Camera style={{ color: theme.palette.secondary.light, fontSize: '2rem' }} />
+                                                <Typography sx={{ color: 'secondary.lighter' }}>Upload</Typography>
+                                            </Stack>
+                                        </Box>
+                                    </FormLabel>
+                                    <TextField
+                                        type="file"
+                                        id="license_back_image"
+                                        placeholder="Outlined"
+                                        variant="outlined"
+                                        sx={{ display: "none" }}
+                                        accept="image/png,image/jpeg,image/jpg"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const maxSize = 1 * 1024 * 1024; 
+                                                const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
+
+                                                if (!allowedFormats.includes(file.type)) {
+                                                    openSnackbar({
+                                                        open: true,
+                                                        message: "Invalid file format. Only PNG, JPEG, JPG allowed.",
+                                                        variant: "alert",
+                                                        alert: { color: "error" },
+                                                    });
+                                                    e.target.value = null;
+                                                    setFieldError("license_back_image", "Invalid file format");
+                                                    setFieldValue("license_back_image", null);
+                                                    return;
+                                                }
+
+                                                // Size validation
+                                                if (file.size > maxSize) {
+                                                    openSnackbar({
+                                                        open: true,
+                                                        message: "File size should be less than 1 MB",
+                                                        variant: "alert",
+                                                        alert: { color: "error" },
+                                                    });
+                                                    e.target.value = null;
+                                                    setFieldError("license_back_image", "File size must be less than 1 MB");
+                                                    setFieldValue("license_back_image", null);
+                                                    return;
+                                                }
+
+                                                // Valid file
+                                                setLicenseBackImage(file);
+                                                setFieldValue("license_back_image", file);
+                                                setFieldError("license_back_image", "");
+                                            }
+                                        }}
+                                    />
+                                </Stack>
+                                <FormHelperText error id="helper-text-license_back_image">
+                                    {errorsMessage.license_front_imageError}
+                                </FormHelperText>
+                            </Box>
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                            <Stack spacing={1}>
+                                <InputLabel htmlFor="driver_name">Driver name</InputLabel>
+                                <OutlinedInput
+                                    fullWidth
+                                    error={Boolean(touched.driver_name && errors.driver_name)}
+                                    id="driver_name"
+                                    type="text"
+                                    value={values.driver_name}
+                                    name="driver_name"
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    placeholder="Enter driver name"
+                                    inputProps={{}}
+                                />
+                            </Stack>
+                            {touched.driver_name && errors.driver_name && (
+                                <FormHelperText error id="helper-text-driver_name">
+                                    {errors.driver_name}
+                                </FormHelperText>
+                            )}
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                            <PhoneNumber
+                                id="phone_number"
+                                value={values.phone_number}
+                                onChange={(phone) => setFieldValue('phone_number', phone)}
+                                onBlur={handleBlur}
+                                touched={touched.phone_number}
+                                error={errors.phone_number} />
+
+                            {errors.phone_numberError && (
+                                <FormHelperText error id="helper-text-phone_number">
+                                    {errors.phone_numberError}
+                                </FormHelperText>
+                            )}
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                            <Stack spacing={1}>
+                                <InputLabel htmlFor="license_number">License number</InputLabel>
+                                <OutlinedInput
+                                    fullWidth
+                                    error={Boolean(touched.license_number && errors.license_number)}
+                                    id="license_number"
+                                    type="text"
+                                    value={values.license_number}
+                                    name="license_number"
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    placeholder="Enter your phone number"
+                                    inputProps={{}}
+                                />
+                            </Stack>
+                            {touched.license_number && errors.license_number && (
+                                <FormHelperText error id="helper-text-license_number">
+                                    {errors.license_number}
+                                </FormHelperText>
+                            )}
+                            <FormHelperText error id="helper-text-license_number">
+                                {errorsMessage.license_numberError}
+                            </FormHelperText>
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                            <Stack spacing={1}>
+                                <InputLabel htmlFor="license_state">License state</InputLabel>
+                                <CustomAutocomplete
+                                    fullWidth
+                                    value={values.license_state ? { value: values.license_state, label: values.license_state.charAt(0).toUpperCase() + values.license_state.slice(1) } : { value: '', label: '' }}
+                                    disableClearable
+                                    onChange={(event, newValue) => {
+                                        let newLabelValue;
+
+                                        // If newValue is an object (selected option)
+                                        if (newValue && typeof newValue === 'object') {
+                                            newLabelValue = newValue.label; // Set the selected value (string)
+                                        } else if (typeof newValue === 'string') {
+                                            // If it's a string (freeSolo input), treat it as the value
+                                            newLabelValue = newValue;
+                                        } else {
+                                            // Handle the case where newValue is null or undefined
+                                            newLabelValue = '';
+                                        }
+
+                                        setFieldValue('license_state', newLabelValue); // Set the value (string, not object)
+                                    }}
+                                    filterOptions={(options, params) => {
+                                        const filtered = filter(options, params);
+                                        const { inputValue } = params;
+                                        const isExisting = options.some((option) => inputValue === option.label);
+                                        if (inputValue !== '' && !isExisting) {
+                                            filtered.push({ value: inputValue, label: `Add "${inputValue}"` }); // Show custom value in dropdown
+                                        }
+                                        return filtered;
+                                    }}
+                                    selectOnFocus
+                                    clearOnBlur
+                                    autoHighlight
+                                    handleHomeEndKeys
+                                    id="license_state"
+                                    options={usStates}
+                                    getOptionLabel={(option) => option?.label}
+                                    freeSolo
+                                    renderInput={(params) => (
+                                        <TextField
+                                            error={Boolean(touched.license_state && errors.license_state)}
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    padding: '6px 9px',
+                                                },
+                                            }}
+                                            {...params}
+                                            name="license_state"
+                                            placeholder="Select state"
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <InputAdornment position="end">
+                                                        <ArrowDown2 />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </Stack>
+                            {touched.license_state && errors.license_state && (
+                                <FormHelperText error id="helper-text-license_state">
+                                    {errors.license_state}
+                                </FormHelperText>
+                            )}
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                            <Stack spacing={1}>
+                                <InputLabel htmlFor="license_expiry">License expiry</InputLabel>
+                                <OutlinedInput
+                                    fullWidth
+                                    error={Boolean(touched.license_expiry && errors.license_expiry)}
+                                    id="license_expiry"
+                                    type="date"
+                                    value={values.license_expiry}
+                                    name="license_expiry"
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    placeholder="Enter your date of birth"
+                                    inputProps={{ min: new Date().toISOString().split("T")[0] }}
+                                />
+                            </Stack>
+                            {touched.license_expiry && errors.license_expiry && (
+                                <FormHelperText error id="helper-text-license_expiry">
+                                    {errors.license_expiry}
+                                </FormHelperText>
+                            )}
+                            <FormHelperText error>
+                                {errorsMessage.license_expiryError}
+                            </FormHelperText>
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                            <Stack spacing={1}>
+                                <InputLabel htmlFor="account_no">Account number</InputLabel>
+                                <OutlinedInput
+                                    fullWidth
+                                    error={Boolean(touched.account_no && errors.account_no)}
+                                    id="account_no"
+                                    type="text"
+                                    value={values.account_no}
+                                    name="account_no"
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    placeholder="Enter your account number"
+                                    inputProps={{}}
+                                />
+                            </Stack>
+                            {touched.account_no && errors.account_no && (
+                                <FormHelperText error id="helper-text-account_no">
+                                    {errors.account_no}
+                                </FormHelperText>
+                            )}
+                            {/* <FormHelperText error id="helper-text-account_no">
+                                    {errorsMessage.account_noError}
+                                </FormHelperText> */}
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                            <Stack spacing={1}>
+                                <InputLabel htmlFor="address">Address</InputLabel>
+                                <OutlinedInput
+                                    error={Boolean(touched.address && errors.address)}
+                                    id="address"
+                                    name="address"
+                                    onBlur={handleBlur}
+                                    value={values.address}
+                                    inputComponent={({ inputRef, ...inputProps }) => (
+                                        <Autocomplete
+                                            apiKey="AIzaSyD1-pjN6OGA80NaUTe8IS9McCWHlMvUcHA"
+                                            onPlaceSelected={(place) => {
+                                                const address = place.formatted_address;
+                                                setFieldValue("address", address);
+                                            }}
+                                            options={{
+                                                types: ["geocode"],
+                                                 componentRestrictions: { country: "us" }
+                                            }}
+                                            defaultValue={values.address}
+                                            placeholder="Enter address"
+                                            inputProps={{
+                                                ref: inputRef,
+                                                ...inputProps,
+                                            }}
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                width: '100%',
+                                                color: 'currentColor',
+                                                padding: '16px',
+                                                outline: 'none',
+                                                boxShadow: 'none',
+                                            }}
+                                        />
+                                    )}
+                                />
+
+                            </Stack>
+                            {touched.address && errors.address && (
+                                <FormHelperText error id="adress">
+                                    <span>{errors.address}</span>
+                                </FormHelperText>
+                            )}
+                        </Grid>
+                        <Grid item xs={12} >
+                            <Stack spacing={1}>
+                                <InputLabel htmlFor="notes">Notes</InputLabel>
+                                <TextField
+                                    fullWidth
+                                    error={Boolean(touched.notes && errors.notes)}
+                                    id="notes"
+                                    type="text"
+                                    value={values.notes}
+                                    name="notes"
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    placeholder="Enter your notes"
+                                    multiline
+                                    rows={4}
+                                    variant="outlined"
+                                    inputProps={{}}
+                                />
+
+                            </Stack>
+                            {touched.notes && errors.notes && (
+                                <FormHelperText error id="helper-text-notes">
+                                    {errors.notes}
+                                </FormHelperText>
+                            )}
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 4 }}>
+                                <Button disableElevation disabled={isSubmitting} variant="contained" type='submit' sx={{
+                                                    '&.Mui-disabled': {
+                                                        bgcolor: theme.palette.primary.main,
+                                                    }
+                                                }}>
+                                    {isSubmitting ? <CircularProgress sx={{ height: '20px !important', width: '20px !important', color: 'white' }} /> : 'Add Reimbursement driver'}
+                                </Button>
+                            </Stack>
+                        </Grid>
+                    </Grid>
+                </form>
+            )}
+        </Formik>
+    );
+}
