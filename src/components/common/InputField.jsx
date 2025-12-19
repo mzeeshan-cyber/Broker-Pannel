@@ -14,7 +14,8 @@ const InputField = ({
     type = 'text',
     placeholder,
     accept,
-    icon
+    icon,
+    size
 }) => {
     // Prevent typing negative numbers
     const handleKeyDown = (e) => {
@@ -39,6 +40,7 @@ const InputField = ({
                 error={Boolean(touched && errors)}
                 id={id}
                 type={type}
+                size={size}
                 value={values}
                 name={id}
                 onBlur={handleBlur}

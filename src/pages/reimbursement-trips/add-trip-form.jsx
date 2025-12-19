@@ -33,7 +33,7 @@ import CircularLoader from 'components/common/loader/CircularLoader';
 import IconButton from 'components/@extended/IconButton';
 import { useTheme } from '@emotion/react';
 
-export default function AddTripForm({ mappedPatients }) {
+export default function AddTripForm({ mappedPatients, allowance }) {
     const API_URL = import.meta.env.VITE_APP_API_URL;
     const encryptedFromStorage = localStorage.getItem("token");
     const decryptedToken = decryptToken(encryptedFromStorage);
@@ -48,7 +48,6 @@ export default function AddTripForm({ mappedPatients }) {
     const [distances, setDistances] = useState([]);
     const navigate = useNavigate()
     const [tripData, setTripData] = useState([]);
-    const [allowance, setAllowance] = useState('');
     const theme = useTheme()
 
 
@@ -81,34 +80,7 @@ export default function AddTripForm({ mappedPatients }) {
     }));
     const durationInMins = result.reduce((sum, item) => sum + item.duration_minutes, 0);
 
-    const handleGetAllowance = async () => {
-        try {
-            const response = await fetcher('fetch-allowances');
-            if (response.status === true) {
-                setAllowance(response.data)
-            }
-            else {
-                openSnackbar({
-                    open: true,
-                    message: 'Allowances are not fetched!',
-                    variant: 'alert',
-                    alert: {
-                        color: 'error'
-                    }
-                });
-            }
-        }
-        catch (error) {
-            openSnackbar({
-                open: true,
-                message: error.message || 'Allowances are not fetched!',
-                variant: 'alert',
-                alert: {
-                    color: 'error'
-                }
-            });
-        }
-    };
+
     const getPayeeData = async () => {
         const params = {
             patient_id: mappedPatients?.id,
@@ -322,10 +294,6 @@ export default function AddTripForm({ mappedPatients }) {
             return null;
         }
     };
-
-    useEffect(() => {
-        handleGetAllowance()
-    }, [])
 
     useEffect(() => {
         getPayeeData();

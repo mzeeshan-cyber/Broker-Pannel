@@ -15,12 +15,12 @@ import { Link } from 'react-router-dom';
 import { ThemeMode } from 'config';
 import Filters from './filters';
 
-const ProviderButtonsOnTable = ({ handleGetData }) => {
+const ProviderButtonsOnTable = ({ handleGetData, filters }) => {
     const theme = useTheme();
     const navigate = useNavigate()
     return (
         <Stack direction="row" spacing={2} alignItems="center" sx={{ width: { xs: '100%', sm: 'auto' } }}>
-            <Filters handleGetBySearch={handleGetData} />
+            <Filters handleGetBySearch={handleGetData} filters={filters}/>
             <Link to={`/providers/add`}>
                 <Button
                     variant="contained"

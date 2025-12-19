@@ -1,8 +1,9 @@
 import React from "react";
 import { Card, CardContent, Typography, Box, Stack, Button } from "@mui/material";
 import { useNavigate } from "react-router";
+import { HiOutlineShieldExclamation } from "react-icons/hi";
 
-export default function EmptyCityCard({ message = "No data found", description, icon, link }) {
+export default function EmptyCityCard({ message = "No data found", description, icon = <HiOutlineShieldExclamation size={24}/>, link, buttonText="Add New" }) {
     const navigate = useNavigate()
     return (
         <Card
@@ -47,7 +48,7 @@ export default function EmptyCityCard({ message = "No data found", description, 
                         type='button'
                         onClick={()=>{navigate(link)}}
                     >
-                        Add New
+                        {buttonText}
                     </Button>
                 </Stack>
             </CardContent>
