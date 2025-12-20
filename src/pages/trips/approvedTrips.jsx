@@ -115,12 +115,13 @@ export default function ApprovedTrips() {
   const handleChangePerPage = async (event) => {
     const per_page = Number(event.target.value);
     setPageSize(per_page);
+    setPage(1);
     const response = await fetcher([
       "/trips/approved",
       {
         params: {
           ...activeFilters,
-          per_page
+          page: 1, per_page,
         }
       }
     ]);
@@ -143,7 +144,8 @@ export default function ApprovedTrips() {
       {
         params: {
           ...activeFilters,
-          page: currentPage
+          page: currentPage,
+          per_page: pageSize
         }
       }
     ]);

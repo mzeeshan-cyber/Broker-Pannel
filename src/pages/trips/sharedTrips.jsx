@@ -58,7 +58,7 @@ export default function SharedTrips() {
       });
     }
   };
-  
+
   const removeSingleFilter = (key) => {
     const updated = { ...activeFilters };
     delete updated[key];
@@ -66,35 +66,40 @@ export default function SharedTrips() {
     getTripsData(updated);
   };
 
-  // Pagination
-  const handleChangePerPage = async (event) => {
-    setPageSize(Number(event.target.value));
-    const per_page = Number(event.target.value);
-    const response = await fetcher([`/trips/shared?per_page=${per_page}`]);
+  const handleChangePagination = async (event, value) => {
+    const currentPage = event.target.value ? event.target.value : value;
+    setPage(currentPage);
+    const response = await fetcher([
+      "/trips/shared",
+      {
+        params: {
+          ...activeFilters,
+          page: currentPage,
+          per_page: pageSize
+        }
+      }
+    ]);
     if (response.status === true) {
-      dispatch(tripsData(response?.data?.data))
-      dispatch(resetFilter(false))
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
+      dispatch(tripsData(response?.data?.trips?.data));
+      dispatch(paginationData(response?.data?.trips));
     }
   };
-  const handleChangePagination = async (event, value) => {
-    const eventValue = event.target.value;
-    setPage(eventValue ? eventValue : value);
-    const response = await fetcher([`/trips/shared?page=${eventValue ? eventValue : value}`]);
+  const handleChangePerPage = async (event) => {
+    const per_page = Number(event.target.value);
+    setPageSize(per_page);
+    setPage(1);
+    const response = await fetcher([
+      "/trips/shared",
+      {
+        params: {
+          ...activeFilters,
+          page: 1, per_page,
+        }
+      }
+    ]);
     if (response.status === true) {
-      dispatch(tripsData(response?.data?.data))
-      dispatch(resetFilter(false))
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
+      dispatch(tripsData(response?.data?.trips?.data));
+      dispatch(paginationData(response?.data?.trips));
     }
   };
 

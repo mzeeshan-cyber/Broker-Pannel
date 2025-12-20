@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Loader from 'components/Loader';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetcher } from 'utils/axios';
-import { loading, providerDriverData, providerDriverPaginationData, resetFilter } from 'store/reducers/providerDriversSlice';
+import { loading, providerDriverData, providerDriverPaginationData } from 'store/reducers/providerDriversSlice';
 import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/providers/drivers/providerDriverTableColumn';
 import { useParams } from 'react-router';
@@ -17,30 +17,57 @@ export default function Drivers() {
   const [providerData, setProviderData] = useState({});
   const dispatch = useDispatch();
   const { provider_id } = useParams()
+  const [filters, setFilters] = useState({});
 
-  const getProvidersDriverData = async (values) => {
+  const getProvidersDriverData = async (values = {}) => {
     dispatch(loading(true));
-    const params = {
+    const query = {
       status: values?.status,
+      provider_id: provider_id,
       vehicle_assigned: values?.vehicle_assigned,
-    }
-    const response = await fetcher([`/get-provider-drivers?provider_id=${provider_id}&per_page=${pageSize}`, { params }]);
+      page,
+      per_page: pageSize
+    };
+    setFilters(query);
+    const response = await fetcher([
+      "/get-provider-drivers",
+      { params: query }
+    ]);
     if (response.status === true) {
       dispatch(loading(false));
       dispatch(providerDriverData(response?.data?.data));
       dispatch(providerDriverPaginationData(response?.data));
-      if (values) {
-        dispatch(resetFilter(true))
-      }
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
     }
   };
+  const handleChangePerPage = async (event) => {
+    const per_page = Number(event.target.value);
 
+    setPageSize(per_page);
+    setPage(1);
+
+    const response = await fetcher([
+      "/get-provider-drivers",
+      { params: { ...filters, page: 1, per_page } }
+    ]);
+
+    if (response.status === true) {
+      dispatch(providerDriverData(response?.data?.data));
+      dispatch(providerDriverPaginationData(response?.data));
+    }
+  };
+  const handleChangePagination = async (event, value) => {
+    setPage(value);
+
+    const response = await fetcher([
+      "/get-provider-drivers",
+      { params: { ...filters, page: value, per_page: pageSize } }
+    ]);
+
+    if (response.status === true) {
+      dispatch(providerDriverData(response?.data?.data));
+      dispatch(providerDriverPaginationData(response?.data));
+    }
+  };
   const FetchSingleProvider = async () => {
     dispatch(loading(true));
     const response = await fetcher(`/provider/${provider_id}`);
@@ -56,38 +83,6 @@ export default function Drivers() {
     }
   }
 
-  // Pagination
-  const handleChangePerPage = async (event) => {
-    setPageSize(Number(event.target.value));
-    const per_page = Number(event.target.value);
-    const response = await fetcher([`/providers?per_page=${per_page}`]);
-    if (response.status === true) {
-      dispatch(providerDriverData(response?.data?.data))
-      dispatch(resetFilter(false))
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
-    }
-  };
-  const handleChangePagination = async (event, value) => {
-    const eventValue = event.target.value;
-    setPage(eventValue ? eventValue : value);
-    const response = await fetcher([`/providers?page=${eventValue ? eventValue : value}`]);
-    if (response.status === true) {
-      dispatch(providerDriverData(response?.data?.data))
-      dispatch(resetFilter(false))
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
-    }
-  };
-
   const porvidersDriverState = useSelector(state => state?.providerDriver)
   const Loading = porvidersDriverState.loading;
   const providerDriversData = porvidersDriverState?.providerDriverData;
@@ -100,7 +95,7 @@ export default function Drivers() {
         <Loader />
         :
         <>
-          <ProviderPersonalInfo providerData={providerData}/>
+          <ProviderPersonalInfo providerData={providerData} />
           <CommonTable
             data={providerDriversData}
             paginationData={porvidersDriverState?.providerDriverPaginationData}
