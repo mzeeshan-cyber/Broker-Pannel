@@ -120,15 +120,15 @@ export default function Filters({ handleGetBySearch, filters }) {
 
                                     }}
                                     onSubmit={async (values, { setSubmitting }) => {
-                                                try {
-                                                    await handleGetBySearch(values);
-                                                    handleClose(); // Close the popper after fetching
-                                                } catch (error) {
-                                                    console.error("Error fetching patients:", error);
-                                                } finally {
-                                                    setSubmitting(false); // Update Formik's loader state
-                                                }
-                                            }}
+                                        try {
+                                            await handleGetBySearch(values);
+                                            handleClose(); // Close the popper after fetching
+                                        } catch (error) {
+                                            console.error("Error fetching patients:", error);
+                                        } finally {
+                                            setSubmitting(false); // Update Formik's loader state
+                                        }
+                                    }}
                                 >
                                     {({ handleBlur, handleChange, handleSubmit, isSubmitting, values, setFieldValue, touched, errors }) => (
                                         <form noValidate onSubmit={handleSubmit}>

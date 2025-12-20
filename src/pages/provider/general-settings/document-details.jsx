@@ -19,7 +19,7 @@ import { Add, Trash } from 'iconsax-react';
 import { Formik, Form, FieldArray } from "formik";
 import { openSnackbar } from "api/snackbar";
 import { useEffect } from "react";
-import { fetcher } from "utils/axios";
+import { fetcher, fetcherDelete } from "utils/axios";
 import axios from "axios";
 import * as Yup from 'yup';
 import { decryptToken } from "utils/tokenUtils";
@@ -36,9 +36,10 @@ export default function DocumentDetails() {
     const decryptedToken = decryptToken(encryptedFromStorage);
     const theme = useTheme()
 
-    const simplifiedDocs = docData.map(({ document_name, required }) => ({
+    const simplifiedDocs = docData.map(({ document_name, required, key }) => ({
         document_name,
         required: required.toString(),
+        key,
     }));
     const initialValues = {
         documents: [
@@ -79,12 +80,27 @@ export default function DocumentDetails() {
                         color: 'success'
                     }
                 });
+                getDocumentsData();
                 setLoading(false)
             })
             .catch(error => {
                 setErrorMsg(error.response.data.message)
                 setLoading(false)
             });
+    }
+    const deleteProviderDocument = async (key) => {
+        const response = await fetcherDelete([`/delete-provider-credentials/${key}`]);
+        if (response.status === 200) {
+            openSnackbar({
+                open: true,
+                message: 'Document Deleted successfuly!',
+                variant: 'alert',
+                alert: {
+                    color: 'success'
+                }
+            });
+
+        }
     }
 
     const handleSubmit = (values) => {
@@ -180,11 +196,9 @@ export default function DocumentDetails() {
                                                         <IconButton
                                                             color="error"
                                                             onClick={() => {
-                                                                const updatedDocuments = values.documents.filter((_, i) => i !== index);
-                                                                postDocuments({ documents: updatedDocuments.length > 0 ? updatedDocuments : values.documents });
+                                                                deleteProviderDocument(field?.key)
                                                                 remove(index);
                                                             }}
-                                                        // disabled={values.documents.length === 1}
                                                         >
                                                             <Trash />
                                                         </IconButton>
@@ -221,7 +235,7 @@ export default function DocumentDetails() {
                                     {loading ? (
                                         <CircularProgress sx={{ height: '20px !important', width: '20px !important', color: 'white' }} />
                                     ) : (
-                                        'Submit'
+                                        'Save Document'
                                     )}
                                 </Button>
                             </Box>

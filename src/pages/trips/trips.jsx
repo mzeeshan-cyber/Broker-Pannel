@@ -55,6 +55,39 @@ export default function Trips() {
       });
     }
   };
+
+  // Pagination
+  const handleChangePerPage = async (event) => {
+    setPageSize(Number(event.target.value));
+    const per_page = Number(event.target.value);
+    const response = await fetcher([`/fetch-trips?per_page=${per_page}`]);
+    if (response.status === true) {
+      dispatch(tripsData(response?.data?.data))
+      dispatch(resetFilter(false))
+      openSnackbar({
+        open: true,
+        message: response.message || 'data is fetched',
+        variant: 'alert',
+        alert: { color: 'success' }
+      });
+    }
+  };
+  const handleChangePagination = async (event, value) => {
+    const eventValue = event.target.value;
+    setPage(eventValue ? eventValue : value);
+    const response = await fetcher([`/fetch-trips?page=${eventValue ? eventValue : value}`]);
+    if (response.status === true) {
+      dispatch(tripsData(response?.data?.data))
+      dispatch(resetFilter(false))
+      openSnackbar({
+        open: true,
+        message: response.message || 'data is fetched',
+        variant: 'alert',
+        alert: { color: 'success' }
+      });
+    }
+  };
+  
   const deleteTrip = async (id) => {
     dispatch(loading(true));
     const response = await fetcherDelete([`/delete-trip/${id}`]);
@@ -98,65 +131,33 @@ export default function Trips() {
     }
   }
 
-  // Pagination
-  const handleChangePerPage = async (event) => {
-    setPageSize(Number(event.target.value));
-    const per_page = Number(event.target.value);
-    const response = await fetcher([`/fetch-trips?per_page=${per_page}`]);
-    if (response.status === true) {
-      dispatch(tripsData(response?.data?.data))
-      dispatch(resetFilter(false))
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
-    }
-  };
-  const handleChangePagination = async (event, value) => {
-    const eventValue = event.target.value;
-    setPage(eventValue ? eventValue : value);
-    const response = await fetcher([`/fetch-trips?page=${eventValue ? eventValue : value}`]);
-    if (response.status === true) {
-      dispatch(tripsData(response?.data?.data))
-      dispatch(resetFilter(false))
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
-    }
-  };
-
   const TripState = useSelector(state => state?.trips)
   const tripsNewData = TripState?.tripsData;
   useEffect(() => {
-  const normalized = tripsNewData.flatMap((item) => {
-    if (item.single_trip) {
-      return [{ ...item.single_trip, trip_type: 'single', isFirstInGroup: true }];
-    } else if (item.round_trip) {
-      return item.round_trip.map((trip, index) => ({
-        ...trip,
-        trip_type: 'round trip',
-        round_index: index,
-        parent_trip_id: item.round_trip[0].id,
-        isFirstInGroup: index === 0,
-      }));
-    } else if (item.shared_trip) {
-      return item.shared_trip.map((trip, index) => ({
-        ...trip,
-        trip_type: 'shared',
-        shared_index: index,
-        parent_trip_id: item.shared_trip[0].id,
-        isFirstInGroup: index === 0,
-      }));
-    }
-    return [];
-  });
-  setNormalizedTrips(normalized);
-}, [tripsNewData]);
+    const normalized = tripsNewData.flatMap((item) => {
+      if (item.single_trip) {
+        return [{ ...item.single_trip, trip_type: 'single', isFirstInGroup: true }];
+      } else if (item.round_trip) {
+        return item.round_trip.map((trip, index) => ({
+          ...trip,
+          trip_type: 'round trip',
+          round_index: index,
+          parent_trip_id: item.round_trip[0].id,
+          isFirstInGroup: index === 0,
+        }));
+      } else if (item.shared_trip) {
+        return item.shared_trip.map((trip, index) => ({
+          ...trip,
+          trip_type: 'shared',
+          shared_index: index,
+          parent_trip_id: item.shared_trip[0].id,
+          isFirstInGroup: index === 0,
+        }));
+      }
+      return [];
+    });
+    setNormalizedTrips(normalized);
+  }, [tripsNewData]);
 
 
   useEffect(() => { getTripsData() }, [])

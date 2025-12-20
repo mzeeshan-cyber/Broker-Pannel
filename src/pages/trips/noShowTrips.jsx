@@ -71,12 +71,13 @@ export default function NoShowTrips() {
   const handleChangePerPage = async (event) => {
     const per_page = Number(event.target.value);
     setPageSize(per_page);
+    setPage(1);
     const response = await fetcher([
       "/trips/noshow",
       {
         params: {
           ...activeFilters,
-          per_page
+          page: 1, per_page,
         }
       }
     ]);
@@ -99,7 +100,8 @@ export default function NoShowTrips() {
       {
         params: {
           ...activeFilters,
-          page: currentPage
+          page: currentPage,
+          per_page: pageSize
         }
       }
     ]);
