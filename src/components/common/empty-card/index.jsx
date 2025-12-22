@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, Box, Stack, Button } from "@mui/material
 import { useNavigate } from "react-router";
 import { HiOutlineShieldExclamation } from "react-icons/hi";
 
-export default function EmptyCityCard({ message = "No data found", description, icon = <HiOutlineShieldExclamation size={24}/>, link, buttonText="Add New" }) {
+export default function EmptyCityCard({ message = "No data found", description, icon = <HiOutlineShieldExclamation size={24} />, link, buttonText = "Add New", button }) {
     const navigate = useNavigate()
     return (
         <Card
@@ -42,14 +42,16 @@ export default function EmptyCityCard({ message = "No data found", description, 
                     <Typography variant="body2" color="text.secondary">
                         {description}
                     </Typography>
-                    <Button
-                        variant="contained"
-                        color="success"
-                        type='button'
-                        onClick={()=>{navigate(link)}}
-                    >
-                        {buttonText}
-                    </Button>
+                    {button ? button :
+                        <Button
+                            variant="contained"
+                            color="success"
+                            type='button'
+                            onClick={() => { navigate(link) }}
+                        >
+                            {buttonText}
+                        </Button>
+                    }
                 </Stack>
             </CardContent>
         </Card>

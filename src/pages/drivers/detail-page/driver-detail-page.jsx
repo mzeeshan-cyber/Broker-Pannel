@@ -145,7 +145,7 @@ export default function DriverDetailPage() {
             }
             <BasicTabs tabs={tabsData} />
             <ObjectionModal openModal={openModalObjection} setOpenModal={setOpenModalObjection} title={`Create Objection`} btnText='Create Objection' >
-              <AddObjection CreateObjecion={CreateObjecion} />
+              <AddObjection CreateObjecion={CreateObjecion} type='driverModule'/>
             </ObjectionModal>
           </Box>
         </>

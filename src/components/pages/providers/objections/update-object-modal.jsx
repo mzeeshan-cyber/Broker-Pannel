@@ -11,11 +11,13 @@ const validationSchema = Yup.object({
     objection_reason: Yup.string().required('Objection reason is required!'),
 });
 
-const UpdateObjectionModal = ({ objectionById, UpdateObjecion }) => {
+const UpdateObjectionModal = ({ objectionById, UpdateObjecion, type }) => {
     const { provider_id, detail_id } = useParams()
     const initialValues = {
         provider_id: provider_id,
-        provider_vehicle_id: detail_id,
+        ...(type === 'driverModule'
+            ? { driver_id: detail_id }
+            : { provider_vehicle_id: detail_id }),
         id: objectionById?.[0]?.id,
         objection_reason: objectionById?.[0]?.objection_reason || '',
     };

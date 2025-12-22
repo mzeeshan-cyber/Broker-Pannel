@@ -1,15 +1,15 @@
 import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
-import Loader from 'components/Loader';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
-import { fetcher } from 'utils/axios';
-import { loading, providerDocumentData, providerDocumentPaginationData } from 'store/reducers/provideDocumentSlice';
+import { fetcher, fetcherDelete } from 'utils/axios';
+import { isDeleting, loading, providerDocumentData, providerDocumentDataAfterDelete, providerDocumentPaginationData } from 'store/reducers/provideDocumentSlice';
 import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/providers/registration-docs/registrationDocsTableColumns';
 import RegistrationButtoonsOnTable from 'components/pages/providers/registration-docs/RegistrationButtoonsOnTable';
 import ProviderPersonalInfo from 'components/pages/providers/provider-personal-info/provider-personal-info';
+import CircularLoader from 'components/common/loader/CircularLoader';
 
 export default function RegistrationDocs() {
   const [pageSize, setPageSize] = useState(10);
@@ -19,7 +19,7 @@ export default function RegistrationDocs() {
   const { provider_id } = useParams();
   const [filters, setFilters] = useState({});
 
-  const getProviderData = async (values = {}) => {
+  const getProviderDocumentData = async (values = {}) => {
     dispatch(loading(true));
     const query = {
       provider_id: provider_id,
@@ -71,25 +71,36 @@ export default function RegistrationDocs() {
     const response = await fetcher(`/provider/${provider_id}`);
     if (response.status === true) {
       setProviderData(response?.data);
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
       dispatch(loading(false));
     }
   }
 
+  const handleDeleteDocument = async (id) => {
+    dispatch(isDeleting(true));
+    const response = await fetcherDelete([`/delete-provider-register-document/${id}`]);
+    if (response.status === 200) {
+      dispatch(providerDocumentDataAfterDelete({ id }))
+      openSnackbar({
+        open: true,
+        message: response.message || 'Provider Document deleted successfuly!',
+        variant: 'alert',
+        
+        alert: {
+          color: 'success'
+        }
+      });
+      dispatch(isDeleting(false));
+    }
+  }
   const providerDocumentState = useSelector(state => state?.providerDocument)
   const Loading = providerDocumentState?.loading;
   const DocumentsData = providerDocumentState?.providerDocumentData;
 
-  useEffect(() => { getProviderData(); FetchSingleProvider() }, [])
+  useEffect(() => { getProviderDocumentData(); FetchSingleProvider() }, [])
   return (
     <Grid>
       {Loading ?
-        <Loader />
+        <CircularLoader text='Loading Documents..' />
         :
         <>
           <ProviderPersonalInfo providerData={providerData} />
@@ -102,6 +113,7 @@ export default function RegistrationDocs() {
             page={page}
             handleChangePerPage={handleChangePerPage}
             handleChangePagination={handleChangePagination}
+            handleDelete={handleDeleteDocument}
             stackontable={<RegistrationButtoonsOnTable />}
             tableName="provider registration docs"
           />

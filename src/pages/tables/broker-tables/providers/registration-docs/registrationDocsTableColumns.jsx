@@ -9,7 +9,7 @@ import { Bag, Edit2, Eye } from 'iconsax-react';
 import { Chip, MenuItem, Select, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router';
 import { openSnackbar } from 'api/snackbar';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { registrationDocumentsStatus } from 'constants/constants';
 import { updateDocumentProviderStatus } from 'store/reducers/provideDocumentSlice';
 import { Link } from 'react-router-dom';
@@ -58,7 +58,7 @@ const changeStatus = async (id, status, dispatch) => {
     }
 };
 
-function EditAction({ row }) {
+function EditAction({ row, table }) {
     const { provider_id } = useParams()
     const navigate = useNavigate()
     const [openModal, setOpenModal] = useState(false);
@@ -66,6 +66,7 @@ function EditAction({ row }) {
         setOpenModal(prevState => !prevState)
     }
     // const selectedCount = table.getSelectedRowModel().rows.length;
+    const {isDeleting}  = useSelector(state => state.providerDocument)
 
     return (
         <Stack direction="row" spacing={1} alignItems="center">
@@ -79,7 +80,7 @@ function EditAction({ row }) {
                     <Bag variant="Outline" />
                 </IconButton>
             </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete Document" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' isSubmitting={false}>
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete Document" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' isSubmitting={isDeleting}>
                 <Typography id="modal-modal-description">Are you sure, you want to delete this document?</Typography>
             </TransitionsModal>
         </Stack>

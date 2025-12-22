@@ -6,16 +6,20 @@ import FormHelperText from '@mui/material/FormHelperText';
 import { Box, Button, Divider, Stack, TextField } from '@mui/material';
 import { useParams } from 'react-router';
 
-export default function AddObjection({ CreateObjecion }) {
+export default function AddObjection({ CreateObjecion, type }) {
     const { provider_id, detail_id } = useParams()
+    const initialValues = {
+        provider_id,
+        objection_reason: '',
+        ...(type === 'driverModule'
+            ? { driver_id: detail_id }
+            : { provider_vehicle_id: detail_id }),
+    };
 
     return (
         <Formik
-            initialValues={{
-                provider_id: provider_id,
-                provider_vehicle_id: detail_id,
-                objection_reason: '',
-            }}
+            initialValues={initialValues}
+            enableReinitialize
             validationSchema={Yup.object().shape({
                 objection_reason: Yup.string()
                     .max(255)
@@ -55,7 +59,7 @@ export default function AddObjection({ CreateObjecion }) {
                                 <Divider />
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'end', gap: '10px' }}>
-                                <Button type='submit' variant='contained' onClick={()=>CreateObjecion(values, `new-objection`)}>Create Objection</Button>
+                                <Button type='submit' variant='contained' onClick={() => CreateObjecion(values, `new-objection`)}>Create Objection</Button>
                             </Box>
                         </Grid>
                     </form>
