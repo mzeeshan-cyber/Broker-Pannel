@@ -228,7 +228,7 @@ export default function AddRegistrationDocument() {
                                             touched={touched}
                                             setFieldValue={setFieldValue}
                                             errors={errors}
-                                            values={values}
+                                            values={values.status}
                                         />
                                         {touched.status && errors.status && (
                                             <FormHelperText error id="helper-text-status">

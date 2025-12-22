@@ -1,19 +1,13 @@
-// material-ui
 import Grid from '@mui/material/Grid';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-
-// project-imports
 import MainCard from 'components/MainCard';
-
-// third-party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
 import { Button, CircularProgress, OutlinedInput } from '@mui/material';
-import { useState } from 'react';
 import { ArrowDown2 } from 'iconsax-react';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Autocomplete as CustomAutocomplete } from '@mui/material';
@@ -26,24 +20,22 @@ import PhoneNumber from 'components/@extended/PhoneNumber';
 import { decryptToken } from 'utils/tokenUtils';
 import { useTheme } from '@emotion/react';
 
-// ==============================|| LAYOUTS -  COLUMNS ||============================== //
 
 export default function AddPatient() {
     const API_URL = import.meta.env.VITE_APP_API_URL;
-    const [errorMsg, setErrorMsg] = useState(null);
     const navigate = useNavigate()
     const theme = useTheme()
     const encryptedFromStorage = localStorage.getItem("token");
     const decryptedToken = decryptToken(encryptedFromStorage);
-
     const filter = createFilterOptions();
 
-    const fields = ["address", "date_of_birth", "social_security_number", "gender", "phone_number", "routing_number", "mobility", "funding_source"];
-    const errorsMessage = fields.reduce((acc, field) => {
-        const key = `${field}Error`;
-        acc[key] = errorMsg?.errors?.[field] ?? null;
-        return acc;
-    }, {});
+    const mapBackendErrorsToFormik = (backendErrors = {}) => {
+        const formikErrors = {};
+        Object.keys(backendErrors).forEach((field) => {
+            formikErrors[field] = backendErrors[field];
+        });
+        return formikErrors;
+    };
 
     const AddPatient = async (values, { setSubmitting, setErrors }) => {
         try {
@@ -55,32 +47,35 @@ export default function AddPatient() {
                 },
                 body: JSON.stringify(values),
             });
+
             if (!response.ok) {
-                const errorData = await response.json();
-                setErrorMsg(errorData);
+                const data = await response.json();
+                if (data?.errors) {
+                    setErrors(mapBackendErrorsToFormik(data.errors));
+                }
                 openSnackbar({
                     open: true,
-                    message: errorData ? errorMsg?.message : 'Patient is not added!',
+                    message: data.message || 'Patient is not added!',
                     variant: 'alert',
 
                     alert: {
                         color: 'error'
                     }
                 });
-                throw new Error(errorData || 'failed!');
             }
-            openSnackbar({
-                open: true,
-                message: 'Patient added Successfuly!',
-                variant: 'alert',
-
-                alert: {
-                    color: 'success'
-                }
-            });
-            setTimeout(() => {
-                navigate('/patients')
-            }, 1500);
+            else {
+                openSnackbar({
+                    open: true,
+                    message: response.message || 'Patient added Successfuly!',
+                    variant: 'alert',
+                    alert: {
+                        color: 'success'
+                    }
+                });
+                setTimeout(() => {
+                    navigate('/patients')
+                }, 1000);
+            }
 
         } catch (error) {
             openSnackbar({
@@ -200,7 +195,7 @@ export default function AddPatient() {
                                 </Stack>
                                 {touched.address && errors.address && (
                                     <FormHelperText error id="adress">
-                                        <span>{errors.address || errorsMessage.addressError}</span>
+                                        <span>{errors.address}</span>
                                     </FormHelperText>
                                 )}
                             </Grid>
@@ -224,12 +219,9 @@ export default function AddPatient() {
                                 </Stack>
                                 {touched.date_of_birth && errors.date_of_birth && (
                                     <FormHelperText error id="helper-text-date_of_birth">
-                                        {errors.date_of_birth || errorsMessage.date_of_birthError}
+                                        {errors.date_of_birth}
                                     </FormHelperText>
                                 )}
-                                <FormHelperText error >
-                                    {errorsMessage.date_of_birthError}
-                                </FormHelperText>
                             </Grid>
                             <Grid item xs={12} md={6} lg={4} xl={3}>
                                 <Stack spacing={1}>
@@ -240,7 +232,6 @@ export default function AddPatient() {
                                         disableClearable
                                         onChange={(event, newValue) => {
                                             let newLabelValue;
-
                                             // If newValue is an object (selected option)
                                             if (newValue && typeof newValue === 'object') {
                                                 newLabelValue = newValue.value; // Set the selected value (string)
@@ -251,7 +242,6 @@ export default function AddPatient() {
                                                 // Handle the case where newValue is null or undefined
                                                 newLabelValue = '';
                                             }
-
                                             setFieldValue('gender', newLabelValue); // Set the value (string, not object)
                                         }}
                                         filterOptions={(options, params) => {
@@ -473,9 +463,6 @@ export default function AddPatient() {
                                                     {errors.social_security_number}
                                                 </FormHelperText>
                                             )}
-                                            <FormHelperText error id="helper-text-social_security_number">
-                                                {errorsMessage.social_security_numberError}
-                                            </FormHelperText>
                                         </Grid>
                                         <Grid item xs={12} md={6} lg={4} xl={3}>
                                             <Stack spacing={1}>
@@ -529,9 +516,6 @@ export default function AddPatient() {
                                                     {errors.routing_number}
                                                 </FormHelperText>
                                             )}
-                                            <FormHelperText error id="helper-text-routing_number">
-                                                {errorsMessage.routing_numberError}
-                                            </FormHelperText>
                                         </Grid>
                                         <Grid item xs={12} md={6} lg={4} xl={3}>
                                             <Stack spacing={1}>
