@@ -1,10 +1,10 @@
 import { openSnackbar } from 'api/snackbar';
 import axios from 'axios';
 import { decryptToken } from './tokenUtils';
+import { logout } from 'store/reducers/authSlice';
+import store, { persistor } from 'store/reducers/store';
 
 const axiosServices = axios.create({ baseURL: import.meta.env.VITE_APP_API_URL });
-
-// ==============================|| AXIOS - FOR MOCK SERVICES ||============================== //
 
 axiosServices.interceptors.request.use(
   async (config) => {
@@ -19,20 +19,38 @@ axiosServices.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
 axiosServices.interceptors.response.use(
   (response) => response,
   (error) => {
-    // if (error.response.status === 401 && !window.location.href.includes('/login')) {
-    //   window.location.pathname = '/maintenance/500';
-    // }
+    const status = error?.response?.status;
+
+    if (status === 401 || status === 419) {
+      store.dispatch(logout());
+      persistor.purge();
+      localStorage.removeItem('token');
+      openSnackbar({
+        open: true,
+        message: 'Session expired. Please login again.',
+        variant: 'alert',
+        alert: { color: 'error' }
+      });
+
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
     openSnackbar({
       open: true,
-      message: error.message || 'data is not fetched',
+      message:
+        error?.response?.data?.message ||
+        error.message ||
+        'Something went wrong',
       variant: 'alert',
       alert: { color: 'error' }
     });
-    return Promise.reject((error.message) || 'Wrong Services');
+
+    return Promise.reject(error);
   }
 );
 

@@ -18,39 +18,29 @@ export default function DeletedReimbursementTrips() {
     const API_URL = import.meta.env.VITE_APP_API_URL;
     const encryptedFromStorage = localStorage.getItem("token");
     const decryptedToken = decryptToken(encryptedFromStorage);
-    const dispatch = useDispatch()
-    const patientId = useParams()
+    const dispatch = useDispatch();
+    const patientId = useParams();
+    const [filters, setFilters] = useState({});
 
-    const getDeteledTrips = async () => {
-        try {
-            setIsLoading(true);
-            const response = await fetcher(["/trips/trashed"]);
-            if (response.status === true) {
-                dispatch(deletedData(response?.data?.data));
-                dispatch(paginationData(response?.data));
-                setIsLoading(false);
-            }
-            else {
-                setIsLoading(false);
-                openSnackbar({
-                    open: true,
-                    message: response.message || 'Failed to fetch data',
-                    variant: 'alert',
-                    alert: { color: 'error' }
-                });
-            }
-        } catch (error) {
+    const getDeteledTrips = async (values = {}) => {
+        setIsLoading(true);
+        const query = {
+            page,
+            per_page: pageSize
+        };
+        setFilters(query);
+        const response = await fetcher([
+            "/trips/trashed",
+            { params: query }
+        ]);
+        if (response.status === true) {
+            dispatch(deletedData(response?.data?.data));
+            dispatch(paginationData(response?.data));
             setIsLoading(false);
-            openSnackbar({
-                open: true,
-                message: error.message || 'Something went wrong',
-                variant: 'alert',
-                alert: { color: 'error' }
-            });
         }
     };
 
-    const restoreTrip = async (id) => { 
+    const restoreTrip = async (id) => {
         dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}trips/restore/${id}`, {
@@ -60,7 +50,7 @@ export default function DeletedReimbursementTrips() {
                     'Authorization': `Bearer ${decryptedToken}`,
                 },
             });
-            
+
             if (!response.ok) {
                 const errorData = response.json();
                 setErrorMsg(errorData);
@@ -68,7 +58,7 @@ export default function DeletedReimbursementTrips() {
                     open: true,
                     message: errorData ? errorMsg?.message : 'Trip is not restored!',
                     variant: 'alert',
-                    
+
                     alert: {
                         color: 'error'
                     }
@@ -82,13 +72,13 @@ export default function DeletedReimbursementTrips() {
                     open: true,
                     message: 'Trip restored successfuly!',
                     variant: 'alert',
-                    
+
                     alert: {
                         color: 'success'
                     }
                 });
             }
-            
+
         } catch (err) {
             setErrorMsg(err);
             dispatch(loading(false));
@@ -141,63 +131,33 @@ export default function DeletedReimbursementTrips() {
         }
     }
 
-    // Pagination
     const handleChangePerPage = async (event) => {
-        setPageSize(Number(event.target.value));
         const per_page = Number(event.target.value);
-        setIsLoading(true);
-        try {
-            const response = await fetcher([`/trips/trashed?patient_id=${patientId.id}&per_page=${per_page}`]);
-            if (response.status === true) {
-                dispatch(deletedData(response?.data?.data))
-                setIsLoading(false);
-            }
-            else {
-                setIsLoading(false);
-                openSnackbar({
-                    open: true,
-                    message: response.message || 'Failed to fetch data',
-                    variant: 'alert',
-                    alert: { color: 'error' }
-                });
-            }
-        } catch (error) {
-            setIsLoading(false);
-            openSnackbar({
-                open: true,
-                message: error.message || 'Something went wrong',
-                variant: 'alert',
-                alert: { color: 'error' }
-            });
+
+        setPageSize(per_page);
+        setPage(1);
+
+        const response = await fetcher([
+            `/trips/trashed?patient_id=${patientId.id}`,
+            { params: { ...filters, page: 1, per_page } }
+        ]);
+
+        if (response.status === true) {
+            dispatch(deletedData(response?.data?.data));
+            dispatch(paginationData(response?.data));
         }
     };
     const handleChangePagination = async (event, value) => {
-        const eventValue = event.target.value;
-        setPage(eventValue ? eventValue : value);
-        setIsLoading(true);
-        try {
-            const response = await fetcher([`/trips/trashed?patient_id=${patientId.id}&page=${eventValue ? eventValue : value}`]);
-            if (response.status === true) {
-                dispatch(deletedData(response?.data?.data))
-                setIsLoading(false);
-            }
-            else {
-                setIsLoading(false);
-                openSnackbar({
-                    open: true,
-                    message: response.message || 'Failed to fetch data',
-                    variant: 'alert',
-                    alert: { color: 'error' }
-                });
-            }
-        } catch (error) {
-            setIsLoading(false);
-            openSnackbar({
-                open: true,
-                message: error.message || 'Something went wrong',
-                variant: 'alert',
-                alert: { color: 'error' }
-            });
+        setPage(value);
+
+        const response = await fetcher([
+            `/trips/trashed?patient_id=${patientId.id}`,
+            { params: { ...filters, page: value, per_page: pageSize } }
+        ]);
+
+        if (response.status === true) {
+            dispatch(deletedData(response?.data?.data));
+            dispatch(paginationData(response?.data));
         }
     };
 

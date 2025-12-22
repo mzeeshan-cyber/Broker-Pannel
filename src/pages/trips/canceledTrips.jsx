@@ -117,10 +117,11 @@ export default function CanceledTrips() {
   const handleChangePerPage = async (event) => {
     const per_page = Number(event.target.value);
     setPageSize(per_page);
+    setPage(1);
     const response = await fetcher([`/trips/cancelled-rejected`, {
       params: {
         ...activeFilters,
-        per_page
+        page: 1, per_page,
       }
     }]);
     if (response.status === true) {
@@ -139,7 +140,8 @@ export default function CanceledTrips() {
     const response = await fetcher([`/trips/cancelled-rejected`,{
         params: {
           ...activeFilters,
-          page: currentPage
+          page: currentPage,
+          per_page: pageSize
         }
       }]);
     if (response.status === true) {

@@ -1,41 +1,69 @@
-// material-ui
 import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
-import Loader from 'components/Loader';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
-import { fetcher } from 'utils/axios';
-import { loading, providerDocumentData, providerDocumentPaginationData } from 'store/reducers/provideDocumentSlice';
+import { fetcher, fetcherDelete } from 'utils/axios';
+import { isDeleting, loading, providerDocumentData, providerDocumentDataAfterDelete, providerDocumentPaginationData } from 'store/reducers/provideDocumentSlice';
 import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/providers/registration-docs/registrationDocsTableColumns';
 import RegistrationButtoonsOnTable from 'components/pages/providers/registration-docs/RegistrationButtoonsOnTable';
 import ProviderPersonalInfo from 'components/pages/providers/provider-personal-info/provider-personal-info';
+import CircularLoader from 'components/common/loader/CircularLoader';
 
-// ==============================|| DASHBOARD - DEFAULT ||============================== //
 export default function RegistrationDocs() {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [providerData, setProviderData] = useState({});
   const dispatch = useDispatch();
   const { provider_id } = useParams();
+  const [filters, setFilters] = useState({});
 
-  const params = {
-    provider_id: provider_id,
-  }
-  const getProviderData = async () => {
+  const getProviderDocumentData = async (values = {}) => {
     dispatch(loading(true));
-    const response = await fetcher(["/get-provider-register-document", { params }]);
+    const query = {
+      provider_id: provider_id,
+      page,
+      per_page: pageSize
+    };
+    setFilters(query);
+    const response = await fetcher([
+      "/get-provider-register-document",
+      { params: query }
+    ]);
     if (response.status === true) {
       dispatch(loading(false));
       dispatch(providerDocumentData(response?.data?.data));
       dispatch(providerDocumentPaginationData(response?.data));
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
+    }
+  };
+  const handleChangePerPage = async (event) => {
+    const per_page = Number(event.target.value);
+
+    setPageSize(per_page);
+    setPage(1);
+
+    const response = await fetcher([
+      "/get-provider-register-document",
+      { params: { ...filters, page: 1, per_page } }
+    ]);
+
+    if (response.status === true) {
+      dispatch(providerDocumentData(response?.data?.data));
+      dispatch(providerDocumentPaginationData(response?.data));
+    }
+  };
+  const handleChangePagination = async (event, value) => {
+    setPage(value);
+
+    const response = await fetcher([
+      "/get-provider-register-document",
+      { params: { ...filters, page: value, per_page: pageSize } }
+    ]);
+
+    if (response.status === true) {
+      dispatch(providerDocumentData(response?.data?.data));
+      dispatch(providerDocumentPaginationData(response?.data));
     }
   };
   const FetchSingleProvider = async () => {
@@ -43,70 +71,52 @@ export default function RegistrationDocs() {
     const response = await fetcher(`/provider/${provider_id}`);
     if (response.status === true) {
       setProviderData(response?.data);
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
       dispatch(loading(false));
     }
   }
 
-  // Pagination
-  const handleChangePerPage = async (event) => {
-    setPageSize(Number(event.target.value));
-    const per_page = Number(event.target.value);
-    const response = await fetcher([`/get-provider-register-document?per_page=${per_page}`, { params }]);
-    if (response.status === true) {
-      dispatch(providerDocumentData(response?.data?.data))
+  const handleDeleteDocument = async (id) => {
+    dispatch(isDeleting(true));
+    const response = await fetcherDelete([`/delete-provider-register-document/${id}`]);
+    if (response.status === 200) {
+      dispatch(providerDocumentDataAfterDelete({ id }))
       openSnackbar({
         open: true,
-        message: response.message || 'data is fetched',
+        message: response.message || 'Provider Document deleted successfuly!',
         variant: 'alert',
-        alert: { color: 'success' }
+        
+        alert: {
+          color: 'success'
+        }
       });
+      dispatch(isDeleting(false));
     }
-  };
-  const handleChangePagination = async (event, value) => {
-    const eventValue = event.target.value;
-    setPage(eventValue ? eventValue : value);
-    const response = await fetcher([`/get-provider-register-document?page=${eventValue ? eventValue : value}`, { params }]);
-    if (response.status === true) {
-      dispatch(providerDocumentData(response?.data?.data))
-      openSnackbar({
-        open: true,
-        message: response.message || 'data is fetched',
-        variant: 'alert',
-        alert: { color: 'success' }
-      });
-    }
-  };
-
+  }
   const providerDocumentState = useSelector(state => state?.providerDocument)
   const Loading = providerDocumentState?.loading;
   const DocumentsData = providerDocumentState?.providerDocumentData;
 
-  useEffect(() => { getProviderData(); FetchSingleProvider() }, [])
+  useEffect(() => { getProviderDocumentData(); FetchSingleProvider() }, [])
   return (
     <Grid>
       {Loading ?
-        <Loader />
+        <CircularLoader text='Loading Documents..' />
         :
         <>
-        <ProviderPersonalInfo providerData={providerData}/>
-        <CommonTable
-          data={DocumentsData}
-          paginationData={providerDocumentState?.providerDocumentPaginationData}
-          defaultColumns={columns}
-          setPageSize={setPageSize}
-          pageSize={pageSize}
-          page={page}
-          handleChangePerPage={handleChangePerPage}
-          handleChangePagination={handleChangePagination}
-          stackontable={<RegistrationButtoonsOnTable />}
-          tableName="provider registration docs"
-        />
+          <ProviderPersonalInfo providerData={providerData} />
+          <CommonTable
+            data={DocumentsData}
+            paginationData={providerDocumentState?.providerDocumentPaginationData}
+            defaultColumns={columns}
+            setPageSize={setPageSize}
+            pageSize={pageSize}
+            page={page}
+            handleChangePerPage={handleChangePerPage}
+            handleChangePagination={handleChangePagination}
+            handleDelete={handleDeleteDocument}
+            stackontable={<RegistrationButtoonsOnTable />}
+            tableName="provider registration docs"
+          />
         </>
       }
     </Grid>

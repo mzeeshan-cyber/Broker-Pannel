@@ -1,51 +1,60 @@
 import { useRef, useState } from 'react';
-
-// material-ui
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
-
-// project-imports
 import MainCard from 'components/MainCard';
 import Transitions from 'components/@extended/Transitions';
 import { ThemeMode } from 'config';
-import { Button, CircularProgress, Grid, Stack } from '@mui/material';
-import { FilterRemove, FilterSearch } from 'iconsax-react';
+import { Button, Chip, CircularProgress, Grid, Stack } from '@mui/material';
+import { FilterSearch } from 'iconsax-react';
 import { Formik } from 'formik';
-import { useDispatch, useSelector } from 'react-redux';
-import { resetFilter } from 'store/reducers/patientSlice';
 import SelectDropDown from 'components/common/SelectDropDown';
 import { inspectionType, vehicleStatus, vehicleType } from 'constants/constants';
+import { capitalize } from 'lodash';
 
-export default function Filters({ handleGetBySearch }) {
+export default function Filters({ handleGetBySearch, filterValue }) {
     const theme = useTheme();
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
-    const dispatch = useDispatch()
-    const patientState = useSelector(state => state.patient)
 
     const handleToggle = () => {
         setOpen((prevOpen) => !prevOpen);
     };
 
     const handleClose = (event) => {
+        if (anchorRef.current && anchorRef.current.contains(event.target)) {
+            return;
+        }
         setOpen(false);
     };
 
-    const handleResetFilter = () => {
-        dispatch(resetFilter(false))
-        handleGetBySearch();
-    }
+    const handleDeleteFilter = (key) => {
+        const updatedFilters = { ...filterValue };
+        delete updatedFilters[key];
+        handleGetBySearch(updatedFilters);
+    };
 
     return (
         <Box sx={{ flexShrink: 0, ml: 0.75 }}>
-            {patientState.resetFilter &&
-                <Button color='error' sx={{ marginRight: '10px' }} onClick={handleResetFilter}>
-                    <FilterRemove size="32" />
-                    <Box sx={{ marginLeft: '5px' }}>Reset Filters</Box>
-                </Button>
+            {filterValue &&
+                Object.entries(filterValue).map(([key, value]) => {
+                    const displayValue = value?.value || value;
+
+                    if (!displayValue) return null;
+
+                    return (
+                        <Chip
+                            key={key}
+                            label={capitalize(displayValue)}
+                            size="small"
+                            color="error"
+                            onDelete={() => handleDeleteFilter(key)}
+                            sx={{ marginRight: '10px', marginBottom: '5px' }}
+                        />
+                    );
+                })
             }
             <Button
                 variant="contained"
@@ -103,14 +112,23 @@ export default function Filters({ handleGetBySearch }) {
 
 
                                     }}
-                                    onSubmit={(values) => handleGetBySearch(values)}
+                                    onSubmit={async (values, { setSubmitting }) => {
+                                        try {
+                                            await handleGetBySearch(values);
+                                            handleClose(); 
+                                        } catch (error) {
+                                            console.error("Error fetching patients:", error);
+                                        } finally {
+                                            setSubmitting(false); 
+                                        }
+                                    }}
                                 >
                                     {({ handleBlur, handleChange, handleSubmit, isSubmitting, values, setFieldValue, touched, errors }) => (
                                         <form noValidate onSubmit={handleSubmit}>
                                             <MainCard title="">
                                                 <Grid container spacing={1} gridColumn={12}>
                                                     <Grid item xs={12} md={6}>
-                                                        <SelectDropDown 
+                                                        <SelectDropDown
                                                             label="Vehicle Status"
                                                             id="vehicle_status"
                                                             values={values}
@@ -119,7 +137,7 @@ export default function Filters({ handleGetBySearch }) {
                                                         />
                                                     </Grid>
                                                     <Grid item xs={12} md={6}>
-                                                        <SelectDropDown 
+                                                        <SelectDropDown
                                                             label="Vehicle Type"
                                                             id="vehicle_type"
                                                             values={values}
@@ -128,7 +146,7 @@ export default function Filters({ handleGetBySearch }) {
                                                         />
                                                     </Grid>
                                                     <Grid item xs={12} md={6}>
-                                                        <SelectDropDown 
+                                                        <SelectDropDown
                                                             label="Inspection Type"
                                                             id="inspection_type"
                                                             values={values}

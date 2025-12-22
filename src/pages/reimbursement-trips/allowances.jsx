@@ -22,17 +22,34 @@ export default function Allowances() {
     const [isLoading, setIsLoading] = useState(true);
     const theme = useTheme()
     const handleGetAllowance = async () => {
+        setIsLoading(true);
         try {
             const response = await fetcher('fetch-allowances');
+
             if (response.status === true) {
-                setAllowance(response.data)
-                setIsLoading(false)
+                setAllowance(response.data);
+            } else {
+                openSnackbar({
+                    open: true,
+                    message: response.message || 'No allowances found.',
+                    variant: 'alert',
+                    alert: { color: 'warning' }
+                });
             }
-        }
-        catch (error) {
-            setIsLoading(false)
+        } catch (error) {
+            openSnackbar({
+                open: true,
+                message:
+                    error?.response?.data?.message ||
+                    'No allowances or Something went wrong while fetching allowances',
+                variant: 'alert',
+                alert: { color: 'error' }
+            });
+        } finally {
+            setIsLoading(false);
         }
     };
+
     const handleAddAllowance = async (values, { setSubmitting, setErrors }) => {
         const response = await fetcherPost(['/store-update-allowances', values]);
         if (response.status === true) {
@@ -55,8 +72,7 @@ export default function Allowances() {
         <>
             {isLoading ?
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: "center", height: '40vh' }}>
-                    <CircularLoader />
-                    <span>Loading data...</span>
+                    <CircularLoader text='Loading Allowances..' />
                 </Box>
                 :
                 <Formik

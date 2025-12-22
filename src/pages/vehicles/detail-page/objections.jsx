@@ -115,7 +115,7 @@ export default function Objections({ data, UpdateObjecion, getDetails, openModal
 
                             {modalType === 'update' &&
                                 <ObjectionModal openModal={openModal} setOpenModal={setOpenModal} title={`Update Objection`}>
-                                    <UpdateObjectionModal objectionById={objectionById} UpdateObjecion={UpdateObjecion} />
+                                    <UpdateObjectionModal objectionById={objectionById} UpdateObjecion={UpdateObjecion} type="vehicleModule"/>
                                 </ObjectionModal>
                             }
                             {modalType === 'verify' &&

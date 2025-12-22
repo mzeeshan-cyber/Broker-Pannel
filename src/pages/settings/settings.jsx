@@ -1,7 +1,7 @@
-// material-ui
 import Typography from '@mui/material/Typography';
 import BasicTabs from 'sections/components-overview/tabs/BasicTabs';
 import EstimatedRates from './estimatedRates';
+import Holidays from './holidays';
 
 export default function Settings() {
   const tabsData = [
@@ -11,14 +11,10 @@ export default function Settings() {
       content: <EstimatedRates/>
     },
     {
-      label: 'Tab2',
+      label: 'Federal Holidays',
       icon: '',
-      content: <Typography variant="h6">Content for Tab 2</Typography>
+      content: <Holidays/>
     },
-    {
-      label: 'Tab3',
-      content: <Typography variant="h6">Content for Tab 3</Typography>
-    }
   ];
   return (
     <BasicTabs tabs={tabsData}/>

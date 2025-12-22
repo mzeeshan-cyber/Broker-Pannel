@@ -4,6 +4,7 @@ const initialState = {
   allProviders: [],
   resetFilter: false,
   providerById: {},
+  filterValue: {},
   providerData:[],
   deletedProviderData:[],
   providerPaginationData:{},
@@ -39,12 +40,15 @@ const providerSlice = createSlice({
         provider.id === id ? { ...provider, status } : provider
       );
     },
+    filterValue: (state, action) => {
+      state.filterValue = action.payload;
+    },
     loading: (state, action) => {
         state.loading = action.payload;
       },  
   },
 });
 
-export const { allProviders, resetFilter, providerById, providerData, deletedProviderData, providerPaginationData, updateProviderStatus, loading } = providerSlice.actions;
+export const { allProviders, resetFilter, providerById, providerData, deletedProviderData, providerPaginationData, updateProviderStatus, loading, filterValue } = providerSlice.actions;
 
 export default providerSlice.reducer;

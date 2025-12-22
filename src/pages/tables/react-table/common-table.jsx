@@ -86,7 +86,7 @@ export const fuzzySort = (rowA, rowB, columnId) => {
     return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir;
 };
 
-export default function CommonTable({ isSubmitting, data,tripIds, handleDelete, handleUpdate, stackontable, defaultColumns, tableType, tableName, handleChangePerPage, handleChangePagination, paginationData, pageSize, page, handleRestoreMultiple, noPagination }) {
+export default function CommonTable({ isSubmitting, data, tripIds, handleDelete, handleUpdate, stackontable, defaultColumns, tableType, tableName, handleChangePerPage, handleChangePagination, paginationData, pageSize, page, handleRestoreMultiple, noPagination }) {
     const theme = useTheme();
     const matchDownSM = useMediaQuery(theme.breakpoints.down('sm'));
     const [rowSelection, setRowSelection] = useState({});
@@ -109,6 +109,7 @@ export default function CommonTable({ isSubmitting, data,tripIds, handleDelete, 
         columns,
         defaultColumn: { cell: RowEditable },
         manualPagination: true,
+        pageCount: Math.ceil((paginationData?.total || 0) / pageSize),
         state: {
             rowSelection,
             columnFilters,
@@ -130,7 +131,7 @@ export default function CommonTable({ isSubmitting, data,tripIds, handleDelete, 
         getExpandedRowModel: getExpandedRowModel(),
         getGroupedRowModel: getGroupedRowModel(),
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        // getPaginationRowModel: getPaginationRowModel(), client side pagination
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getFacetedRowModel: getFacetedRowModel(),
@@ -198,7 +199,7 @@ export default function CommonTable({ isSubmitting, data,tripIds, handleDelete, 
                         onFilterChange={(value) => setGlobalFilter(String(value))}
                         placeholder={`Search ${data.length} records...`}
                     />
-                    {table.getRowModel().rows.length > 0 && stackontable}
+                    {stackontable}
                     {/*  on the base on table type restore data */}
                     {tableType === 'deletedTable' &&
                         <>
@@ -265,7 +266,7 @@ export default function CommonTable({ isSubmitting, data,tripIds, handleDelete, 
                                     </Button>
                                 </Stack>
                             </Stack>
-                            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title={`Assign Trips To All The Providers`} handleSubmit={() => handleRestoreMultiple(tripIds, data.map(item=>item.id))} btnText='Yes' isSubmitting={isSubmitting}>
+                            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title={`Assign Trips To All The Providers`} handleSubmit={() => handleRestoreMultiple(tripIds, data.map(item => item.id))} btnText='Yes' isSubmitting={isSubmitting}>
                                 <Typography id="modal-modal-description">{`Are you sure, you want to bulk assign these trips?`}</Typography>
                             </TransitionsModal>
                         </>

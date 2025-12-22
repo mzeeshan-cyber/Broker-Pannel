@@ -11,42 +11,57 @@ import Popper from '@mui/material/Popper';
 import MainCard from 'components/MainCard';
 import Transitions from 'components/@extended/Transitions';
 import { ThemeMode } from 'config';
-import { Button, CircularProgress, Grid, InputLabel, OutlinedInput, Stack } from '@mui/material';
-import { FilterRemove, FilterSearch } from 'iconsax-react';
+import { Button, Chip, CircularProgress, Grid, InputLabel, OutlinedInput, Stack } from '@mui/material';
+import { FilterSearch } from 'iconsax-react';
 import { Formik } from 'formik';
-import { useDispatch, useSelector } from 'react-redux';
-import { resetFilter } from 'store/reducers/patientSlice';
+import { useSelector } from 'react-redux';
 import InputField from 'components/common/InputField';
+import { capitalize } from 'lodash';
 
 // ==============================|| HEADER CONTENT - PROFILE ||============================== //
 
-export default function Filters({ handleGetBySearch }) {
+export default function Filters({ handleGetBySearch, filters }) {
     const theme = useTheme();
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
-    const dispatch = useDispatch()
-    const patientState = useSelector(state => state.patient)
+    const providerState = useSelector(state => state.provider)
 
     const handleToggle = () => {
         setOpen((prevOpen) => !prevOpen);
     };
 
     const handleClose = (event) => {
+        if (anchorRef.current && anchorRef.current.contains(event.target)) {
+            return;
+        }
         setOpen(false);
     };
 
-    const handleResetFilter = () => {
-        dispatch(resetFilter(false))
-        handleGetBySearch();
-    }
+    const handleDeleteFilter = (key) => {
+        const updatedFilters = { ...providerState.filterValue };
+        delete updatedFilters[key];
+        handleGetBySearch(updatedFilters);
+    };
 
     return (
         <Box sx={{ flexShrink: 0, ml: 0.75 }}>
-            {patientState.resetFilter &&
-                <Button color='error' sx={{ marginRight: '10px' }} onClick={handleResetFilter}>
-                    <FilterRemove size="32" />
-                    <Box sx={{ marginLeft: '5px' }}>Reset Filters</Box>
-                </Button>
+            {providerState.filterValue &&
+                Object.entries(providerState.filterValue).map(([key, value]) => {
+                    const displayValue = value?.value || value;
+
+                    if (!displayValue) return null;
+
+                    return (
+                        <Chip
+                            key={key}
+                            label={capitalize(displayValue)}
+                            size="small"
+                            color="error"
+                            onDelete={() => handleDeleteFilter(key)}
+                            sx={{ marginRight: '10px', marginBottom: '5px' }}
+                        />
+                    );
+                })
             }
             <Button
                 variant="contained"
@@ -104,7 +119,16 @@ export default function Filters({ handleGetBySearch }) {
 
 
                                     }}
-                                    onSubmit={(values) => handleGetBySearch(values)}
+                                    onSubmit={async (values, { setSubmitting }) => {
+                                        try {
+                                            await handleGetBySearch(values);
+                                            handleClose(); // Close the popper after fetching
+                                        } catch (error) {
+                                            console.error("Error fetching patients:", error);
+                                        } finally {
+                                            setSubmitting(false); // Update Formik's loader state
+                                        }
+                                    }}
                                 >
                                     {({ handleBlur, handleChange, handleSubmit, isSubmitting, values, setFieldValue, touched, errors }) => (
                                         <form noValidate onSubmit={handleSubmit}>
@@ -115,6 +139,7 @@ export default function Filters({ handleGetBySearch }) {
                                                             <InputLabel htmlFor="name">Provider Name</InputLabel>
                                                             <OutlinedInput
                                                                 fullWidth
+                                                                size='small'
                                                                 id="name"
                                                                 type="text"
                                                                 value={values.name}
@@ -129,6 +154,7 @@ export default function Filters({ handleGetBySearch }) {
                                                     <Grid item xs={12} md={6}>
                                                         <InputField
                                                             id="email"
+                                                            size='small'
                                                             label="Email"
                                                             type="email"
                                                             touched={touched.email}
@@ -145,6 +171,7 @@ export default function Filters({ handleGetBySearch }) {
                                                                 fullWidth
                                                                 id="phone_number"
                                                                 type="text"
+                                                                size='small'
                                                                 value={values.phone_number}
                                                                 name="phone_number"
                                                                 onBlur={handleBlur}

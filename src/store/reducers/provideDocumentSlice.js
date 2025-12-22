@@ -1,9 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  providerDocumentData:[],
-  providerDocumentPaginationData:{},
+  providerDocumentData: [],
+  providerDocumentPaginationData: {},
   loading: false,
+  isDeleting: false,
 
 };
 
@@ -23,12 +24,19 @@ const providerDocumentSlice = createSlice({
         provider.id === id ? { ...provider, status } : provider
       );
     },
+    providerDocumentDataAfterDelete: (state, action) => {
+      const { id } = action.payload;
+      state.providerDocumentData = state?.providerDocumentData.filter(item => item.id !== id);
+    },
     loading: (state, action) => {
-        state.loading = action.payload;
-      },  
+      state.loading = action.payload;
+    },
+    isDeleting: (state, action) => {
+      state.isDeleting = action.payload;
+    },
   },
 });
 
-export const {providerDocumentData, providerDocumentPaginationData, updateDocumentProviderStatus, loading } = providerDocumentSlice.actions;
+export const { providerDocumentData, providerDocumentPaginationData, updateDocumentProviderStatus, loading, isDeleting, providerDocumentDataAfterDelete } = providerDocumentSlice.actions;
 
 export default providerDocumentSlice.reducer;
