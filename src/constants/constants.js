@@ -155,6 +155,18 @@ export const ratelistStatuses = [
   { name: "pending", label: "Pending", color: "secondary" }
 ];
 
+// Billings
+export const TripInvoicesStatus = [
+  { name: "paid", label: "Paid", color: "success" },
+  { name: "submitted", label: "Submitted", color: "info" },
+  { name: "rejected", label: "Rejected", color: "error" },
+];
+export const TripInvoicesStatusDropdown = [
+  { value: "paid", label: "Paid" },
+  { value: "submitted", label: "Submitted" },
+  { value: "rejected", label: "Rejected" },
+];
+
 // Trips
 export const allowanceType = [
   { value: '1', label: "Yes" },

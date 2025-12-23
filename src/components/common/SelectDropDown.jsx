@@ -56,12 +56,12 @@ const SelectDropDown = ({ label, id, values, setFieldValue, touched, errors, opt
           freeSolo
           renderInput={(params) => (
             <TextField
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                padding: '6px 9px',
-              },
-            }}
-            {...params}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  padding: '6px 9px',
+                },
+              }}
+              {...params}
               name={id}
               placeholder={`Select ${label}`}
               // error={Boolean(touched && errors)}
