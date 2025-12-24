@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -11,206 +11,237 @@ import { Button, Chip, CircularProgress, Grid, InputLabel, OutlinedInput, Stack 
 import { FilterSearch } from 'iconsax-react';
 import { Formik } from 'formik';
 import SelectDropDown from 'components/common/SelectDropDown';
-import { TripInvoicesStatusDropdown, vehicleStatus } from 'constants/constants';
-import { capitalize } from 'lodash';
+import { TripInvoicesStatusDropdown } from 'constants/constants';
+import { capitalize, debounce } from 'lodash';
 import { useSelector } from 'react-redux';
 import { fetcher } from 'utils/axios';
-import CircularLoader from 'components/common/loader/CircularLoader';
+
+function ProviderDropdown({ values, setFieldValue }) {
+    const [openDropdown, setOpenDropdown] = useState(false);
+    const [providersData, setProvidersData] = useState([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isFetching, setIsFetching] = useState(false);
+
+    const anchorRef = useRef(null);
+
+    const getProviderData = async (page = 1, search = '') => {
+        setIsFetching(true);
+        try {
+            const response = await fetcher(['/providers', { params: { page, search } }]);
+            if (response.status === true) {
+                const newData = response?.data?.data || [];
+                setProvidersData(prev => page === 1 ? newData : [...prev, ...newData]);
+                setHasMore(newData.length > 0);
+            }
+        } finally {
+            setIsFetching(false);
+        }
+    };
+
+    const handleScroll = (e) => {
+        const { scrollTop, clientHeight, scrollHeight } = e.target;
+        if (scrollHeight - scrollTop <= clientHeight + 5 && hasMore && !isFetching) {
+            setPage(prev => prev + 1);
+        }
+    };
+
+    const handleSearch = useCallback(
+        debounce((value) => {
+            setProvidersData([]);
+            setHasMore(true);
+            setPage(1);
+            setSearchTerm(value);
+        }, 300),
+        []
+    );
+
+    useEffect(() => {
+        getProviderData(page, searchTerm);
+    }, [page, searchTerm]);
+
+    useEffect(() => {
+        return () => handleSearch.cancel();
+    }, [handleSearch]);
+
+    const providers = providersData.map(p => ({
+        value: p.id,
+        label: p.name
+    }));
+
+    return (
+        <Stack spacing={1}>
+            <InputLabel>Provider Name</InputLabel>
+
+            <Box
+                ref={anchorRef}
+                onClick={() => setOpenDropdown(prev => !prev)}
+                sx={{
+                    border: '1px solid #ccc',
+                    borderRadius: 1,
+                    p: 1.5,
+                    cursor: 'pointer'
+                }}
+            >
+                {values.provider_id?.label || 'Select Provider'}
+            </Box>
+
+            <Popper
+                open={openDropdown}
+                anchorEl={anchorRef.current}
+                placement="bottom-start"
+                sx={{ zIndex: 1300, width: anchorRef.current?.offsetWidth }}
+            >
+                <Paper sx={{ maxHeight: 260, overflowY: 'auto' }} onScroll={handleScroll}>
+                    <Box p={1}>
+                        <OutlinedInput
+                            fullWidth
+                            size="small"
+                            placeholder="Search provider"
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </Box>
+
+                    {providers.map(p => (
+                        <Box
+                            key={p.value}
+                            sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'grey.100' } }}
+                            onClick={() => {
+                                setFieldValue('provider_id', p);
+                                setOpenDropdown(false);
+                            }}
+                        >
+                            {p.label}
+                        </Box>
+                    ))}
+
+                    {isFetching && (
+                        <Box textAlign="center" p={1}>
+                            <CircularProgress size={20} />
+                        </Box>
+                    )}
+                </Paper>
+            </Popper>
+        </Stack>
+    );
+}
 
 export default function Filters({ handleGetBySearch }) {
     const theme = useTheme();
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
-    const [isFetching, setIsFetching] = useState(false);
-    const [providersData, setProvidersData] = useState([]);
-    const tripsInvoices = useSelector(state => state.tripsInvoices)
-
-    const handleToggle = () => {
-        setOpen((prevOpen) => !prevOpen);
-    };
-
-    const handleClose = (event) => {
-        if (anchorRef.current && anchorRef.current.contains(event.target)) {
-            return;
-        }
-        setOpen(false);
-    };
+    const tripsInvoices = useSelector(state => state.tripsInvoices);
 
     const handleDeleteFilter = (key) => {
-        const updatedFilters = { ...tripsInvoices.filterValue };
-        delete updatedFilters[key];
-        handleGetBySearch(updatedFilters);
+        const updated = { ...tripsInvoices.filterValue };
+        delete updated[key];
+        handleGetBySearch(updated);
     };
-
-    const getProviderData = async () => {
-        setIsFetching(true)
-        const query = {
-            page: 'all',
-        };
-        const response = await fetcher([
-            "/providers",
-            { params: query }
-        ]);
-        if (response.status === true) {
-            setProvidersData(response?.data.data)
-            setIsFetching(false)
-        }
-    };
-
-    const AllProviders = providersData.map((item, index) => {
-        return {
-            value: item.id,
-            label: item.name
-        };
-    });
-
-    useEffect(() => {
-        getProviderData()
-    }, [])
 
     return (
         <Box sx={{ flexShrink: 0, ml: 0.75 }}>
             {tripsInvoices.filterValue &&
                 Object.entries(tripsInvoices.filterValue).map(([key, value]) => {
-                    let displayValue = value?.value || value;
-                    const displayLabel = value?.label || key;
-
-                    if (key === 'provider_id') {
-                        const provider = AllProviders.find(p => p.value === displayValue);
-                        displayValue = provider?.label || displayValue;
-                    }
-
+                    const displayValue = key === 'provider_id' ? value?.label : value?.label ?? value?.value ?? value;
+                    console.log(value, key)
                     if (!displayValue) return null;
 
                     return (
                         <Chip
                             key={key}
-                            label={`${displayLabel === 'provider_id' ? 'Provider Name' : capitalize(displayLabel.replace('_', ' '))} : ${capitalize(displayValue)}`}
+                            label={`${key === 'provider_id'
+                                ? 'Provider Name'
+                                : capitalize(key.replace('_', ' '))
+                                } : ${capitalize(String(displayValue))}`}
                             size="small"
                             color="error"
                             onDelete={() => handleDeleteFilter(key)}
-                            sx={{ marginRight: '10px', marginBottom: '5px' }}
+                            sx={{ mr: 1, mb: 0.5 }}
                         />
                     );
                 })
             }
 
             <Button
+                ref={anchorRef}
                 variant="contained"
-                color="primary"
-                type='button'
+                onClick={() => setOpen(prev => !prev)}
                 sx={{
                     fontWeight: 500,
                     bgcolor: 'primary',
                     color: 'secondary.lighter',
                     '&:hover': {
-                        color: 'secondary.lighter',
                         ...(theme.palette.mode === ThemeMode.DARK && {
-                            bgcolor: 'primary.darker',
-                            color: 'secondary.darker'
+                            bgcolor: 'primary.darker'
                         })
                     }
                 }}
-                aria-label="open filters"
-                ref={anchorRef}
-                aria-haspopup="true"
-                onClick={handleToggle}
             >
                 <FilterSearch size="32" />
-                <Box sx={{ marginLeft: '5px' }}>Filters</Box>
+                <Box ml={1}>Filters</Box>
             </Button>
+
             <Popper
-                placement="bottom-end"
                 open={open}
                 anchorEl={anchorRef.current}
-                role={undefined}
+                placement="bottom-end"
                 transition
-                disablePortal
-                popperOptions={{ modifiers: [{ name: 'offset', options: { offset: [0, 9] } }] }}
                 sx={{ zIndex: 9 }}
             >
                 {({ TransitionProps }) => (
-                    <Transitions type="grow" position="top-right" in={open} {...TransitionProps} >
-                        <Paper
-                            sx={{
-                                boxShadow: theme.customShadows.z1,
-                                width: 390,
-                                minWidth: 240,
-                                maxWidth: 390,
-                                [theme.breakpoints.down('md')]: { maxWidth: 250 },
-                                borderRadius: 1.5,
-                                border: '1px solid rgb(242, 242, 242)'
-                            }}
-                        >
-                            <ClickAwayListener onClickAway={handleClose}>
-                                {isFetching ?
-                                <CircularLoader text='Loading Providers...'/> 
-                                : 
+                    <Transitions type="grow" position="top-right" {...TransitionProps}>
+                        <Paper sx={{ width: 390, borderRadius: 1.5 }}>
+                            <ClickAwayListener onClickAway={() => setOpen(false)}>
                                 <Formik
                                     initialValues={{
                                         provider_id: '',
                                         submission_date: '',
                                         paid_date: '',
-                                        status: '',
-
-
+                                        status: ''
                                     }}
-                                    onSubmit={async (values, { setSubmitting }) => {
-                                        try {
-                                            await handleGetBySearch(values);
-                                            handleClose();
-                                        } catch (error) {
-                                            console.error("Error fetching patients:", error);
-                                        } finally {
-                                            setSubmitting(false);
-                                        }
+                                    onSubmit={(values) => {
+                                        handleGetBySearch({
+                                            ...values,
+                                            provider_id: values.provider_id
+                                        });
+                                        setOpen(false);
                                     }}
                                 >
-                                    {({ handleBlur, handleChange, handleSubmit, isSubmitting, values, setFieldValue, touched, errors }) => (
-                                        <form noValidate onSubmit={handleSubmit}>
-                                            <MainCard title="">
-                                                <Grid container spacing={1} gridColumn={12}>
+                                    {({ handleSubmit, handleBlur, handleChange, isSubmitting, values, setFieldValue }) => (
+                                        <form onSubmit={handleSubmit}>
+                                            <MainCard>
+                                                <Grid container spacing={1}>
                                                     <Grid item xs={12} md={6}>
-                                                        <SelectDropDown
-                                                            label="Provider Name"
-                                                            id="provider_id"
-                                                            values={values.provider_id}
-                                                            setFieldValue={setFieldValue}
-                                                            options={AllProviders}
-                                                        />
+                                                        <ProviderDropdown values={values} setFieldValue={setFieldValue} />
                                                     </Grid>
+
                                                     <Grid item xs={12} md={6}>
                                                         <Stack spacing={1}>
-                                                            <InputLabel htmlFor="name">Submission Date</InputLabel>
+                                                            <InputLabel>Submission Date</InputLabel>
                                                             <OutlinedInput
-                                                                fullWidth
-                                                                id="submission_date"
                                                                 type="date"
-                                                                value={values.submission_date}
                                                                 name="submission_date"
-                                                                onBlur={handleBlur}
+                                                                value={values.submission_date}
                                                                 onChange={handleChange}
-                                                                placeholder="Enter submission date"
-                                                                inputProps={{}}
+                                                                onBlur={handleBlur}
                                                             />
                                                         </Stack>
                                                     </Grid>
+
                                                     <Grid item xs={12} md={6}>
                                                         <Stack spacing={1}>
-                                                            <InputLabel htmlFor="name">Paid Date</InputLabel>
+                                                            <InputLabel>Paid Date</InputLabel>
                                                             <OutlinedInput
-                                                                fullWidth
-                                                                id="paid_date"
                                                                 type="date"
-                                                                value={values.paid_date}
                                                                 name="paid_date"
-                                                                onBlur={handleBlur}
+                                                                value={values.paid_date}
                                                                 onChange={handleChange}
-                                                                placeholder="Enter paid date"
-                                                                inputProps={{}}
+                                                                onBlur={handleBlur}
                                                             />
                                                         </Stack>
                                                     </Grid>
+
                                                     <Grid item xs={12} md={6}>
                                                         <SelectDropDown
                                                             label="Status"
@@ -220,23 +251,22 @@ export default function Filters({ handleGetBySearch }) {
                                                             options={TripInvoicesStatusDropdown}
                                                         />
                                                     </Grid>
+
                                                     <Grid item xs={12}>
-                                                        <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 1 }}>
-                                                            <Button variant="outlined" color="secondary" onClick={() => setOpen(false)}>
+                                                        <Stack direction="row" justifyContent="flex-end" spacing={2}>
+                                                            <Button onClick={() => setOpen(false)} variant="outlined">
                                                                 Cancel
                                                             </Button>
-                                                            <Button disableElevation disabled={isSubmitting} variant="contained" type='submit'>
-                                                                {isSubmitting ? <CircularProgress sx={{ height: '20px !important', width: '20px !important' }} /> : 'Search'}
+                                                            <Button type="submit" variant="contained" disabled={isSubmitting}>
+                                                                {isSubmitting ? <CircularProgress size={20} /> : 'Search'}
                                                             </Button>
                                                         </Stack>
                                                     </Grid>
-
                                                 </Grid>
                                             </MainCard>
                                         </form>
                                     )}
                                 </Formik>
-                                }
                             </ClickAwayListener>
                         </Paper>
                     </Transitions>

@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-// material-ui
-import Tooltip from '@mui/material/Tooltip';
 import Stack from '@mui/material/Stack';
-// project import
 import IconButton from 'components/@extended/IconButton';
-//assets
-import { ArrowDown2, ArrowRight2, CloseCircle, Edit2, Bag } from 'iconsax-react';
+import { ArrowDown2, ArrowRight2, CloseCircle } from 'iconsax-react';
 import TransitionsModal from 'sections/components-overview/modal/TransitionsModal';
-import { Chip, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
-import { useNavigate } from 'react-router';
+import { Chip, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import { openSnackbar } from 'api/snackbar';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { TripInvoicesStatus } from 'constants/constants';
 import { decryptToken } from 'utils/tokenUtils';
 import { updateStatus } from 'store/reducers/tripsInvoicesSlice';
@@ -34,8 +29,6 @@ const changeStatus = async (id, status, dispatch, paid_date = null) => {
         });
 
         const data = await response.json();
-        console.log(response)
-
         if (response.ok) {
             dispatch(updateStatus({ id, status, paid_date }));
             openSnackbar({
@@ -57,34 +50,6 @@ const changeStatus = async (id, status, dispatch, paid_date = null) => {
     }
 };
 
-function EditAction({ row, table }) {
-    const Loader = useSelector(state => state?.driver.loader);
-    const navigate = useNavigate()
-
-    const [openModal, setOpenModal] = useState(false);
-    const handleOpenModal = () => {
-        setOpenModal(prevState => !prevState)
-    }
-
-
-    return (
-        <Stack direction="row" spacing={1} alignItems="center">
-            <Tooltip title='Edit'>
-                <IconButton color={'primary'} onClick={() => navigate(`/providers/${row?.original.id}/update`)}>
-                    <Edit2 variant="Outline" />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title='Delete'>
-                <IconButton color="error" onClick={handleOpenModal}>
-                    <Bag variant="Outline" />
-                </IconButton>
-            </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete provider" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' Loader={Loader}>
-                <Typography id="modal-modal-description">Are you sure, you want to delete a provider?</Typography>
-            </TransitionsModal>
-        </Stack>
-    );
-}
 const StatusTransitions = {
     paid: ["paid"],
     submitted: ["paid", "rejected", "submitted"],
@@ -220,12 +185,5 @@ export const columns =
             },
 
             dataType: 'select',
-        },
-        {
-            id: 'edit',
-            header: 'Actions',
-            cell: EditAction,
-            enableGrouping: false,
-            meta: { className: 'cell-center' }
         },
     ]
