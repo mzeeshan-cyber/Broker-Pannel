@@ -29,7 +29,7 @@ function ProviderDropdown({ values, setFieldValue }) {
     const getProviderData = async (page = 1, search = '') => {
         setIsFetching(true);
         try {
-            const response = await fetcher(['/providers', { params: { page, search } }]);
+            const response = await fetcher(['/providers', { params: { page, name:search } }]);
             if (response.status === true) {
                 const newData = response?.data?.data || [];
                 setProvidersData(prev => page === 1 ? newData : [...prev, ...newData]);

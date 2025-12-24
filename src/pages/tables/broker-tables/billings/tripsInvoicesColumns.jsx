@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import Tooltip from '@mui/material/Tooltip';
 import Stack from '@mui/material/Stack';
 import IconButton from 'components/@extended/IconButton';
-import { ArrowDown2, ArrowRight2, CloseCircle } from 'iconsax-react';
+import { ArrowDown2, ArrowRight2, CloseCircle, Eye } from 'iconsax-react';
 import TransitionsModal from 'sections/components-overview/modal/TransitionsModal';
 import { Chip, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import { useNavigate } from 'react-router';
 import { openSnackbar } from 'api/snackbar';
 import { useDispatch } from 'react-redux';
 import { TripInvoicesStatus } from 'constants/constants';
@@ -29,6 +31,7 @@ const changeStatus = async (id, status, dispatch, paid_date = null) => {
         });
 
         const data = await response.json();
+
         if (response.ok) {
             dispatch(updateStatus({ id, status, paid_date }));
             openSnackbar({
@@ -50,6 +53,18 @@ const changeStatus = async (id, status, dispatch, paid_date = null) => {
     }
 };
 
+function EditAction({ row }) {
+    const navigate = useNavigate()
+    return (
+        <Stack direction="row" spacing={1} alignItems="center">
+            <Tooltip title='View Trips'>
+                <IconButton color={'primary'} onClick={() => navigate(`/providers/${row?.original.id}/update`)}>
+                    <Eye variant="Outline" />
+                </IconButton>
+            </Tooltip>
+        </Stack>
+    );
+}
 const StatusTransitions = {
     paid: ["paid"],
     submitted: ["paid", "rejected", "submitted"],
@@ -185,5 +200,12 @@ export const columns =
             },
 
             dataType: 'select',
+        },
+        {
+            id: 'edit',
+            header: 'Actions',
+            cell: EditAction,
+            enableGrouping: false,
+            meta: { className: 'cell-center' }
         },
     ]

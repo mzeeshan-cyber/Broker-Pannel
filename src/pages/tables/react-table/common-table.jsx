@@ -62,6 +62,7 @@ import ReimbursementTripExpandingDetails from 'components/pages/reimbursement-tr
 import { replace } from 'lodash';
 import TripsExpandingDetails from 'components/pages/trips/tripsExpandingDetails';
 import AssignAndMerge from 'components/pages/trips/assignAndMerge';
+import ExpandingDetails from 'components/pages/tripsInvoices/ExpandingDetails';
 
 export const fuzzyFilter = (row, columnId, value, addMeta) => {
     // rank the item
@@ -86,7 +87,7 @@ export const fuzzySort = (rowA, rowB, columnId) => {
     return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir;
 };
 
-export default function CommonTable({ isSubmitting, data, tripIds, handleDelete, handleUpdate, stackontable, defaultColumns, tableType, tableName, handleChangePerPage, handleChangePagination, paginationData, pageSize, page, handleRestoreMultiple, noPagination }) {
+export default function CommonTable({ isSubmitting, data, tripIds, handleDelete, handleUpdate, stackontable, defaultColumns, tableType, tableName, handleChangePerPage, handleChangePagination, paginationData, pageSize, page, handleRestoreMultiple, noPagination, noSearch }) {
     const theme = useTheme();
     const matchDownSM = useMediaQuery(theme.breakpoints.down('sm'));
     const [rowSelection, setRowSelection] = useState({});
@@ -138,7 +139,7 @@ export default function CommonTable({ isSubmitting, data, tripIds, handleDelete,
         getFacetedUniqueValues: getFacetedUniqueValues(),
         getFacetedMinMaxValues: getFacetedMinMaxValues(),
         globalFilterFn: fuzzyFilter,
-        getRowId: (row) => row.id.toString(), // good to have guaranteed unique row ids/keys for rendering
+        getRowId: (row) => row?.id?.toString(), // good to have guaranteed unique row ids/keys for rendering
         debugTable: true,
         debugHeaders: true,
         debugColumns: true,
@@ -180,6 +181,8 @@ export default function CommonTable({ isSubmitting, data, tripIds, handleDelete,
                 return <ReimbursementTripExpandingDetails data={row} />
             case "trips":
                 return <TripsExpandingDetails data={row} />
+            case "trip-invoices":
+                return <ExpandingDetails data={row} />
             default:
                 return ''
         }
@@ -190,15 +193,17 @@ export default function CommonTable({ isSubmitting, data, tripIds, handleDelete,
             <MainCard content={false} sx={{ overflow: 'visible !important' }}>
                 <Stack
                     direction={{ xs: 'column', sm: 'row' }}
-                    spacing={2}
+                    spacing={!noSearch ? 2 : 0}
                     justifyContent="space-between"
-                    sx={{ padding: 2, ...(matchDownSM && { '& .MuiOutlinedInput-root, & .MuiFormControl-root': { width: '100%' } }) }}
+                    sx={{ padding: !noSearch ? 2 : 0, ...(matchDownSM && { '& .MuiOutlinedInput-root, & .MuiFormControl-root': { width: '100%' } }) }}
                 >
-                    <DebouncedInput
-                        value={globalFilter ?? ''}
-                        onFilterChange={(value) => setGlobalFilter(String(value))}
-                        placeholder={`Search ${data.length} records...`}
-                    />
+                    {!noSearch &&
+                        <DebouncedInput
+                            value={globalFilter ?? ''}
+                            onFilterChange={(value) => setGlobalFilter(String(value))}
+                            placeholder={`Search ${data.length} records...`}
+                        />
+                    }
                     {stackontable}
                     {/*  on the base on table type restore data */}
                     {tableType === 'deletedTable' &&
