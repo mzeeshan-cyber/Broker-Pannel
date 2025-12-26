@@ -58,7 +58,7 @@ function EditAction({ row }) {
     return (
         <Stack direction="row" spacing={1} alignItems="center">
             <Tooltip title='View Trips'>
-                <IconButton color={'primary'} onClick={() => navigate(`/providers/${row?.original.id}/update`)}>
+                <IconButton color={'primary'} onClick={() => navigate(`/trips-invoice/${row?.original.id}/view`)}>
                     <Eye variant="Outline" />
                 </IconButton>
             </Tooltip>

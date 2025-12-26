@@ -5,30 +5,32 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetcher, fetcherDelete, fetcherUpdate } from 'utils/axios';
 import { loading, tripsInvoicesData, paginationData, tripsInvoicesAfterDelete, filterValue } from 'store/reducers/tripsInvoicesSlice';
 import CommonTable from 'pages/tables/react-table/common-table';
-import { columns } from 'pages/tables/broker-tables/billings/tripsInvoicesColumns';
+import { columns } from 'pages/tables/broker-tables/billings/tripInvoiceViewPageColumn';
 import TripButtonsOnTable from 'components/pages/tripsInvoices/TripButtonsOnTable';
 import CircularLoader from 'components/common/loader/CircularLoader';
+import { Box, Typography } from '@mui/material';
+import { useParams } from 'react-router';
 
-export default function TripsInvoices() {
+export default function TripsInvoiceViewPage() {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({});
+  const {invoice_id} = useParams()
 
   const getTripsInvoices = async (values = {}) => {
     setIsLoading(true);
     const query = {
-      provider_id: values?.provider_id || '',
-      submission_date: values?.submission_date || '',
-      paid_date: values?.paid_date || '',
-      status: values?.status || '',
+      invoice_id: invoice_id,
+      service_date:values.date,
+      mobility:values.mobility,
       page,
       per_page: pageSize
     };
     setFilters(query);
     const response = await fetcher([
-      "/get-trip-invoices",
+      "/get-invoice-trips",
       { params: query }
     ]);
     if (response.status === true) {
@@ -45,7 +47,7 @@ export default function TripsInvoices() {
     setPage(1);
 
     const response = await fetcher([
-      "/get-trip-invoices",
+      "/get-invoice-trips",
       { params: { ...filters, page: 1, per_page } }
     ]);
 
@@ -58,7 +60,7 @@ export default function TripsInvoices() {
     setPage(value);
 
     const response = await fetcher([
-      "/get-trip-invoices",
+      "/get-invoice-trips",
       { params: { ...filters, page: value, per_page: pageSize } }
     ]);
 
@@ -109,6 +111,11 @@ export default function TripsInvoices() {
       {isLoading ?
         <CircularLoader text='Loading data...' height='40vh' />
         :
+        <>
+        <Box display="flex" alignItems="center" gap="10px" mb={1}>
+        <Typography variant='h4'>Invoice Number :</Typography>
+        <Typography variant='h6'>Invoice Number</Typography>
+        </Box>
         <CommonTable
           data={Array.isArray(tripsInvoiceData) ? [...tripsInvoiceData].reverse() : []}
           paginationData={TripsInvoiceState?.paginationData}
@@ -120,9 +127,10 @@ export default function TripsInvoices() {
           handleChangePagination={handleChangePagination}
           handleDelete={deleteTripsInvoices}
           handleUpdate={updateTripsInvoices}
-          stackontable={<TripButtonsOnTable handleGetData={getTripsInvoices} />}
+          stackontable={<TripButtonsOnTable handleGetData={getTripsInvoices} pageTitle="invoice-view"/>}
           tableName="trip-invoices"
         />
+        </>
       }
     </Grid>
   );

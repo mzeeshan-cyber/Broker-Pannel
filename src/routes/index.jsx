@@ -66,6 +66,7 @@ import Cities from 'pages/provider/cities/cities';
 import AddCity from 'pages/provider/cities/addCity';
 import BulkAssignment from 'pages/tables/broker-tables/trips/bulkAssignment';
 import TripsInvoices from 'pages/billings/trips-invoice';
+import TripsInvoiceViewPage from 'pages/billings/trip-invoice-view-page';
 
 const MaintenanceError = Loadable(lazy(() => import('pages/maintenance/error/404')));
 
@@ -152,6 +153,7 @@ function Router() {
 
                 {/* Trips Invoices */}
                 <Route path="trips-invoice" element={<TripsInvoices />} />
+                <Route path="trips-invoice/:invoice_id/view" element={<TripsInvoiceViewPage />} />
 
                 {/* Settings */}
                 <Route path="settings" element={<Settings />} />
