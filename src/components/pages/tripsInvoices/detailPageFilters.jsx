@@ -11,7 +11,7 @@ import { Button, Chip, CircularProgress, Grid, InputLabel, OutlinedInput, Stack 
 import { FilterSearch } from 'iconsax-react';
 import { Formik } from 'formik';
 import SelectDropDown from 'components/common/SelectDropDown';
-import { TripInvoicesStatusDropdown } from 'constants/constants';
+import { mobility } from 'constants/constants';
 import { capitalize } from 'lodash';
 import { useSelector } from 'react-redux';
 
@@ -31,17 +31,14 @@ export default function DetailPageFilters({ handleGetBySearch }) {
         <Box sx={{ flexShrink: 0, ml: 0.75 }}>
             {tripsInvoices.filterValue &&
                 Object.entries(tripsInvoices.filterValue).map(([key, value]) => {
-                    const displayValue = key === 'provider_id' ? value?.label : value?.label ?? value?.value ?? value;
-                    console.log(value, key)
+                    const displayValue = value?.label ?? value?.value ?? value;
+                    console.log(value, key);
                     if (!displayValue) return null;
 
                     return (
                         <Chip
                             key={key}
-                            label={`${key === 'provider_id'
-                                ? 'Provider Name'
-                                : capitalize(key.replace('_', ' '))
-                                } : `}
+                            label={`${capitalize(key.replace('_', ' '))} : ${capitalize(displayValue)}`}
                             size="small"
                             color="error"
                             onDelete={() => handleDeleteFilter(key)}
@@ -83,7 +80,7 @@ export default function DetailPageFilters({ handleGetBySearch }) {
                             <ClickAwayListener onClickAway={() => setOpen(false)}>
                                 <Formik
                                     initialValues={{
-                                        date: '',
+                                        service_date: '',
                                         mobility: ''
                                     }}
                                     onSubmit={(values) => {
@@ -104,8 +101,8 @@ export default function DetailPageFilters({ handleGetBySearch }) {
                                                             <InputLabel>Service Date</InputLabel>
                                                             <OutlinedInput
                                                                 type="date"
-                                                                name="date"
-                                                                value={values.date}
+                                                                name="service_date"
+                                                                value={values.service_date}
                                                                 onChange={handleChange}
                                                                 onBlur={handleBlur}
                                                             />
@@ -118,7 +115,7 @@ export default function DetailPageFilters({ handleGetBySearch }) {
                                                             id="mobility"
                                                             values={values.mobility}
                                                             setFieldValue={setFieldValue}
-                                                            options={TripInvoicesStatusDropdown}
+                                                            options={mobility}
                                                         />
                                                     </Grid>
 

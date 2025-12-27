@@ -27,15 +27,20 @@ export default function TripsInvoices() {
       per_page: pageSize
     };
     setFilters(query);
-    const response = await fetcher([
-      "/get-trip-invoices",
-      { params: query }
-    ]);
-    if (response.status === true) {
+    try{
+      const response = await fetcher([
+        "/get-trip-invoices",
+        { params: query }
+      ]);
+      if (response.status === true) {
+        setIsLoading(false);
+        dispatch(filterValue(values));
+        dispatch(tripsInvoicesData(response?.data?.data));
+        dispatch(paginationData(response?.data));
+      }
+    }
+    catch(error){
       setIsLoading(false);
-      dispatch(filterValue(values));
-      dispatch(tripsInvoicesData(response?.data?.data));
-      dispatch(paginationData(response?.data));
     }
   };
   const handleChangePerPage = async (event) => {

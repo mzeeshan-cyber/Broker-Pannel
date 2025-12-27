@@ -196,7 +196,7 @@ export default function ApprovedTripTable({ isSubmitting, data, handleDelete, ha
                     />
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {stackontable}
-                        {seletedRows.length < 1 &&
+                        {seletedRows.length < 1 && tableName === 'approved' &&
                             <Button
                                 variant="contained"
                                 color="success"

@@ -2,29 +2,44 @@ import Stack from '@mui/material/Stack';
 import Filters from './filters';
 import DetailPageFilters from './detailPageFilters';
 import ReusableDrawer from 'components/common/ReusableDrawer';
-import { useState } from 'react';
-import { Button, Divider } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Button } from '@mui/material';
 import ManageRisk from './manageRisk';
+import { fetcher } from 'utils/axios';
+import RiskFactorCard from './RiskFactorCard';
 
-const TripButtonsOnTable = ({ handleGetData, pageTitle }) => {
+const TripButtonsOnTable = ({ handleGetData, pageTitle, riskData, setRiskData }) => {
     const [open, setOpen] = useState(false);
     const handleToggle = () => setOpen(!open);
+
+    const getRiskData = async () => {
+        const response = await fetcher(["/get-trip-margin-data"]);
+        if (response.status === true) {
+            setRiskData(response.data.data)
+        }
+    };
+
+    useEffect(() => {
+        getRiskData();
+    }, [open])
     return (
         <Stack direction="row" spacing={2} alignItems="center" sx={{ width: { xs: '100%', sm: 'auto' } }}>
             {pageTitle === 'invoice-view' ?
-                <DetailPageFilters handleGetBySearch={handleGetData} />
-                :
                 <>
-                    <Button onClick={handleToggle} variant='outlined' color='error'>Risk Factor</Button>
-                    <Filters handleGetBySearch={handleGetData} />
+                    <RiskFactorCard riskData={riskData}/>
+                    <DetailPageFilters handleGetBySearch={handleGetData} />
+                    <Button onClick={handleToggle} variant='outlined' color='error'>Manage Risk Factor</Button>
                     <ReusableDrawer
                         open={open}
                         onClose={handleToggle}
                         title="Manage Risk Factor"
                     >
-                        <Divider/>
-                        <ManageRisk/>
+                        <ManageRisk setOpen={setOpen} riskData={riskData} />
                     </ReusableDrawer>
+                </>
+                :
+                <>
+                    <Filters handleGetBySearch={handleGetData} />
                 </>
             }
         </Stack>

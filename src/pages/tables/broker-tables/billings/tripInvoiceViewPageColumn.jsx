@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import Stack from '@mui/material/Stack';
 import IconButton from 'components/@extended/IconButton';
 import { Eye } from 'iconsax-react';
-import { useNavigate } from 'react-router';
 import { toLower } from 'lodash';
 import ReusableDrawer from 'components/common/ReusableDrawer';
 import Conversation from 'pages/billings/Conversation';
+import { fetcher } from 'utils/axios';
 
 function BrokerComment({ row }) {
     const [open, setOpen] = useState(false);
@@ -129,8 +129,22 @@ export const columns =
             enableGrouping: false
         },
         {
+            id: 'actual_cost',
+            header: 'Actual Cost',
+            accessorKey: 'actual_cost',
+            dataType: 'text',
+            enableGrouping: false
+        },
+        {
+            id: 'estimated_cost',
+            header: 'Estimated Cost',
+            accessorFn: row => row?.trip?.estimated_cost || '-',
+            dataType: 'text',
+            enableGrouping: false
+        },
+        {
             id: 'total_miles',
-            header: 'Miles',
+            header: 'Actual Miles',
             accessorKey: 'total_miles',
             dataType: 'text',
             enableGrouping: false
