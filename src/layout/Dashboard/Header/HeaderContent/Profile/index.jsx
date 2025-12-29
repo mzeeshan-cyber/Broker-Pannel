@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 // material-ui
@@ -35,6 +35,7 @@ import { openSnackbar } from 'api/snackbar';
 import { useDispatch } from 'react-redux';
 import { logout } from 'store/reducers/authSlice';
 import { decryptToken } from 'utils/tokenUtils';
+import { capitalize } from 'lodash';
 
 
 // tab panel wrapper
@@ -72,7 +73,16 @@ export default function ProfilePage() {
   const encryptedFromStorage = localStorage.getItem("token");
   const decryptedToken = decryptToken(encryptedFromStorage);
   console.log(decryptedToken)
-  
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const storedData = localStorage.getItem('persist:auth');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      const user = parsedData.user ? JSON.parse(parsedData.user) : null;
+      setData({ ...parsedData, user });
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -121,8 +131,6 @@ export default function ProfilePage() {
 
     }
   };
-
-
 
   const anchorRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -197,9 +205,9 @@ export default function ProfilePage() {
                         <Stack direction="row" spacing={1.25} alignItems="center">
                           <Avatar alt="profile user" src={avatar1} />
                           <Stack>
-                            <Typography variant="subtitle1">User Name</Typography>
+                            <Typography variant="subtitle1">{capitalize(data.user.name)}</Typography>
                             <Typography variant="body2" color="secondary">
-                              UI/UX Designer
+                              {data.user.email}
                             </Typography>
                           </Stack>
                         </Stack>
@@ -214,7 +222,7 @@ export default function ProfilePage() {
                     </Grid>
                   </CardContent>
 
-                  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  {/* <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs variant="fullWidth" value={value} onChange={handleChange} aria-label="profile tabs">
                       <Tab
                         sx={{
@@ -241,13 +249,13 @@ export default function ProfilePage() {
                         {...a11yProps(1)}
                       />
                     </Tabs>
-                  </Box>
-                  <TabPanel value={value} index={0} dir={theme.direction}>
+                  </Box> */}
+                  {/* <TabPanel value={value} index={0} dir={theme.direction}>
                     <ProfileTab handleLogout={handleOpenModal} />
                   </TabPanel>
                   <TabPanel value={value} index={1} dir={theme.direction}>
                     <SettingTab />
-                  </TabPanel>
+                  </TabPanel> */}
                 </MainCard>
               </ClickAwayListener>
             </Paper>

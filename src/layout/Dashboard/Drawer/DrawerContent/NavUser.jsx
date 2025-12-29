@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -22,6 +22,7 @@ import { useGetMenuMaster } from 'api/menu';
 import { ArrowRight2 } from 'iconsax-react';
 
 import avatar1 from 'assets/images/users/avatar-1.png';
+import { capitalize } from 'lodash';
 
 const ExpandMore = styled(IconButton, { shouldForwardProp: (prop) => prop !== 'theme' && prop !== 'expand' && prop !== 'drawerOpen' })(
   ({ theme, expand, drawerOpen }) => ({
@@ -44,6 +45,16 @@ const ExpandMore = styled(IconButton, { shouldForwardProp: (prop) => prop !== 't
 export default function UserList() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const storedData = localStorage.getItem('persist:auth');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      const user = parsedData.user ? JSON.parse(parsedData.user) : null;
+      setData({ ...parsedData, user });
+    }
+  }, []);
 
   const { menuMaster } = useGetMenuMaster();
   const drawerOpen = menuMaster.isDashboardDrawerOpened;
@@ -77,21 +88,21 @@ export default function UserList() {
       <List disablePadding>
         <ListItem
           disablePadding
-          secondaryAction={
-            <ExpandMore
-              theme={theme}
-              expand={open}
-              drawerOpen={drawerOpen}
-              id="basic-button"
-              aria-controls={open ? 'basic-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? 'true' : undefined}
-              onClick={handleClick}
-              aria-label="show more"
-            >
-              <ArrowRight2 style={{ fontSize: '0.625rem' }} />
-            </ExpandMore>
-          }
+          // secondaryAction={
+          //   <ExpandMore
+          //     theme={theme}
+          //     expand={open}
+          //     drawerOpen={drawerOpen}
+          //     id="basic-button"
+          //     aria-controls={open ? 'basic-menu' : undefined}
+          //     aria-haspopup="true"
+          //     aria-expanded={open ? 'true' : undefined}
+          //     onClick={handleClick}
+          //     aria-label="show more"
+          //   >
+          //     <ArrowRight2 style={{ fontSize: '0.625rem' }} />
+          //   </ExpandMore>
+          // }
           sx={{
             ...(!drawerOpen && { display: 'flex', justifyContent: 'flex-end' }),
             '& .MuiListItemSecondaryAction-root': { right: !drawerOpen ? 16 : -16 }
@@ -100,7 +111,7 @@ export default function UserList() {
           <ListItemAvatar>
             <Avatar alt="Avatar" src={avatar1} sx={{ ...(drawerOpen && { width: 46, height: 46 }) }} />
           </ListItemAvatar>
-          <ListItemText primary={`user name`} sx={{ ...(!drawerOpen && { display: 'none' }) }} secondary="UI/UX Designer" />
+          <ListItemText primary={capitalize(data?.user?.name)} sx={{ ...(!drawerOpen && { display: 'none' }) }} secondary={data?.user?.email} />
         </ListItem>
       </List>
       {/* <Menu

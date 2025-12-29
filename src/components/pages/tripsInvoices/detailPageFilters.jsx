@@ -32,7 +32,6 @@ export default function DetailPageFilters({ handleGetBySearch }) {
             {tripsInvoices.filterValue &&
                 Object.entries(tripsInvoices.filterValue).map(([key, value]) => {
                     const displayValue = value?.label ?? value?.value ?? value;
-                    console.log(value, key);
                     if (!displayValue) return null;
 
                     return (
