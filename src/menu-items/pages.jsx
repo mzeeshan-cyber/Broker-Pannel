@@ -1,6 +1,7 @@
 
 // assets
-import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar } from 'iconsax-react';
+import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar, Personalcard, Receipt, Document } from 'iconsax-react';
+import { FaFileInvoice, FaReceipt } from 'react-icons/fa';
 
 const icons = {
   maintenance: MessageProgramming,
@@ -9,6 +10,8 @@ const icons = {
   reimbursementtrips: Car,
   settings: Setting2,
   trips: SmartCar,
+  patient: Personalcard,
+  billing: Receipt,
 };
 
 // ==============================|| MENU ITEMS - PAGES ||============================== //
@@ -22,7 +25,7 @@ const pages = {
       id: 'Patient',
       title: "Patient",
       type: 'collapse',
-      icon: icons.maintenance,
+      icon: icons.patient,
       children: [
         {
           id: 'patients',
@@ -184,13 +187,35 @@ const pages = {
       ]
     },
     {
+      id: 'Billings',
+      title: "Billings",
+      type: 'collapse',
+      icon: icons.billing,
+      children: [
+        {
+          id: 'Trips Invoice',
+          title: "Trips Invoice",
+          type: 'item',
+          url: '/trips-invoice',
+          target: false
+        },
+        // {
+        //   id: 'Reimbursement Trip Invoice',
+        //   title: "Reimbursement Trip Invoice",
+        //   type: 'item',
+        //   url: '/reimbursement-trips/add',
+        //   target: false
+        // },
+      ]
+    },
+    {
       id: 'settings',
       title: "Settings",
       type: 'item',
       url: '/settings',
       icon: icons.settings,
       target: false
-    }
+    },
   ]
 };
 
