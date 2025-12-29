@@ -144,7 +144,6 @@ export default function Filters({ handleGetBySearch }) {
             {tripsInvoices.filterValue &&
                 Object.entries(tripsInvoices.filterValue).map(([key, value]) => {
                     const displayValue = key === 'provider_id' ? value?.label : value?.label ?? value?.value ?? value;
-                    console.log(value, key)
                     if (!displayValue) return null;
 
                     return (

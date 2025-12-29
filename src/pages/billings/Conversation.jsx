@@ -64,9 +64,6 @@ const Conversation = ({ comments, open }) => {
     };
     const getRiskData = async () => {
         const response = await fetcher([`${conversation?.id}/read-comments`]);
-        if (response.status === true) {
-            console.log('messages are reed')
-        }
     };
     useEffect(() => {
         const chatContainer = chatEndRef.current?.parentElement;
