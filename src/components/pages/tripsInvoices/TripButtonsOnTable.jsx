@@ -11,17 +11,19 @@ import RiskFactorCard from './RiskFactorCard';
 const TripButtonsOnTable = ({ handleGetData, pageTitle, riskData, setRiskData }) => {
     const [open, setOpen] = useState(false);
     const handleToggle = () => setOpen(!open);
-
     const getRiskData = async () => {
+         if (typeof setRiskData !== 'function') return;
         const response = await fetcher(["/get-trip-margin-data"]);
         if (response.status === true) {
-            setRiskData(response.data.data)
+            setRiskData(response?.data?.data)
         }
     };
 
     useEffect(() => {
-        getRiskData();
-    }, [open])
+        if(pageTitle ==="invoice-view"){
+            getRiskData();
+        }
+    }, [open, pageTitle])
     return (
         <Stack direction="row" spacing={2} alignItems="center" sx={{ width: { xs: '100%', sm: 'auto' } }}>
             {pageTitle === 'invoice-view' ?

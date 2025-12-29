@@ -11,8 +11,9 @@ import axios from "axios";
 import { decryptToken } from "utils/tokenUtils";
 import { MdKeyboardDoubleArrowDown } from "react-icons/md";
 import { BiCheckDouble } from "react-icons/bi";
+import { fetcher } from "utils/axios";
 
-const Conversation = ({ comments }) => {
+const Conversation = ({ comments, open }) => {
     const theme = useTheme();
     const [isNearBottom, setIsNearBottom] = useState(true);
     const [conversation, setConversation] = useState(comments);
@@ -61,6 +62,12 @@ const Conversation = ({ comments }) => {
             });
         }
     };
+    const getRiskData = async () => {
+        const response = await fetcher([`${conversation?.id}/read-comments`]);
+        if (response.status === true) {
+            console.log('messages are reed')
+        }
+    };
     useEffect(() => {
         const chatContainer = chatEndRef.current?.parentElement;
 
@@ -85,6 +92,9 @@ const Conversation = ({ comments }) => {
             chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
     }, [conversation, isNearBottom]);
+    if (open) {
+        getRiskData();
+    }
 
     return (
         <Paper
@@ -106,21 +116,21 @@ const Conversation = ({ comments }) => {
                     position: "relative",
                     flexGrow: 1,
                     mb: 2,
-                    height: conversation.invoice.status === 'paid'
+                    height: conversation?.invoice?.status === 'paid'
                         ? 'calc(100vh - 245px)'
                         : 'calc(100vh - 335px)',
                     overflowY: "auto",
                     pr: 1,
                     "&::-webkit-scrollbar": { display: "none" },
-                    "-ms-overflow-style": "none",
-                    "scrollbar-width": "none"
+                    "MsOverflowStyle": "none",
+                    "scrollbarWidth": "none"
                 }}
             >
                 <>
                     <Box sx={{
                         height: "100%", overflowY: "auto", "&::-webkit-scrollbar": { display: "none" },
-                        "-ms-overflow-style": "none",
-                        "scrollbar-width": "none"
+                        "MsOverflowStyle": "none",
+                        "scrollbarWidth": "none"
                     }}>
                         {conversation?.comments?.map((msg, index) => (
                             <Box
@@ -212,7 +222,7 @@ const Conversation = ({ comments }) => {
                     💬 Broker Response
                 </Typography>
 
-                {conversation.invoice.status === 'paid' ? (
+                {conversation?.invoice?.status === 'paid' ? (
                     <Typography
                         variant="body2"
                         color="error"
@@ -238,7 +248,7 @@ const Conversation = ({ comments }) => {
                             minRows={2}
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            disabled={conversation.invoice.status === 'paid'}
+                            disabled={conversation?.invoice?.status === 'paid'}
                             sx={{
                                 "& .MuiOutlinedInput-root": {
                                     borderRadius: "12px",
@@ -255,7 +265,7 @@ const Conversation = ({ comments }) => {
                                 variant="contained"
                                 color="success"
                                 onClick={handleBrokerComment}
-                                disabled={conversation.invoice.status === 'paid'}
+                                disabled={conversation?.invoice?.status === 'paid'}
                                 sx={{
                                     px: 3,
                                     borderRadius: "12px",

@@ -1,21 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import Stack from '@mui/material/Stack';
 import IconButton from 'components/@extended/IconButton';
-import { Eye } from 'iconsax-react';
 import { toLower } from 'lodash';
 import ReusableDrawer from 'components/common/ReusableDrawer';
 import Conversation from 'pages/billings/Conversation';
-import { fetcher } from 'utils/axios';
+import { Box } from '@mui/material';
+import { BsChatSquare } from "react-icons/bs";
 
 function BrokerComment({ row }) {
+    const commentCount = row?.original?.comments?.filter(item => item.user_type === 'provider')?.filter(item => item.is_read === 0).length;
     const [open, setOpen] = useState(false);
     const handleToggle = () => setOpen(!open);
     return (
         <Stack direction="row" spacing={1} alignItems="center">
-            <Tooltip title='View Trips'>
+            <Tooltip title='View Comments'>
                 <IconButton color={'primary'} onClick={handleToggle}>
-                    <Eye variant="Outline" color='green'/>
+                    <BsChatSquare variant="Outline" color='green' size={30} />
+                    {commentCount > 0 &&
+                        <Box sx={{ position: 'absolute', top: 0, background: '#008000ff', borderRadius: '20px', fontSize: '10px', padding: '3px', right: '-5px', color: 'white', minWidth: '18px' }}>{commentCount ?? commentCount}</Box>
+                    }
                 </IconButton>
             </Tooltip>
             <ReusableDrawer
@@ -23,9 +27,9 @@ function BrokerComment({ row }) {
                 onClose={handleToggle}
                 title="Conversation B/W Broker and Provider"
             >
-                <Conversation comments={row.original} />
+                <Conversation comments={row.original} open={open}/>
             </ReusableDrawer>
-        </Stack>
+        </Stack >
     );
 }
 export const columns =
@@ -110,7 +114,7 @@ export const columns =
         {
             id: 'shared_priority_fs',
             header: '(F)(S)',
-            accessorFn: row => toLower(row?.trip?.shared_priority) === 'frc' ? 'FRC' : 'SRC',
+            accessorFn: row => toLower(row?.trip?.shared_priority) === 'frc' ? 'FRC' : row?.trip?.shared_priority === null | undefined ? '-': 'SRC',
             dataType: 'text',
             enableGrouping: false
         },
@@ -131,14 +135,14 @@ export const columns =
         {
             id: 'actual_cost',
             header: 'Actual Cost',
-            accessorKey: 'actual_cost',
+            accessorFn: row => Number(row?.actual_cost?.toFixed(2)) || '-',
             dataType: 'text',
             enableGrouping: false
         },
         {
             id: 'estimated_cost',
             header: 'Estimated Cost',
-            accessorFn: row => row?.trip?.estimated_cost || '-',
+            accessorFn: row => Number(Number(row?.trip?.estimated_cost)?.toFixed(2)) || '-',
             dataType: 'text',
             enableGrouping: false
         },

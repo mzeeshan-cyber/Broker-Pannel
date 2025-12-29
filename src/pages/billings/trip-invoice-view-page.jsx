@@ -18,7 +18,7 @@ export default function TripsInvoiceViewPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({});
   const { invoice_id } = useParams();
-  const [riskData, setRiskData] = useState();
+  const [riskData, setRiskData] = useState([]);
 
   const getTripsInvoices = async (values = {}) => {
     setIsLoading(true);
