@@ -28,11 +28,12 @@ export default function ReimbursementDrivers() {
       phone_number: values?.phone_number || '',
       status: values?.status || '',
       license_state: values?.license_state || '',
-      page,
+      page:1,
       per_page: pageSize
 
     }
     setFilters(params);
+    setPage(1);
     const response = await fetcher(["/reimbursement-drivers", { params }]);
 
     if (response.status === true) {

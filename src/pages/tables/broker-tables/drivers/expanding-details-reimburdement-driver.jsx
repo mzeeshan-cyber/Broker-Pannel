@@ -10,16 +10,10 @@ import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-
-// third-party
 import { PatternFormat } from 'react-number-format';
-
-// project import
 import MainCard from 'components/MainCard';
 import Avatar from 'components/@extended/Avatar';
 import { getImageUrl, ImagePath } from 'utils/getImageUrl';
-
-// assets
 import { Home } from 'iconsax-react';
 import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
@@ -28,10 +22,7 @@ import { patientById } from 'store/reducers/patientSlice';
 import { getStatusColor } from 'constants/constants';
 import { capitalize } from 'lodash';
 
-// ==============================|| EXPANDING TABLE - USER DETAILS ||============================== //
-
 export default function ExpandingUserDetail({ data }) {
-    const navigate = useNavigate()
     const dispatch = useDispatch()
     const matchDownMD = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
@@ -40,7 +31,6 @@ export default function ExpandingUserDetail({ data }) {
     }, [data])
 
     const LicenceExpiry = new Date(data.license_expiry).toISOString().split("T")[0];
-    
 
     return (
         <Grid container spacing={2.5} sx={{ pl: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>

@@ -44,19 +44,11 @@ export default function TripsExpandingDetails({ data }) {
                             <List sx={{ py: 0 }}>
                                 <ListItem divider={!matchDownMD}>
                                     <Grid container spacing={3}>
-                                        <Grid item xs={12} md={6}>
+                                        <Grid item xs={12}>
                                             <Stack spacing={0.5}>
                                                 <Typography color="secondary">Patient</Typography>
                                                 <Typography>
-                                                    <img src={`${imagePath + patient?.image}`} alt="" style={{ height: '40px', width: '40px', borderRadius: '100%' }} />
-                                                </Typography>
-                                            </Stack>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <Stack spacing={0.5}>
-                                                <Typography color="secondary">Patient Name</Typography>
-                                                <Typography>
-                                                    {patient?.name}
+                                                    <img src={patient.image ? `${imagePath + patient?.image}` : 'https://avatar.iran.liara.run/public/3'} alt="" style={{ height: '40px', width: '40px', borderRadius: '100%' }} />
                                                 </Typography>
                                             </Stack>
                                         </Grid>
@@ -66,9 +58,9 @@ export default function TripsExpandingDetails({ data }) {
                                     <Grid container spacing={3}>
                                         <Grid item xs={12} md={6}>
                                             <Stack spacing={0.5}>
-                                                <Typography color="secondary">Patient Email Address</Typography>
+                                                <Typography color="secondary">Patient Name</Typography>
                                                 <Typography>
-                                                    {patient?.email}
+                                                    {patient?.name}
                                                 </Typography>
                                             </Stack>
                                         </Grid>
@@ -82,6 +74,18 @@ export default function TripsExpandingDetails({ data }) {
                                                 }}
                                                 color={getStatusColor(patient?.status)}
                                             />
+                                        </Grid>
+                                    </Grid>
+                                </ListItem>
+                                <ListItem divider={!matchDownMD}>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <Stack spacing={0.5}>
+                                                <Typography color="secondary">Patient Email Address</Typography>
+                                                <Typography>
+                                                    {patient?.email}
+                                                </Typography>
+                                            </Stack>
                                         </Grid>
                                     </Grid>
                                 </ListItem>

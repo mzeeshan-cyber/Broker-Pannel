@@ -27,10 +27,11 @@ export default function Attendents() {
       phone_number: values?.phone_number || '',
       relationship: values?.relationship || '',
       status: values?.status || '',
-      page,
+      page:1,
       per_page: pageSize
     }
     setFilters(params)
+    setPage(1)
     const response = await fetcher(["/patient-attendants", { params }]);
     if (response.status === true) {
       dispatch(loading(false));

@@ -83,7 +83,6 @@ const Conversation = ({ comments, open }) => {
         };
     }, []);
 
-
     useEffect(() => {
         if (isNearBottom) {
             chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -124,74 +123,75 @@ const Conversation = ({ comments, open }) => {
                 }}
             >
                 <>
-                    <Box sx={{
-                        height: "100%", overflowY: "auto", "&::-webkit-scrollbar": { display: "none" },
-                        "MsOverflowStyle": "none",
-                        "scrollbarWidth": "none"
-                    }}>
-                        {conversation?.comments?.map((msg, index) => (
-                            <Box
-                                key={index}
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: msg.user_type === "broker" ? "flex-end" : "flex-start",
-                                    mb: 2,
-                                    px: 1
-                                }}
-                            >
+                    {conversation?.comments?.length < 1 ?
+                        <Box>No Conversation Yet</Box>
+                        :
+                        <Box sx={{
+                            height: "100%", overflowY: "auto", "&::-webkit-scrollbar": { display: "none" },
+                            "MsOverflowStyle": "none",
+                            "scrollbarWidth": "none"
+                        }}>
+                            {conversation?.comments?.map((msg, index) => (
                                 <Box
+                                    key={index}
                                     sx={{
-                                        p: 1.5,
-                                        borderRadius: msg.user_type === "broker" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                                        bgcolor: msg.user_type === "broker" ? (isDark ? "#1D2630" : "white") : (isDark ? "#2e7d32cc" : "#e3f1e2ff"),
-                                        boxShadow: isDark ? "0px 2px 6px rgba(255,255,255,0.1)" : "0px 2px 6px rgba(0,0,0,0.15)",
-                                        maxWidth: "70%",
-                                        color: isDark ? "#f5f5f5" : "#212121"
+                                        display: "flex",
+                                        justifyContent: msg.user_type === "broker" ? "flex-end" : "flex-start",
+                                        mb: 2,
+                                        px: 1
                                     }}
                                 >
-                                    <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5, color: msg.user_type === "broker" ? (isDark ? "#4dd0e1" : "#00796b") : (isDark ? "#81c784" : "#2e7d32") }}>
-                                        {msg.user_type === "broker" ? "Broker" : "Provider"}
-                                    </Typography>
-                                    <Typography variant="body1">{msg.message}</Typography>
-                                    {msg.datetime && (
-                                        <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', gap: '6px' }}>
-                                            <Typography variant="caption" sx={{ display: "block", mt: 0.5, fontWeight: "bold", color: isDark ? "#ddd" : "#424242" }}>
-                                                {msg.datetime.split(" ")[1]}
-                                            </Typography>
-                                            <BiCheckDouble size={20} color={msg.is_read === 0 ? 'rgba(98, 109, 109, 1)' : 'rgba(22, 145, 216, 1)'} />
-                                        </Box>
-                                    )}
+                                    <Box
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: msg.user_type === "broker" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                                            bgcolor: msg.user_type === "broker" ? (isDark ? "#1D2630" : "white") : (isDark ? "#2e7d32cc" : "#e3f1e2ff"),
+                                            boxShadow: isDark ? "0px 2px 6px rgba(255,255,255,0.1)" : "0px 2px 6px rgba(0,0,0,0.15)",
+                                            maxWidth: "70%",
+                                            color: isDark ? "#f5f5f5" : "#212121"
+                                        }}
+                                    >
+                                        <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5, color: msg.user_type === "broker" ? (isDark ? "#4dd0e1" : "#00796b") : (isDark ? "#81c784" : "#2e7d32") }}>
+                                            {msg.user_type === "broker" ? "Broker" : "Provider"}
+                                        </Typography>
+                                        <Typography variant="body1">{msg.message}</Typography>
+                                        {msg.datetime && (
+                                            <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', gap: '6px' }}>
+                                                <Typography variant="caption" sx={{ display: "block", mt: 0.5, fontWeight: "bold", color: isDark ? "#ddd" : "#424242" }}>
+                                                    {msg.datetime.split(" ")[1]}
+                                                </Typography>
+                                                <BiCheckDouble size={20} color={msg.is_read === 0 ? 'rgba(98, 109, 109, 1)' : 'rgba(22, 145, 216, 1)'} />
+                                            </Box>
+                                        )}
 
+                                    </Box>
                                 </Box>
-                            </Box>
-                        ))}
-                        <div ref={chatEndRef} />
-                        {!isNearBottom && (
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => {
-                                    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-                                }}
-                                sx={{
-                                    position: "absolute",
-                                    bottom: "0px",
-                                    left: "50%",
-                                    transform: "translateX(-50%)",
-                                    zIndex: 10,
-                                    borderRadius: "20px",
-                                    height: "35px",
-                                    color: "white",
-                                    opacity: "80%"
-                                }}
-                            >
-                                <MdKeyboardDoubleArrowDown />
-                            </Button>
-                        )}
+                            ))}
+                            <div ref={chatEndRef} />
+                            {!isNearBottom && (
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => {
+                                        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                                    }}
+                                    sx={{
+                                        position: "absolute",
+                                        bottom: "0px",
+                                        left: "50%",
+                                        transform: "translateX(-50%)",
+                                        zIndex: 10,
+                                        borderRadius: "20px",
+                                        height: "35px",
+                                        color: "white",
+                                        opacity: "80%"
+                                    }}
+                                >
+                                    <MdKeyboardDoubleArrowDown />
+                                </Button>
+                            )}
 
-                    </Box>
-                    {conversation?.comments?.length < 1 &&
-                        <Box>No Conversation Yet</Box>
+                        </Box>
                     }
                 </>
             </Box>

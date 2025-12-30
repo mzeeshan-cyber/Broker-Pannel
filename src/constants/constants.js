@@ -1,3 +1,4 @@
+
 // Patients Module
 export const mobilities = [
   { value: "wheelchair", label: "Wheelchair" },
@@ -344,10 +345,7 @@ export function getStatusColor(status) {
       color = "info";
       break;
     case "pending":
-      color = "secondary";
-      break;
-    case "pending":
-      color = "secondary";
+      color = "info";
       break;
     default:
       color = "secondary";

@@ -27,10 +27,11 @@ export default function Patient() {
       gender: values?.gender?.value || '',
       mobility: values?.mobility?.value || '',
       funding_source: values?.funding_source?.value || '',
-      page,
+      page:1,
       per_page: pageSize
     };
     setFilters(query);
+    setPage(1);
     const response = await fetcher([
       "/search-patients",
       { params: query }

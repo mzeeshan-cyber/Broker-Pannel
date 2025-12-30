@@ -7,7 +7,6 @@ import TripDetail from 'components/pages/reimbursement-trips/trip-detail';
 import { Call, ShieldTick, Sms, User } from 'iconsax-react';
 import AddTripForm from './add-trip-form';
 import CircularLoader from 'components/common/loader/CircularLoader';
-import { Box } from '@mui/material';
 
 export const AddTrip = () => {
     const [selected, setSelected] = useState(null);

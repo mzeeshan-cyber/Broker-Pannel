@@ -137,7 +137,7 @@ export default function CityInfoCard({ data, onStatusUpdate, noStatus }) {
                         overflow: "hidden",
                         minHeight: "100%",
                         background: isDark
-                            ? "linear-gradient(145deg, #1e1e1e, #2a2a2a)"
+                            ? "#18222cff"
                             : "linear-gradient(145deg, #ffffff, #f3f6fb)",
                         border: `1px solid ${isDark ? theme.palette.divider : "#e3e8ef"}`,
                         boxShadow: isDark ? "0 6px 22px rgba(0,0,0,0.45)" : "0 4px 20px rgba(0,0,0,0.06)",

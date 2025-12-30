@@ -3,7 +3,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import MainCard from 'components/MainCard';
 import { FaMapMarkerAlt, FaPhoneAlt, FaStickyNote } from "react-icons/fa";
-import { Divider } from '@mui/material';
+import { Divider, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import PatientCard from 'components/pages/reimbursement-trips/PatientCard';
 import BasicTabs from 'sections/components-overview/tabs/BasicTabs';
@@ -12,6 +12,8 @@ import AttendentCard from './AttendentCard';
 import InvoiceDetail from 'components/common/invoice-detail';
 
 export default function ReimbursementTripExpandingDetails({ data }) {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
     const tabsData = [
         {
             label: 'Patient Deatils',
@@ -47,9 +49,10 @@ export default function ReimbursementTripExpandingDetails({ data }) {
                                     sx={{
                                         flex: "1 1 47%",
                                         p: 2,
-                                        border: "1px solid #e0e0e0",
+                                        border: isDark ? '1px solid #343c44de':"1px solid #e0e0e0",
                                         borderRadius: 2,
-                                        backgroundColor: "#fafafa",
+                                        backgroundColor: isDark? '18222cff': "#fafafa",
+                                        
                                     }}
                                 >
                                     <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>

@@ -30,6 +30,7 @@ export default function AddTripForm({ mappedPatients }) {
     const navigate = useNavigate();
     const formikRef = useRef();
     const theme = useTheme()
+    const isDark = theme.palette.mode === 'dark';
 
     const getLatLng = async (pickup, dropoff) => {
         try {
@@ -522,7 +523,7 @@ export default function AddTripForm({ mappedPatients }) {
                                         </FormHelperText>
                                     )}
                                 </Grid>
-                                <Grid item xs={12} sx={{ borderRadius: '10px', background: '#f7f7f794', border: '1px solid #e0e0e0ff', padding: '10px 25px 30px 10px', marginLeft: "25px", marginTop: '30px' }}>
+                                <Grid item xs={12} sx={{ borderRadius: '10px', background: isDark ? '#18222cff':'#f7f7f794', border: isDark ? '':'1px solid #e0e0e0ff', padding: '10px 25px 30px 10px', marginLeft: "25px", marginTop: '30px' }}>
                                     <Grid container spacing={3} gridColumn={12}>
                                         <Grid item xs={12} md={6} lg={4}>
                                             <SelectDropDown
@@ -578,7 +579,7 @@ export default function AddTripForm({ mappedPatients }) {
                                         </Grid>
                                     </Grid>
                                 </Grid>
-                                <Box sx={isRoundtrip ? { background: '#f1f1f1ff', marginTop: '20px', marginLeft: '25px', padding: '20px', width: "100%", borderRadius: '20px' } : { marginLeft: '0px', width: "98%" }}>
+                                <Box sx={isRoundtrip ? { background: isDark ? '#18222cff':'#f7f7f794', border: isDark ? '':'1px solid #e0e0e0ff', marginTop: '20px', marginLeft: '25px', padding: '20px', width: "100%", borderRadius: '20px' } : { marginLeft: '0px', width: "98%" }}>
                                     {isRoundtrip &&
                                         <Typography variant='h4'>Round Trip</Typography>
                                     }
