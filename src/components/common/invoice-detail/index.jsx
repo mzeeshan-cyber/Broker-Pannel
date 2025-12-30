@@ -1,23 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-
-// material-ui
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-
-// third-party
 import { PDFDownloadLink } from '@react-pdf/renderer';
-
-// project-imports
 import MainCard from 'components/MainCard';
 import LogoSection from 'components/logo';
 import LoadingButton from 'components/@extended/LoadingButton';
 import ExportPDFView from 'sections/apps/invoice/export-pdf';
-
-// assets
 import { List, ListItem, useMediaQuery } from '@mui/material';
 import { capitalize, replace } from 'lodash';
 import { openSnackbar } from 'api/snackbar';
@@ -212,10 +204,10 @@ export default function InvoiceDetail({ data }) {
           </Box>
 
           <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ p: 2.5 }}>
-            <LoadingButton onClick={()=>{navigate('/reimbursement-trips/form');localStorage.setItem("tripId", data.id);}} color="success" variant="outlined">
+            <LoadingButton onClick={()=>{navigate('/reimbursement-trips/form');localStorage.setItem("tripId", data.id);}} color="success" variant="contained">
               reimbursement trips form
             </LoadingButton>
-            <LoadingButton onClick={handleToggle} color="secondary" variant="contained" sx={{ color: 'secondary.lighter' }}>
+            <LoadingButton onClick={handleToggle} color="success" variant="contained">
               Apply for rebilling
             </LoadingButton>
             <PDFDownloadLink document={<ExportPDFView data={data} reimbursementTripRate={reimbursementTripRate} personal_driver_cost={personal_driver_cost} />} fileName={`${data.id}-${data.patient.name}.pdf`}>

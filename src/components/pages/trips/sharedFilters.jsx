@@ -18,6 +18,7 @@ export default function SharedFilters({ handleGetBySearch }) {
     const theme = useTheme();
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
+    const isDark = theme.palette.mode === 'dark';
 
     const handleToggle = () => {
         setOpen((prevOpen) => !prevOpen);
@@ -78,7 +79,7 @@ export default function SharedFilters({ handleGetBySearch }) {
                                         maxWidth: 390,
                                         [theme.breakpoints.down('md')]: { maxWidth: 250 },
                                         borderRadius: 1.5,
-                                        border: '1px solid rgb(242, 242, 242)'
+                                        border: isDark ? '' :'1px solid rgb(242, 242, 242)'
                                     }}
                                 >
                                     <Formik

@@ -25,6 +25,7 @@ export default function Filters({ handleGetBySearch, filters }) {
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
     const providerState = useSelector(state => state.provider)
+    const isDark = theme.palette.mode === 'dark';
 
     const handleToggle = () => {
         setOpen((prevOpen) => !prevOpen);
@@ -107,7 +108,7 @@ export default function Filters({ handleGetBySearch, filters }) {
                                 maxWidth: 390,
                                 [theme.breakpoints.down('md')]: { maxWidth: 250 },
                                 borderRadius: 1.5,
-                                border: '1px solid rgb(242, 242, 242)'
+                                border: isDark ? '' :'1px solid rgb(242, 242, 242)'
                             }}
                         >
                             <ClickAwayListener onClickAway={handleClose}>

@@ -19,6 +19,7 @@ export default function Filters({ getPatientsBySearch }) {
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
     const patientState = useSelector(state => state.patient)
+    const isDark = theme.palette.mode === 'dark';
 
     const filter = createFilterOptions();
     const handleToggle = () => {
@@ -106,7 +107,7 @@ export default function Filters({ getPatientsBySearch }) {
                                             maxWidth: 390,
                                             [theme.breakpoints.down('md')]: { maxWidth: 250 },
                                             borderRadius: 1.5,
-                                            border: '1px solid rgb(242, 242, 242)'
+                                            border: isDark ? '' :'1px solid rgb(242, 242, 242)'
                                         }}
                                     >
                                         <Formik
