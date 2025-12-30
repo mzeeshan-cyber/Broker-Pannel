@@ -23,10 +23,11 @@ export default function Provider() {
       name: values?.name || '',
       company_phone: values?.phone_number || '',
       email: values?.email || '',
-      page,
+      page:1,
       per_page: pageSize
     };
     setFilters(query);
+    setPage(1)
     const response = await fetcher([
       "/providers",
       { params: query }

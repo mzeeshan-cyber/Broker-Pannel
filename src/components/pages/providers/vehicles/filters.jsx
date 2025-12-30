@@ -131,7 +131,7 @@ export default function Filters({ handleGetBySearch, filterValue }) {
                                                         <SelectDropDown
                                                             label="Vehicle Status"
                                                             id="vehicle_status"
-                                                            values={values}
+                                                            values={values.vehicle_status}
                                                             setFieldValue={setFieldValue}
                                                             options={vehicleStatus}
                                                         />
@@ -140,7 +140,7 @@ export default function Filters({ handleGetBySearch, filterValue }) {
                                                         <SelectDropDown
                                                             label="Vehicle Type"
                                                             id="vehicle_type"
-                                                            values={values}
+                                                            values={values.vehicle_type}
                                                             setFieldValue={setFieldValue}
                                                             options={vehicleType}
                                                         />
@@ -149,7 +149,7 @@ export default function Filters({ handleGetBySearch, filterValue }) {
                                                         <SelectDropDown
                                                             label="Inspection Type"
                                                             id="inspection_type"
-                                                            values={values}
+                                                            values={values.inspection_type}
                                                             setFieldValue={setFieldValue}
                                                             options={inspectionType}
                                                         />

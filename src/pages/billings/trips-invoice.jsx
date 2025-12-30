@@ -23,9 +23,10 @@ export default function TripsInvoices() {
       submission_date: values?.submission_date || '',
       paid_date: values?.paid_date || '',
       status: values?.status || '',
-      page,
+      page:1,
       per_page: pageSize
     };
+    setPage(1);
     setFilters(query);
     try{
       const response = await fetcher([

@@ -27,9 +27,10 @@ export default function Vehicles() {
       vehicle_type: values?.vehicle_type || '',
       inspection_type: values?.inspection_type || '',
       provider_id: provider_id,
-      page,
+      page:1,
       per_page: pageSize
     };
+    setPage(1)
     setFilters(query);
     const response = await fetcher([
       "/get-provider-vehicles",
