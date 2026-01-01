@@ -19,10 +19,11 @@ import Avatar from 'components/@extended/Avatar';
 import { CallCalling, Profile2User } from 'iconsax-react';
 import { ImagePath, getImageUrl } from 'utils/getImageUrl';
 import { capitalize } from 'lodash';
-import { Chip } from '@mui/material';
+import { Box, Card, CardContent, Chip, useTheme } from '@mui/material';
 import { getStatusColor } from 'constants/constants';
 
 export default function AttendentCard({ data }) {
+    const theme = useTheme()
     return (
         <>
             {data.map((item, index) => (
@@ -112,6 +113,34 @@ export default function AttendentCard({ data }) {
                     </Grid>
                 </MainCard>
             ))}
+            {data.length < 1 &&
+                <Card
+                    elevation={0}
+                    sx={{
+                        borderRadius: 2,
+                        border: `1px solid ${theme.palette.divider}`,
+                        backgroundColor:
+                            theme.palette.mode === 'dark'
+                                ? ''
+                                : theme.palette.grey[50],
+                        textAlign: 'center'
+                    }}
+                >
+                    <CardContent sx={{ py: 3 }}>
+                        <Box>
+                            <Typography variant="h6" fontWeight={600}>
+                                No Attendants
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ mt: 0.5 }}
+                            >
+                                There are currently no attendants available.
+                            </Typography>
+                        </Box>
+                    </CardContent>
+                </Card>}
         </>
     );
 }

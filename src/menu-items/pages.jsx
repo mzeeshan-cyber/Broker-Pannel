@@ -1,7 +1,6 @@
 
 // assets
-import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar, Personalcard, Receipt, Document } from 'iconsax-react';
-import { FaFileInvoice, FaReceipt } from 'react-icons/fa';
+import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar, Personalcard, Receipt } from 'iconsax-react';
 
 const icons = {
   maintenance: MessageProgramming,

@@ -1,81 +1,77 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
-
-// material-ui
 import { useTheme } from '@mui/material/styles';
-
-// third-party
 import ReactApexChart from 'react-apexcharts';
-
-// project-imports
 import { ThemeMode } from 'config';
 
-// ==============================|| CHART - ECOMMERCE DATA CHART ||============================== //
-
-export default function EcommerceDataChart({ color, height }) {
+export default function EcommerceDataChart({ color, height, data, type }) {
   const theme = useTheme();
   const mode = theme.palette.mode;
 
-  // chart options
-  const areaChartOptions = {
+  const [options, setOptions] = useState({
     chart: {
       id: 'new-stack-chart',
       type: 'bar',
-      sparkline: {
-        enabled: true
-      },
-      toolbar: {
-        show: false
-      },
-      offsetX: -2
+      sparkline: { enabled: true },
+      toolbar: { show: false },
+      offsetX: 0
     },
-    dataLabels: {
-      enabled: false
-    },
+    dataLabels: { enabled: false },
     plotOptions: {
       bar: {
-        borderRadius: 2,
-        columnWidth: '80%'
+        borderRadius: 4,
+        columnWidth: '50%',
+        distributed: data?.length === 1
       }
     },
     xaxis: {
-      crosshairs: {
-        width: 1
-      }
+      crosshairs: { width: 1 },
+      labels: { show: false } // hide X-axis labels
+    },
+    yaxis: {
+      min: 0,
+      max: Math.max(...(data || [0])) * 1.2,
+      labels: { show: false } // hide Y-axis labels
     },
     tooltip: {
-      fixed: {
-        enabled: false
-      },
-      x: {
-        show: false
-      }
+      fixed: { enabled: false },
+      x: { show: false }
     }
-  };
-
-  const { primary, secondary } = theme.palette.text;
-  const line = theme.palette.divider;
-
-  const [options, setOptions] = useState(areaChartOptions);
+  });
 
   useEffect(() => {
     setOptions((prevState) => ({
       ...prevState,
       colors: [color],
-      theme: {
-        mode: mode === ThemeMode.DARK ? 'dark' : 'light'
-      }
+      plotOptions: {
+        ...prevState.plotOptions,
+        bar: {
+          ...prevState.plotOptions.bar,
+          distributed: data?.length === 1,
+          columnWidth: data?.length === 1 ? '40%' : '80%' // narrower if single bar
+        }
+      },
+      yaxis: {
+        min: 0,
+        max: Math.max(...(data || [0])) * 1.2,
+        labels: { show: false }
+      },
+      xaxis: {
+        ...prevState.xaxis,
+        labels: { show: false }
+      },
+      theme: { mode: mode === ThemeMode.DARK ? 'dark' : 'light' }
     }));
-  }, [color, mode, primary, secondary, line, theme]);
+  }, [color, mode, data]);
 
-  const [series] = useState([
-    {
-      name: 'Users',
-      data: [10, 30, 40, 20, 60, 50, 20, 15, 20, 25, 30, 25]
-    }
-  ]);
+  const series = [{ name: type, data: data || [] }];
 
-  return <ReactApexChart options={options} series={series} type="bar" height={height ? height : 50} />;
+  return <ReactApexChart options={options} series={series} type="bar" height={height || 50} />;
 }
 
-EcommerceDataChart.propTypes = { color: PropTypes.string, height: PropTypes.number };
+EcommerceDataChart.propTypes = {
+  color: PropTypes.string,
+  height: PropTypes.number,
+  data: PropTypes.array,
+  type: PropTypes.string
+};

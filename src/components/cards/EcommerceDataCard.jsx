@@ -14,10 +14,27 @@ import MainCard from 'components/MainCard';
 import Avatar from 'components/@extended/Avatar';
 import IconButton from 'components/@extended/IconButton';
 import MoreIcon from 'components/@extended/MoreIcon';
+import { MdOutlineArrowBackIos, MdOutlineArrowForwardIos } from 'react-icons/md';
+import { Button, Chip, Tooltip } from '@mui/material';
+import { useTheme } from '@emotion/react';
 
-// ==============================|| CHART WIDGET - ECOMMERCE CARD  ||============================== //
-
-export default function EcommerceDataCard({ title, count, percentage, color, iconPrimary, children }) {
+export default function EcommerceDataCard({ 
+  title,
+  count,
+  countTotal,
+  percentage,
+  color,
+  iconPrimary,
+  children,
+  toDate,
+  fromDate,
+  selectedType,
+  onTypeChange,
+  onPrev,
+  onNext,
+  disableNext
+}) {
+  const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -39,53 +56,71 @@ export default function EcommerceDataCard({ title, count, percentage, color, ico
                 {iconPrimary}
               </Avatar>
               <Typography variant="subtitle1">{title}</Typography>
+              <Typography variant="subtitle1">({countTotal})</Typography>
             </Stack>
-            <IconButton
-              color="secondary"
-              id="wallet-button"
-              aria-controls={open ? 'wallet-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? 'true' : undefined}
-              onClick={handleClick}
-            >
-              <MoreIcon />
-            </IconButton>
-            <Menu
-              id="wallet-menu"
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleClose}
-              MenuListProps={{
-                'aria-labelledby': 'wallet-button',
-                sx: { p: 1.25, minWidth: 150 }
-              }}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right'
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right'
-              }}
-            >
-              <ListItemButton onClick={handleClose}>Today</ListItemButton>
-              <ListItemButton onClick={handleClose}>Weekly</ListItemButton>
-              <ListItemButton onClick={handleClose}>Monthly</ListItemButton>
-            </Menu>
+
+            {/* Interval Type Menu */}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <IconButton
+                color="secondary"
+                id="wallet-button"
+                aria-controls={open ? 'wallet-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                onClick={handleClick}
+              >
+                <MoreIcon />
+              </IconButton>
+              <Menu
+                id="wallet-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                  'aria-labelledby': 'wallet-button',
+                  sx: { p: 1.25, minWidth: 150 }
+                }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              >
+                <ListItemButton onClick={() => { handleClose(); onTypeChange('weekly'); }}>Weekly</ListItemButton>
+                <ListItemButton onClick={() => { handleClose(); onTypeChange('monthly'); }}>Monthly</ListItemButton>
+                <ListItemButton onClick={() => { handleClose(); onTypeChange('yearly'); }}>Yearly</ListItemButton>
+              </Menu>
+            </Stack>
           </Stack>
         </Grid>
+
+        {/* Chart Section */}
         <Grid item xs={12}>
           <MainCard content={false} border={false} sx={{ bgcolor: 'background.default' }}>
             <Box sx={{ p: 3, pb: 1.25 }}>
-              <Grid container spacing={3}>
-                <Grid item xs={7}>
+              <Grid container spacing={0}>
+                <Grid item xs={12}>
                   {children}
-                </Grid>
-                <Grid item xs={5}>
-                  <Stack spacing={1}>
-                    <Typography variant="h5">{count}</Typography>
-                    {percentage}
+
+                  {/* Interval Navigation */}
+                  <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} paddingTop={'5px'}>
+                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                      <Button size="small" variant="outlined" onClick={onPrev}>
+                        <MdOutlineArrowBackIos />
+                      </Button>
+                      <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>
+                        {selectedType}
+                      </Typography>
+                      <Button size="small" variant="outlined" onClick={onNext} disabled={disableNext}>
+                        <MdOutlineArrowForwardIos />
+                      </Button>
+                      <Typography fontSize={'10px'} color="#ffffffff">
+                        {fromDate} To {toDate}
+                      </Typography>
+                    </Stack>
+
+                    <Stack display={'flex'} justifyContent={'end'} alignItems={'end'}>
+                      <Typography variant="h5">{count}</Typography>
+                    </Stack>
                   </Stack>
+
                 </Grid>
               </Grid>
             </Box>
@@ -95,12 +130,3 @@ export default function EcommerceDataCard({ title, count, percentage, color, ico
     </MainCard>
   );
 }
-
-EcommerceDataCard.propTypes = {
-  title: PropTypes.string,
-  count: PropTypes.string,
-  percentage: PropTypes.node,
-  color: PropTypes.any,
-  iconPrimary: PropTypes.node,
-  children: PropTypes.any
-};

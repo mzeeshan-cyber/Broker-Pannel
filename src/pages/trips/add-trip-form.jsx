@@ -461,7 +461,7 @@ export default function AddTripForm({ mappedPatients }) {
                                 </Grid>
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
-                                        label="Is Bariotric"
+                                        label="Is Bariatric"
                                         id="is_bariatric"
                                         values={values.is_bariatric}
                                         options={repeating}
