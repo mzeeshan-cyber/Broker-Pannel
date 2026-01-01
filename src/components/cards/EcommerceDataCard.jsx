@@ -1,28 +1,22 @@
-import PropTypes from 'prop-types';
 import { useState } from 'react';
-
-// material-ui
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Menu from '@mui/material/Menu';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import ListItemButton from '@mui/material/ListItemButton';
-
-// project-imports
 import MainCard from 'components/MainCard';
 import Avatar from 'components/@extended/Avatar';
 import IconButton from 'components/@extended/IconButton';
 import MoreIcon from 'components/@extended/MoreIcon';
 import { MdOutlineArrowBackIos, MdOutlineArrowForwardIos } from 'react-icons/md';
-import { Button, Chip, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import { useTheme } from '@emotion/react';
 
-export default function EcommerceDataCard({ 
+export default function EcommerceDataCard({
   title,
   count,
   countTotal,
-  percentage,
   color,
   iconPrimary,
   children,
@@ -34,7 +28,6 @@ export default function EcommerceDataCard({
   onNext,
   disableNext
 }) {
-  const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -46,6 +39,8 @@ export default function EcommerceDataCard({
     setAnchorEl(null);
   };
 
+  const theme = useTheme();
+
   return (
     <MainCard>
       <Grid container spacing={2}>
@@ -55,8 +50,14 @@ export default function EcommerceDataCard({
               <Avatar variant="rounded" color={color}>
                 {iconPrimary}
               </Avatar>
-              <Typography variant="subtitle1">{title}</Typography>
-              <Typography variant="subtitle1">({countTotal})</Typography>
+              <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                <Typography variant="subtitle1">{title}</Typography>
+                <Stack direction={'row'} alignItems={'center'}>
+                  <Typography variant="subtitle1" fontSize={12}>{count}</Typography>
+                  <Typography variant="subtitle1" fontSize={12} margin={'0 2px'}>/</Typography>
+                  <Typography variant="subtitle1" fontSize={12}>{countTotal}</Typography>
+                </Stack>
+              </Stack>
             </Stack>
 
             {/* Interval Type Menu */}
@@ -93,38 +94,35 @@ export default function EcommerceDataCard({
 
         {/* Chart Section */}
         <Grid item xs={12}>
-          <MainCard content={false} border={false} sx={{ bgcolor: 'background.default' }}>
-            <Box sx={{ p: 3, pb: 1.25 }}>
+          <MainCard content={false} border={false} sx={{ bgcolor: theme.palette.mode === 'dark' ? '#161f29ff' : '#F5F8FF' }}>
+            <Box sx={{ p: 2 }}>
               <Grid container spacing={0}>
                 <Grid item xs={12}>
                   {children}
-
-                  {/* Interval Navigation */}
-                  <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} paddingTop={'5px'}>
-                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
-                      <Button size="small" variant="outlined" onClick={onPrev}>
-                        <MdOutlineArrowBackIos />
-                      </Button>
-                      <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>
-                        {selectedType}
-                      </Typography>
-                      <Button size="small" variant="outlined" onClick={onNext} disabled={disableNext}>
-                        <MdOutlineArrowForwardIos />
-                      </Button>
-                      <Typography fontSize={'10px'} color="#ffffffff">
-                        {fromDate} To {toDate}
-                      </Typography>
-                    </Stack>
-
-                    <Stack display={'flex'} justifyContent={'end'} alignItems={'end'}>
-                      <Typography variant="h5">{count}</Typography>
-                    </Stack>
-                  </Stack>
-
                 </Grid>
               </Grid>
             </Box>
           </MainCard>
+          <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} spacing={1} paddingTop={'10px'}>
+            <Stack direction={'row'} alignItems={'center'} gap={'5px'}>
+              <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>
+                {selectedType}
+              </Typography>
+              <Tooltip title='Previus Interval'>
+                <IconButton color="primary" onClick={onPrev} sx={{ p: 0, height: '15px', width: '15px' }}>
+                  <MdOutlineArrowBackIos size={5}/>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Next Interval">
+                <IconButton color="primary" onClick={onNext} disabled={disableNext} sx={{ p: 0, height: '15px', width: '15px' }}>
+                  <MdOutlineArrowForwardIos size={5}/>
+                </IconButton>
+              </Tooltip>
+            </Stack>
+            <Typography fontSize={'10px'}>
+              {fromDate} To {toDate}
+            </Typography>
+          </Stack>
         </Grid>
       </Grid>
     </MainCard>
