@@ -237,7 +237,11 @@ export default function DashboardDefault() {
             onNext={createNextHandler(patientsDate, setPatientsDate, patientsFilter)}
             disableNext={getIntervalRange(patientsDate, patientsFilter).isFutureDisabled}
           >
-            <EcommerceDataChart color={theme.palette.primary.main} data={chartPatients} type={'Patients'} />
+            <EcommerceDataChart color={theme.palette.primary.main} data={chartPatients} type={'Patients'}
+              toDate={getIntervalRange(patientsDate, patientsFilter).to_date}
+              fromDate={getIntervalRange(patientsDate, patientsFilter).from_date}
+              filterType={patientsFilter}
+            />
           </EcommerceDataCard>
         }
       </Grid>
@@ -259,7 +263,13 @@ export default function DashboardDefault() {
             onNext={createNextHandler(providersDate, setProvidersDate, providersFilter)}
             disableNext={getIntervalRange(providersDate, providersFilter).isFutureDisabled}
           >
-            <EcommerceDataChart color={theme.palette.warning.main} data={chartProviders} type={'Providers'} />
+            <EcommerceDataChart
+              color={theme.palette.warning.main}
+              data={chartProviders}
+              type={'Providers'}
+              toDate={getIntervalRange(providersDate, providersFilter).to_date}
+              fromDate={getIntervalRange(providersDate, providersFilter).from_date}
+              filterType={providersFilter} />
           </EcommerceDataCard>
         }
       </Grid>
@@ -281,7 +291,13 @@ export default function DashboardDefault() {
             onNext={createNextHandler(tripsDate, setTripsDate, tripsFilter)}
             disableNext={getIntervalRange(tripsDate, tripsFilter).isFutureDisabled}
           >
-            <EcommerceDataChart color={theme.palette.warning.main} data={chartTrips} type={'Trips'} />
+            <EcommerceDataChart
+              color={theme.palette.warning.main}
+              data={chartTrips} type={'Trips'}
+              toDate={getIntervalRange(tripsDate, tripsFilter).to_date}
+              fromDate={getIntervalRange(tripsDate, tripsFilter).from_date}
+              filterType={tripsFilter}
+            />
           </EcommerceDataCard>
         }
       </Grid>
@@ -309,6 +325,7 @@ export default function DashboardDefault() {
               type={'Reimbursement Trips'}
               toDate={getIntervalRange(reimbursementDate, reimbursementTripsFilter).to_date}
               fromDate={getIntervalRange(reimbursementDate, reimbursementTripsFilter).from_date}
+              filterType={reimbursementTripsFilter}
             />
           </EcommerceDataCard>
         }
