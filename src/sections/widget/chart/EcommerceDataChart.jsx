@@ -39,7 +39,6 @@ export default function EcommerceDataChart({ color, height = 50, data = [], type
   // Generate chartLabels aligned with data
   const chartLabels = useMemo(() => {
     const labels = generateLabels(fromDate, toDate, filterType);
-    console.log(labels)
 
     if (!Array.isArray(data) || data.length === 0) return labels;
 

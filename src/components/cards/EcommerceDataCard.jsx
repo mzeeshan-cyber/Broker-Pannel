@@ -109,14 +109,24 @@ export default function EcommerceDataCard({
                 {selectedType}
               </Typography>
               <Tooltip title='Previus Interval'>
-                <IconButton color="primary" onClick={onPrev} sx={{ p: 0, height: '15px', width: '15px' }}>
-                  <MdOutlineArrowBackIos size={5}/>
-                </IconButton>
+                <Box color={theme.palette.primary.main} onClick={onPrev}
+                  sx={{
+                    cursor:'pointer',
+                  }}>
+                  <MdOutlineArrowBackIos size={15} />
+                </Box>
               </Tooltip>
               <Tooltip title="Next Interval">
-                <IconButton color="primary" onClick={onNext} disabled={disableNext} sx={{ p: 0, height: '15px', width: '15px' }}>
-                  <MdOutlineArrowForwardIos size={5}/>
-                </IconButton>
+                <Box
+                  color={theme.palette.primary.main}
+                  onClick={!disableNext ? onNext : undefined}
+                  sx={{
+                    cursor: disableNext ? 'not-allowed' : 'pointer',
+                    opacity: disableNext ? 0.4 : 1,
+                  }}
+                >
+                  <MdOutlineArrowForwardIos size={15} />
+                </Box>
               </Tooltip>
             </Stack>
             <Typography fontSize={'10px'}>

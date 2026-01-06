@@ -237,7 +237,10 @@ export default function DashboardDefault() {
             onNext={createNextHandler(patientsDate, setPatientsDate, patientsFilter)}
             disableNext={getIntervalRange(patientsDate, patientsFilter).isFutureDisabled}
           >
-            <EcommerceDataChart color={theme.palette.primary.main} data={chartPatients} type={'Patients'}
+            <EcommerceDataChart
+              color={theme.palette.primary.main}
+              data={chartPatients}
+              type={'Patients'}
               toDate={getIntervalRange(patientsDate, patientsFilter).to_date}
               fromDate={getIntervalRange(patientsDate, patientsFilter).from_date}
               filterType={patientsFilter}
@@ -292,7 +295,7 @@ export default function DashboardDefault() {
             disableNext={getIntervalRange(tripsDate, tripsFilter).isFutureDisabled}
           >
             <EcommerceDataChart
-              color={theme.palette.warning.main}
+              color={theme.palette.success.main}
               data={chartTrips} type={'Trips'}
               toDate={getIntervalRange(tripsDate, tripsFilter).to_date}
               fromDate={getIntervalRange(tripsDate, tripsFilter).from_date}
