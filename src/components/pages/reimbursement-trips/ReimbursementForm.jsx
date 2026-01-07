@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import UploadVerificationForm from "./UploadVerificationForm";
 import { FiAlertCircle } from "react-icons/fi";
 import TransitionsModal from "sections/components-overview/modal/TransitionsModal";
+import CircularLoader from "components/common/loader/CircularLoader";
 
 Font.register({
   family: "DejaVuSans",
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
 // ---------------- MAIN COMPONENT ----------------
 const TripVerificationForm = () => {
   const [formData, setFormData] = useState({});
-  const [loading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
   const tripId = localStorage.getItem("tripId");
@@ -111,12 +112,16 @@ const TripVerificationForm = () => {
       }
     } catch (error) {
       setIsLoading(false);
+      const res = response.Json();
       openSnackbar({
         open: true,
-        message: error.message || 'Something went wrong',
+        message: res.message || 'Something went wrong',
         variant: 'alert',
         alert: { color: 'error' }
       });
+    }
+    finally{
+      setIsLoading(false);
     }
 
   };
@@ -393,8 +398,8 @@ const TripVerificationForm = () => {
   // ---------------- SCREEN UI ----------------
   return (
     <>
-      {loading ?
-        'loading...'
+      {isLoading ?
+        <CircularLoader/>
         :
         <>
           {(!formData?.reimbursement_form && !clinicSignature) &&

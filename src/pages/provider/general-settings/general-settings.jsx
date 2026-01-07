@@ -4,7 +4,7 @@ import DocumentDetails from './document-details';
 export default function GeneralSettings() {
   const tabsData = [
     {
-      label: 'Document Detail',
+      label: 'Required Documents',
       icon: '',
       content: <DocumentDetails/>
     },

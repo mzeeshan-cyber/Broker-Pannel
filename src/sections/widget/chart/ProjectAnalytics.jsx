@@ -29,6 +29,7 @@ import { ThemeMode } from 'config';
 
 // assets
 import { ArrowDown, ArrowSwapHorizontal, ArrowUp, Bookmark, Chart, Edit, HomeTrendUp, Maximize4, ShoppingCart } from 'iconsax-react';
+import RepeatCustomerChart from './RepeatCustomerChart';
 
 function a11yProps(index) {
   return {
@@ -235,7 +236,8 @@ export default function ProjectAnalytics() {
                     <MoreIcon />
                   </IconButton>
                 </Stack>
-                <EcommerceDataChart data={data} />
+                {/* <EcommerceDataChart data={data} /> */}
+                <RepeatCustomerChart />
               </Stack>
             </Grid>
             <Grid item xs={12} md={4}>

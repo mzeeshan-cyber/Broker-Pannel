@@ -24,6 +24,7 @@ import avatar2 from '/src/assets/images/users/avatar-2.png';
 import avatar3 from '/src/assets/images/users/avatar-3.png';
 import avatar4 from '/src/assets/images/users/avatar-4.png';
 import avatar5 from '/src/assets/images/users/avatar-5.png';
+import { minHeight } from '@mui/system';
 
 // ===========================|| STATISTICS - ASSIGN USERS ||=========================== //
 
@@ -42,8 +43,8 @@ export default function AssignUsers() {
   };
 
   return (
-    <MainCard>
-      <Grid container spacing={3}>
+    <MainCard sx={{height:'100%'}}>
+      <Grid container spacing={6} sx={{height:'100%'}}>
         <Grid item xs={12}>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Stack direction="row" alignItems="center" spacing={2}>

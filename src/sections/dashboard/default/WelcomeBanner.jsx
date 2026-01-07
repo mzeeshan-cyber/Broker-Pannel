@@ -41,28 +41,15 @@ export default function WelcomeBanner() {
       <Grid container>
         <Grid item md={6} sm={6} xs={12}>
           <Stack spacing={2} sx={{ padding: 3 }}>
-            <Typography variant="h2" color={theme.palette.background.paper}>
-              Explore Redesigned Able Pro
+            <Typography variant="h2" color='#f3f2f2ff'>
+              Welcome to the CNavigator Broker Panel
             </Typography>
-            <Typography variant="h6" color={theme.palette.background.paper}>
-              The Brand new User Interface with power of Material-UI Components. Explore the Endless possibilities with Able Pro.
+            <Typography variant="h6" color='#dfdedeff'>
+              With the Broker Panel, you can easily monitor ride activity, review and manage invoices, track funding sources, and ensure smooth coordination between providers and stakeholders. Our goal is to simplify your workflow, reduce manual effort, and help you make informed decisions faster.
             </Typography>
-            <Box sx={{ pt: 1.5 }}>
-              <Button
-                variant="outlined"
-                color="secondary"
-                href="https://1.envato.market/c/1289604/275988/4415?subId1=phoenixcoded&u=https%3A%2F%2Fthemeforest.net%2Fitem%2Fable-pro-responsive-bootstrap-4-admin-template%2F19300403"
-                sx={{
-                  color: 'background.paper',
-                  borderColor: theme.palette.background.paper,
-                  zIndex: 2,
-                  '&:hover': { color: 'background.paper', borderColor: theme.palette.background.paper, bgcolor: 'primary.main' }
-                }}
-                target="_blank"
-              >
-                Exclusive on Themeforest
-              </Button>
-            </Box>
+            <Typography variant="h6" color='#dfdedeff'>
+              Thank you for choosing CNavigator. We’re here to support you every step of the way.
+            </Typography>
           </Stack>
         </Grid>
         <Grid item sm={6} xs={12} sx={{ display: { xs: 'none', sm: 'initial' } }}>
