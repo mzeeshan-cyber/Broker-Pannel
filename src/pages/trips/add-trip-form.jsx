@@ -321,7 +321,7 @@ export default function AddTripForm({ mappedPatients }) {
                 return_pickup_directions: '',
                 return_dropoff_facility_name: '',
                 return_dropoff_phone: '',
-                return_dropoff_time: '',
+                return_appointment_time: '',
                 return_dropoff_address: '',
                 return_dropoff_hospital_id: '',
                 return_dropoff_directions: '',
@@ -399,7 +399,7 @@ export default function AddTripForm({ mappedPatients }) {
                 useEffect(() => {
                     if (values?.return_pickup_time && loacationData?.details?.duration_seconds) {
                         if (appointmentTime) {
-                            setFieldValue('return_dropoff_time', appointmentTime);
+                            setFieldValue('return_appointment_time', appointmentTime);
                         }
                     }
                 }, [appointmentTime]);
@@ -962,12 +962,12 @@ export default function AddTripForm({ mappedPatients }) {
 
                                                             <Grid item xs={12} md={6} lg={4}>
                                                                 <TimePicker24
-                                                                    id="return_dropoff_time"
+                                                                    id="return_appointment_time"
                                                                     label="Dropoff Time"
                                                                     type="time"
-                                                                    touched={touched.return_dropoff_time}
-                                                                    errors={errors.return_dropoff_time}
-                                                                    values={values.return_dropoff_time}
+                                                                    touched={touched.return_appointment_time}
+                                                                    errors={errors.return_appointment_time}
+                                                                    values={values.return_appointment_time}
                                                                     handleBlur={handleBlur}
                                                                     handleChange={handleChange}
                                                                     disabled={!values?.return_pickup_time || !loacationData?.details?.duration_seconds}

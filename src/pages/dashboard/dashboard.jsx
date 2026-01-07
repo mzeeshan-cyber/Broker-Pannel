@@ -6,7 +6,7 @@ import WelcomeBanner from 'sections/dashboard/default/WelcomeBanner';
 import ProjectAnalytics from 'sections/widget/chart/ProjectAnalytics';
 import ProjectOverview from 'sections/widget/chart/ProjectOverview';
 import AssignUsers from 'sections/widget/statistics/AssignUsers';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { fetcherPost } from 'utils/axios';
 import EcommerceDataChart from 'sections/widget/chart/EcommerceDataChart';
 import { Car, People, SmartCar, Personalcard } from 'iconsax-react';
@@ -14,11 +14,14 @@ import SkeletonCard from 'components/pages/dashboard/skeletonCard';
 
 export default function DashboardDefault() {
   const theme = useTheme();
-  const getPreviousMonthDate = () => {
+  const getInitialDateByFilter = useCallback((filter) => {
     const d = new Date();
-    d.setMonth(d.getMonth() - 1);
+    if (filter === 'weekly') d.setDate(d.getDate() - 7);
+    else if (filter === 'monthly') d.setMonth(d.getMonth() - 1);
+    else if (filter === 'yearly') d.setFullYear(d.getFullYear() - 1);
     return d;
-  };
+  }, []);
+
   const formatLocalDate = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -32,10 +35,23 @@ export default function DashboardDefault() {
   const [tripsFilter, setTripsFilter] = useState('weekly');
   const [reimbursementTripsFilter, setReimbursementreTripsFilter] = useState('weekly');
 
-  const [patientsDate, setPatientsDate] = useState(getPreviousMonthDate());
-  const [providersDate, setProvidersDate] = useState(getPreviousMonthDate());
-  const [tripsDate, setTripsDate] = useState(getPreviousMonthDate());
-  const [reimbursementDate, setReimbursementDate] = useState(getPreviousMonthDate());
+  // const [patientsDate, setPatientsDate] = useState(getPreviousMonthDate());
+  // const [providersDate, setProvidersDate] = useState(getPreviousMonthDate());
+  // const [tripsDate, setTripsDate] = useState(getPreviousMonthDate());
+  // const [reimbursementDate, setReimbursementDate] = useState(getPreviousMonthDate());
+  const [patientsDate, setPatientsDate] = useState(
+    getInitialDateByFilter(patientsFilter)
+  );
+  const [providersDate, setProvidersDate] = useState(
+    getInitialDateByFilter(providersFilter)
+  );
+  const [tripsDate, setTripsDate] = useState(
+    getInitialDateByFilter(tripsFilter)
+  );
+  const [reimbursementDate, setReimbursementDate] = useState(
+    getInitialDateByFilter(reimbursementTripsFilter)
+  );
+
 
   const [patients, setPatients] = useState([]);
   const [chartPatients, setChartPatients] = useState([]);
@@ -57,26 +73,25 @@ export default function DashboardDefault() {
 
     switch (type) {
       case 'weekly': {
-        const firstOfMonth = new Date(base.getFullYear(), base.getMonth(), 1);
-        const baseCopy = new Date(base); // avoid mutating base
+        const baseCopy = new Date(base);
+        const today = new Date();
 
         const dayOfWeek = baseCopy.getDay(); // 0 = Sunday
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const weekStart = new Date(baseCopy);
-        weekStart.setDate(baseCopy.getDate() + diffToMonday);
 
-        const from = weekStart < firstOfMonth ? firstOfMonth : weekStart;
+        const from = new Date(baseCopy);
+        from.setDate(baseCopy.getDate() + diffToMonday);
 
-        const weekEnd = new Date(from);
-        weekEnd.setDate(from.getDate() + 6);
-        const to = weekEnd > today ? today : weekEnd;
+        const to = new Date(from);
+        to.setDate(from.getDate() + 6);
 
         return {
           from_date: formatLocalDate(from),
-          to_date: formatLocalDate(to),
+          to_date: formatLocalDate(to > today ? today : to),
           isFutureDisabled: to >= today
         };
       }
+
 
       case 'monthly': {
         const from = new Date(base.getFullYear(), base.getMonth(), 1);
@@ -266,7 +281,11 @@ export default function DashboardDefault() {
             toDate={patientsInterval.to_date}
             fromDate={patientsInterval.from_date}
             selectedType={patientsFilter}
-            onTypeChange={setPatientsFilter}
+            // onTypeChange={setPatientsFilter}
+            onTypeChange={(newFilter) => {
+              setPatientsFilter(newFilter);
+              setPatientsDate(getInitialDateByFilter(newFilter));
+            }}
             onPrev={createPrevHandler(patientsDate, setPatientsDate, patientsFilter)}
             onNext={createNextHandler(patientsDate, setPatientsDate, patientsFilter)}
             disableNext={patientsInterval.isFutureDisabled}
@@ -295,7 +314,11 @@ export default function DashboardDefault() {
             toDate={providersInterval.to_date}
             fromDate={providersInterval.from_date}
             selectedType={providersFilter}
-            onTypeChange={setProvidersFilter}
+            onTypeChange={(newFilter) => {
+              setProvidersFilter(newFilter);
+              setProvidersDate(getInitialDateByFilter(newFilter));
+            }}
+
             onPrev={createPrevHandler(providersDate, setProvidersDate, providersFilter)}
             onNext={createNextHandler(providersDate, setProvidersDate, providersFilter)}
             disableNext={providersInterval.isFutureDisabled}
@@ -323,7 +346,10 @@ export default function DashboardDefault() {
             toDate={tripsInterval.to_date}
             fromDate={tripsInterval.from_date}
             selectedType={tripsFilter}
-            onTypeChange={setTripsFilter}
+            onTypeChange={(newFilter) => {
+              setTripsFilter(newFilter);
+              setTripsDate(getInitialDateByFilter(newFilter));
+            }}
             onPrev={createPrevHandler(tripsDate, setTripsDate, tripsFilter)}
             onNext={createNextHandler(tripsDate, setTripsDate, tripsFilter)}
             disableNext={tripsInterval.isFutureDisabled}
@@ -351,7 +377,10 @@ export default function DashboardDefault() {
             toDate={reimbursementInterval.to_date}
             fromDate={reimbursementInterval.from_date}
             selectedType={reimbursementTripsFilter}
-            onTypeChange={setReimbursementreTripsFilter}
+            onTypeChange={(newFilter) => {
+              setReimbursementreTripsFilter(newFilter);
+              setReimbursementDate(getInitialDateByFilter(newFilter));
+            }}
             onPrev={createPrevHandler(reimbursementDate, setReimbursementDate, reimbursementTripsFilter)}
             onNext={createNextHandler(reimbursementDate, setReimbursementDate, reimbursementTripsFilter)}
             disableNext={reimbursementInterval.isFutureDisabled}
