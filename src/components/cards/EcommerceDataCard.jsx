@@ -95,7 +95,10 @@ export default function EcommerceDataCard({
         {/* Chart Section */}
         <Grid item xs={12}>
           <MainCard content={false} border={false} sx={{ bgcolor: theme.palette.mode === 'dark' ? '#161f29ff' : '#F5F8FF' }}>
-            <Box sx={{ p: 2 }}>
+            <Box sx={{
+              p: 2,
+              maxHeight: '180px'
+            }}>
               <Grid container spacing={0}>
                 <Grid item xs={12}>
                   {children}
@@ -111,7 +114,7 @@ export default function EcommerceDataCard({
               <Tooltip title='Previus Interval'>
                 <Box color={theme.palette.primary.main} onClick={onPrev}
                   sx={{
-                    cursor:'pointer',
+                    cursor: 'pointer',
                   }}>
                   <MdOutlineArrowBackIos size={15} />
                 </Box>

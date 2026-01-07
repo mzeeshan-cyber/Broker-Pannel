@@ -18,7 +18,7 @@ export default function SkeletonCard() {
         >
           <Stack direction="row" spacing={1.5} alignItems="center">
             {/* Icon */}
-            <Skeleton variant="rounded" width={30} height={30} />
+            <Skeleton variant="rounded" width={40} height={40} />
 
             {/* Title + count */}
             <Skeleton variant="text" width={110} height={22} />
@@ -35,6 +35,7 @@ export default function SkeletonCard() {
             px: 3,
             py: 1.5,
             mb: 1.5,
+            height:'180px',
             backgroundColor: (theme) =>
               theme.palette.mode === 'dark'
                 ? 'rgba(255,255,255,0.05)'
@@ -48,10 +49,11 @@ export default function SkeletonCard() {
                 key={i}
                 variant="rounded"
                 width={6}
-                height={Math.random() * 30 + 40}
+                height={Math.random() * 30 + 70}
               />
             ))}
           </Stack>
+          <Skeleton variant="text" height={30} />
         </Box>
 
         {/* ================= Footer ================= */}

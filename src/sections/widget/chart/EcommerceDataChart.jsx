@@ -1,129 +1,150 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTheme } from '@mui/material/styles';
 import ReactApexChart from 'react-apexcharts';
+import { ThemeMode } from 'config';
 
-export default function EcommerceDataChart({ color, height = 50, data = [], type, filterType, fromDate, toDate }) {
+export default function EcommerceDataChart({ filterType = 'monthly', data = [], fromDate, toDate, color, type }) {
+  const theme = useTheme();
+  const mode = theme.palette.mode;
+  const { secondary } = theme.palette.text;
+  const line = theme.palette.divider;
 
-  function generateLabels(fromDate, toDate, filterType) {
-    const start = new Date(fromDate);
-    const end = new Date(toDate);
+  const formatMonthlyTooltip = (day) => {
+    const date = new Date(fromDate);
+    date.setDate(Number(day));
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+  const formatWeeklyTooltip = (dayLabel, dataPointIndex) => {
+    const date = new Date(fromDate);
+    date.setDate(date.getDate() + dataPointIndex);
 
-    const labels = [];
+    return date.toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'short',
+      weekday: 'short'
+    });
+  };
 
-    if (filterType === "yearly") {
-      // Generate months from fromDate to toDate
-      let current = new Date(start.getFullYear(), start.getMonth(), 1);
-      while (current <= end) {
-        labels.push(monthNames[current.getMonth()]);
-        current.setMonth(current.getMonth() + 1);
+  // Dynamically generate categories based on filterType and data
+  const categories = useMemo(() => {
+    if (!data || data.length === 0) return [];
+
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+
+    switch (filterType) {
+      case 'weekly': {
+        const result = [];
+        for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+          result.push(d.toLocaleDateString('en-US', { weekday: 'short' })); // Mon, Tue...
+        }
+        return result;
       }
-    } else if (filterType === "monthly") {
-      // Show days for monthly data
-      let current = new Date(start);
-      while (current <= end) {
-        labels.push(`${monthNames[current.getMonth()]} ${current.getDate()}`);
-        current.setDate(current.getDate() + 1);
+
+      case 'monthly': {
+        const daysInMonth = to.getDate();
+        return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
       }
-    } else if (filterType === "weekly") {
-      // Show weekdays for weekly data
-      return weekDays;
+
+      case 'yearly': {
+        const monthsDiff = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()) + 1;
+        const result = [];
+        let current = new Date(from.getFullYear(), from.getMonth(), 1); // day = 1
+        for (let i = 0; i < monthsDiff; i++) {
+          result.push(current.toLocaleString('default', { month: 'short', year: 'numeric' }));
+          current = new Date(current.getFullYear(), current.getMonth() + 1, 1); // next month, day = 1
+        }
+        return result;
+      }
+
+      default:
+        return [];
     }
+  }, [filterType, data, fromDate, toDate]);
 
-    return labels;
-  }
+  // Map API counts to chart series
+  const seriesData = useMemo(() => {
+    if (!data || data.length === 0) return [];
 
-  // Generate labels for the tooltip
-  // Generate chartLabels aligned with data
-  const chartLabels = useMemo(() => {
-    const labels = generateLabels(fromDate, toDate, filterType);
+    switch (filterType) {
+      case 'weekly':
+      case 'monthly':
+        return data.map(d => d ?? 0);
 
-    if (!Array.isArray(data) || data.length === 0) return labels;
+      case 'yearly': {
+        return data.map(d => d ?? 0);
+      }
 
-    // Map labels to data points
-    return data.map((d, index) => {
-      const val = typeof d === 'number' ? d : d?.count ?? 0;
-
-      // For zero values, still keep the label from `labels`
-      return labels[index] ?? '';
-    });
-  }, [fromDate, toDate, filterType, data]);
-
-
-  // Normalize data
-  const normalizedData = useMemo(() => {
-    if (!Array.isArray(data) || data.length === 0) return [0];
-    return data.map(d => {
-      const val = typeof d === 'number' ? d : d?.count ?? 0;
-      return val === 0 ? 0.06 : val; // tiny bar for zero
-    });
-  }, [data]);
+      default:
+        return [];
+    }
+  }, [data, filterType]);
 
   const [options, setOptions] = useState({
     chart: {
-      id: 'new-stack-chart',
       type: 'bar',
-      sparkline: { enabled: true },
       toolbar: { show: false },
-      offsetX: 0
+      background: 'transparent'
     },
+    tooltip: {
+      x: {
+        formatter: (value, { dataPointIndex }) => {
+          if (filterType === 'monthly') {
+            return formatMonthlyTooltip(value);
+          }
+
+          if (filterType === 'weekly') {
+            return formatWeeklyTooltip(value, dataPointIndex);
+          }
+
+          return value;
+        }
+      }
+    }
+    ,
     dataLabels: { enabled: false },
+    stroke: { show: false },
+    fill: { type: 'solid', colors: [color || theme.palette.primary.main] },
     plotOptions: {
       bar: {
-        borderRadius: 4,
-        columnWidth: '50%',
-        distributed: normalizedData.length === 1
+        columnWidth: '45%',
+        borderRadius: 1
       }
     },
-    xaxis: { labels: { show: false }, crosshairs: { width: 1 } },
-    yaxis: { min: 0, labels: { show: false } },
-    tooltip: {
-      enabled: true,
-      shared: false,
-      intersect: true,
-      custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-        const value = normalizedData[dataPointIndex] ?? 0;
-        const label = chartLabels[dataPointIndex] ?? '';
-        return `
-          <div style="
-            background: white; 
-            color: #0d161fff; 
-            border-radius: 8px; 
-            padding: 6px 10px; 
-            font-size: 12px; 
-            font-family: Inter, sans-serif;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-          ">
-            <strong>${label}</strong>: ${type} ${value < 1 ? 0 :value}
-          </div>
-        `;
-      }
+    grid: { strokeDashArray: 4, borderColor: line },
+    xaxis: {
+      categories,
+      labels: {
+        show: filterType !== 'monthly',
+        style: { colors: categories.map(() => secondary) }
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
     },
-    colors: [color]
+    yaxis: {
+      labels: { style: { colors: [secondary] } }
+    },
+    theme: { mode: mode === ThemeMode.DARK ? 'dark' : 'light' }
   });
 
+  // Update options when categories or theme changes
   useEffect(() => {
     setOptions(prev => ({
       ...prev,
-      plotOptions: {
-        ...prev.plotOptions,
-        bar: {
-          ...prev.plotOptions.bar,
-          distributed: normalizedData.length === 1,
-          columnWidth: normalizedData.length === 1 ? '40%' : '80%'
-        }
+      xaxis: {
+        ...prev.xaxis,
+        categories,
+        labels: { style: { colors: categories.map(() => secondary) } }
       },
-      yaxis: {
-        min: 0,
-        max: Math.max(...normalizedData, 1),
-        labels: { show: false }
-      }
+      fill: { ...prev.fill, colors: [color || theme.palette.primary.main] },
+      grid: { ...prev.grid, borderColor: line },
+      theme: { mode: mode === ThemeMode.DARK ? 'dark' : 'light' }
     }));
-  }, [color, normalizedData]);
+  }, [categories, secondary, line, theme, color, mode]);
 
-  const series = [{ name: type, data: normalizedData }];
-
-  return <ReactApexChart options={options} series={series} type="bar" height={height} />;
+  return <ReactApexChart options={options} series={[{ name: type, data: seriesData }]} type="bar" height={160} />;
 }

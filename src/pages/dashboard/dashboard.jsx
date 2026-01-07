@@ -14,17 +14,28 @@ import SkeletonCard from 'components/pages/dashboard/skeletonCard';
 
 export default function DashboardDefault() {
   const theme = useTheme();
+  const getPreviousMonthDate = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d;
+  };
+  const formatLocalDate = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   // ==============================|| STATES ||============================== //
-  const [patientsFilter, setPatientsFilter] = useState('monthly');
-  const [providersFilter, setProvidersFilter] = useState('monthly');
-  const [tripsFilter, setTripsFilter] = useState('monthly');
-  const [reimbursementTripsFilter, setReimbursementreTripsFilter] = useState('monthly');
+  const [patientsFilter, setPatientsFilter] = useState('weekly');
+  const [providersFilter, setProvidersFilter] = useState('weekly');
+  const [tripsFilter, setTripsFilter] = useState('weekly');
+  const [reimbursementTripsFilter, setReimbursementreTripsFilter] = useState('weekly');
 
-  const [patientsDate, setPatientsDate] = useState(new Date());
-  const [providersDate, setProvidersDate] = useState(new Date());
-  const [tripsDate, setTripsDate] = useState(new Date());
-  const [reimbursementDate, setReimbursementDate] = useState(new Date());
+  const [patientsDate, setPatientsDate] = useState(getPreviousMonthDate());
+  const [providersDate, setProvidersDate] = useState(getPreviousMonthDate());
+  const [tripsDate, setTripsDate] = useState(getPreviousMonthDate());
+  const [reimbursementDate, setReimbursementDate] = useState(getPreviousMonthDate());
 
   const [patients, setPatients] = useState([]);
   const [chartPatients, setChartPatients] = useState([]);
@@ -39,44 +50,61 @@ export default function DashboardDefault() {
   const [tripsLoading, setTripsLoading] = useState(false);
   const [reimbursementLoading, setReimbursementLoading] = useState(false);
 
-
   // ==============================|| INTERVAL LOGIC ||============================== //
+
   const getIntervalRange = (base, type) => {
     const today = new Date();
-    let from = new Date(base);
-    let to = new Date(base);
 
     switch (type) {
-      case 'weekly':
-        const dayOfWeek = from.getDay();
+      case 'weekly': {
+        const firstOfMonth = new Date(base.getFullYear(), base.getMonth(), 1);
+        const baseCopy = new Date(base); // avoid mutating base
+
+        const dayOfWeek = baseCopy.getDay(); // 0 = Sunday
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        from.setDate(from.getDate() + diffToMonday);
-        to = new Date(from);
-        to.setDate(from.getDate() + 6);
-        break;
+        const weekStart = new Date(baseCopy);
+        weekStart.setDate(baseCopy.getDate() + diffToMonday);
 
-      case 'monthly':
-        from = new Date(from.getFullYear(), from.getMonth(), 1);
-        to = new Date(from.getFullYear(), from.getMonth() + 1, 0);
-        break;
+        const from = weekStart < firstOfMonth ? firstOfMonth : weekStart;
 
-      case 'yearly':
-        from = new Date(from.getFullYear(), 0, 1);
-        to = new Date(from.getFullYear(), 11, 31);
-        break;
+        const weekEnd = new Date(from);
+        weekEnd.setDate(from.getDate() + 6);
+        const to = weekEnd > today ? today : weekEnd;
+
+        return {
+          from_date: formatLocalDate(from),
+          to_date: formatLocalDate(to),
+          isFutureDisabled: to >= today
+        };
+      }
+
+      case 'monthly': {
+        const from = new Date(base.getFullYear(), base.getMonth(), 1);
+        const monthEnd = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+        const to = monthEnd > today ? today : monthEnd;
+
+        return {
+          from_date: formatLocalDate(from),
+          to_date: formatLocalDate(to),
+          isFutureDisabled: to >= today
+        };
+      }
+
+      case 'yearly': {
+        const from = new Date(base.getFullYear(), 0, 1);
+        const yearEnd = new Date(base.getFullYear(), 11, 31);
+        const to = yearEnd > today ? today : yearEnd;
+
+        return {
+          from_date: formatLocalDate(from),
+          to_date: formatLocalDate(to),
+          isFutureDisabled: to >= today
+        };
+      }
+
+      default:
+        throw new Error(`Unknown interval type: ${type}`);
     }
-
-    // Clamp 'to' to today
-    if (to > today) to = today;
-
-    // Ensure from is never after to
-    if (from > to) from = new Date(to);
-
-    return {
-      from_date: from.toISOString().split('T')[0],
-      to_date: to.toISOString().split('T')[0],
-      isFutureDisabled: to >= today
-    };
   };
 
   // ==============================|| AGGREGATE CHART DATA ||============================== //
@@ -215,6 +243,12 @@ export default function DashboardDefault() {
     setDate(date);
   };
 
+  const patientsInterval = getIntervalRange(patientsDate, patientsFilter);
+  const providersInterval = getIntervalRange(providersDate, providersFilter);
+  const tripsInterval = getIntervalRange(tripsDate, tripsFilter);
+  const reimbursementInterval = getIntervalRange(reimbursementDate, reimbursementTripsFilter);
+
+
   // ==============================|| RENDER ||============================== //
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
@@ -229,20 +263,20 @@ export default function DashboardDefault() {
             countTotal={patients?.total_count}
             iconPrimary={<Personalcard />}
             color={'primary'}
-            toDate={getIntervalRange(patientsDate, patientsFilter).to_date}
-            fromDate={getIntervalRange(patientsDate, patientsFilter).from_date}
+            toDate={patientsInterval.to_date}
+            fromDate={patientsInterval.from_date}
             selectedType={patientsFilter}
             onTypeChange={setPatientsFilter}
             onPrev={createPrevHandler(patientsDate, setPatientsDate, patientsFilter)}
             onNext={createNextHandler(patientsDate, setPatientsDate, patientsFilter)}
-            disableNext={getIntervalRange(patientsDate, patientsFilter).isFutureDisabled}
+            disableNext={patientsInterval.isFutureDisabled}
           >
             <EcommerceDataChart
               color={theme.palette.primary.main}
               data={chartPatients}
               type={'Patients'}
-              toDate={getIntervalRange(patientsDate, patientsFilter).to_date}
-              fromDate={getIntervalRange(patientsDate, patientsFilter).from_date}
+              toDate={patientsInterval.to_date}
+              fromDate={patientsInterval.from_date}
               filterType={patientsFilter}
             />
           </EcommerceDataCard>
@@ -258,20 +292,20 @@ export default function DashboardDefault() {
             countTotal={providers?.total_count}
             iconPrimary={<People />}
             color={'warning'}
-            toDate={getIntervalRange(providersDate, providersFilter).to_date}
-            fromDate={getIntervalRange(providersDate, providersFilter).from_date}
+            toDate={providersInterval.to_date}
+            fromDate={providersInterval.from_date}
             selectedType={providersFilter}
             onTypeChange={setProvidersFilter}
             onPrev={createPrevHandler(providersDate, setProvidersDate, providersFilter)}
             onNext={createNextHandler(providersDate, setProvidersDate, providersFilter)}
-            disableNext={getIntervalRange(providersDate, providersFilter).isFutureDisabled}
+            disableNext={providersInterval.isFutureDisabled}
           >
             <EcommerceDataChart
               color={theme.palette.warning.main}
               data={chartProviders}
               type={'Providers'}
-              toDate={getIntervalRange(providersDate, providersFilter).to_date}
-              fromDate={getIntervalRange(providersDate, providersFilter).from_date}
+              toDate={providersInterval.to_date}
+              fromDate={providersInterval.from_date}
               filterType={providersFilter} />
           </EcommerceDataCard>
         }
@@ -286,19 +320,19 @@ export default function DashboardDefault() {
             countTotal={trips?.total_count}
             iconPrimary={<SmartCar />}
             color={'success'}
-            toDate={getIntervalRange(tripsDate, tripsFilter).to_date}
-            fromDate={getIntervalRange(tripsDate, tripsFilter).from_date}
+            toDate={tripsInterval.to_date}
+            fromDate={tripsInterval.from_date}
             selectedType={tripsFilter}
             onTypeChange={setTripsFilter}
             onPrev={createPrevHandler(tripsDate, setTripsDate, tripsFilter)}
             onNext={createNextHandler(tripsDate, setTripsDate, tripsFilter)}
-            disableNext={getIntervalRange(tripsDate, tripsFilter).isFutureDisabled}
+            disableNext={tripsInterval.isFutureDisabled}
           >
             <EcommerceDataChart
               color={theme.palette.success.main}
               data={chartTrips} type={'Trips'}
-              toDate={getIntervalRange(tripsDate, tripsFilter).to_date}
-              fromDate={getIntervalRange(tripsDate, tripsFilter).from_date}
+              toDate={tripsInterval.to_date}
+              fromDate={tripsInterval.from_date}
               filterType={tripsFilter}
             />
           </EcommerceDataCard>
@@ -314,20 +348,20 @@ export default function DashboardDefault() {
             countTotal={reimbursementTrips?.total_count}
             iconPrimary={<Car />}
             color={'error'}
-            toDate={getIntervalRange(reimbursementDate, reimbursementTripsFilter).to_date}
-            fromDate={getIntervalRange(reimbursementDate, reimbursementTripsFilter).from_date}
+            toDate={reimbursementInterval.to_date}
+            fromDate={reimbursementInterval.from_date}
             selectedType={reimbursementTripsFilter}
             onTypeChange={setReimbursementreTripsFilter}
             onPrev={createPrevHandler(reimbursementDate, setReimbursementDate, reimbursementTripsFilter)}
             onNext={createNextHandler(reimbursementDate, setReimbursementDate, reimbursementTripsFilter)}
-            disableNext={getIntervalRange(reimbursementDate, reimbursementTripsFilter).isFutureDisabled}
+            disableNext={reimbursementInterval.isFutureDisabled}
           >
             <EcommerceDataChart
               color={theme.palette.error.main}
               data={chartReimbursementTrips}
               type={'Reimbursement Trips'}
-              toDate={getIntervalRange(reimbursementDate, reimbursementTripsFilter).to_date}
-              fromDate={getIntervalRange(reimbursementDate, reimbursementTripsFilter).from_date}
+              toDate={reimbursementInterval.to_date}
+              fromDate={reimbursementInterval.from_date}
               filterType={reimbursementTripsFilter}
             />
           </EcommerceDataCard>
