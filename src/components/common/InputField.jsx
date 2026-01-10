@@ -15,7 +15,8 @@ const InputField = ({
     placeholder,
     accept,
     icon,
-    size
+    size,
+    disabled
 }) => {
     // Prevent typing negative numbers
     const handleKeyDown = (e) => {
@@ -47,6 +48,7 @@ const InputField = ({
                 onChange={handleCustomChange}
                 onKeyDown={handleKeyDown}
                 placeholder={`${placeholder || `Enter ${label}`}`}
+                disabled={disabled}
                 startAdornment={
                     icon ? (
                         <InputAdornment position="start">

@@ -11,6 +11,7 @@ const icons = {
   trips: SmartCar,
   patient: Personalcard,
   billing: Receipt,
+  complaints: I24Support,
 };
 
 // ==============================|| MENU ITEMS - PAGES ||============================== //
@@ -181,6 +182,21 @@ const pages = {
           title: "Reimbursement Settings",
           type: 'item',
           url: '/reimbursement-trips/rates',
+          target: false
+        },
+      ]
+    },
+    {
+      id: 'Complaints',
+      title: "Complaints",
+      type: 'collapse',
+      icon: icons.complaints,
+      children: [
+        {
+          id: 'Complaints',
+          title: "Complaints",
+          type: 'item',
+          url: '/complaints',
           target: false
         },
       ]
