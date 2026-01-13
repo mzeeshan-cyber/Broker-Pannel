@@ -11,7 +11,7 @@ import axios from "axios";
 import { decryptToken } from "utils/tokenUtils";
 import { MdKeyboardDoubleArrowDown } from "react-icons/md";
 import { BiCheckDouble } from "react-icons/bi";
-import { fetcher } from "utils/axios";
+import { fetcher, fetcherPost } from "utils/axios";
 
 const Conversation = ({ comments, open }) => {
     const theme = useTheme();
@@ -63,7 +63,7 @@ const Conversation = ({ comments, open }) => {
         }
     };
     const getRiskData = async () => {
-        const response = await fetcher([`${conversation?.id}/read-comments`]);
+        const response = await fetcherPost([`read-comments/${conversation?.id}`]);
     };
     useEffect(() => {
         const chatContainer = chatEndRef.current?.parentElement;
@@ -88,10 +88,25 @@ const Conversation = ({ comments, open }) => {
             chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
     }, [conversation, isNearBottom]);
+
     useEffect(() => {
-        if (open) getRiskData();
+        if (!open) return;
+
+        // Fetch initially
+        getRiskData();
+
+        // Set up refresh every 5 seconds
+        const intervalId = setInterval(() => {
+            getRiskData();
+        }, 5000);
+
+        // Clean up on unmount or when `open` changes
+        return () => clearInterval(intervalId);
     }, [open]);
 
+    useEffect(() => {
+        setConversation(comments);
+    }, [comments]);
 
     return (
         <Paper
@@ -231,7 +246,7 @@ const Conversation = ({ comments, open }) => {
                     💬 Broker Response
                 </Typography>
 
-                {conversation?.invoice?.status === 'paid' ? (
+                {conversation?.status === 'close' || conversation?.status === 'resolved' || conversation?.status === 'rejected' ? (
                     <Typography
                         variant="body2"
                         color="error"

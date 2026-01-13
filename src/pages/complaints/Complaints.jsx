@@ -1,5 +1,3 @@
-// material-ui
-import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,6 +7,7 @@ import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/complaints/Columns';
 import CircularLoader from 'components/common/loader/CircularLoader';
 import ComplaintsButtonsOnTable from 'components/pages/complaints/ComplaintsButtonsOnTable';
+import BasicTabs from 'sections/components-overview/tabs/BasicTabs';
 
 
 export default function Complaints() {
@@ -29,7 +28,7 @@ export default function Complaints() {
     };
     setFilters(query);
     setPage(1)
-    try{
+    try {
       const response = await fetcher([
         "/get-assigned-complaints",
         { params: query }
@@ -41,8 +40,8 @@ export default function Complaints() {
         setIsLoading(false);
       }
     }
-    catch(error){}
-    finally{
+    catch (error) { }
+    finally {
       setIsLoading(false);
     }
   };
@@ -87,7 +86,7 @@ export default function Complaints() {
           color: 'success'
         }
       });
-      dispatch(deleteComplaint({id}));
+      dispatch(deleteComplaint({ id }));
       dispatch(loading(false));
     }
   }
@@ -111,26 +110,53 @@ export default function Complaints() {
     getComplaintData({}, page, pageSize);
   }, []);
 
+  const tabsData = [
+    {
+      label: 'My Complaints',
+      icon: '',
+      content:
+        isLoading ?
+          <CircularLoader />
+          :
+          <CommonTable
+            data={complaintsStateData.filter(item => item.raised_by_role === 'broker')}
+            paginationData={complaintsState?.paginationData}
+            defaultColumns={columns}
+            setPageSize={setPageSize}
+            pageSize={pageSize}
+            page={page}
+            handleChangePerPage={handleChangePerPage}
+            handleChangePagination={handleChangePagination}
+            handleDelete={handleDeleteComplaint}
+            handleUpdate={updateProvider}
+            stackontable={<ComplaintsButtonsOnTable handleGetData={getComplaintData} filters={filters} />}
+            tableName="complaints"
+          />
+    },
+    {
+      label: 'Other Complaints',
+      icon: '',
+      content:
+        isLoading ?
+          <CircularLoader />
+          :
+          <CommonTable
+            data={complaintsStateData.filter(item => item.raised_by_role !== 'broker')}
+            paginationData={complaintsState?.paginationData}
+            defaultColumns={columns}
+            setPageSize={setPageSize}
+            pageSize={pageSize}
+            page={page}
+            handleChangePerPage={handleChangePerPage}
+            handleChangePagination={handleChangePagination}
+            handleDelete={handleDeleteComplaint}
+            handleUpdate={updateProvider}
+            stackontable={<ComplaintsButtonsOnTable handleGetData={getComplaintData} filters={filters} />}
+            tableName="complaints"
+          />
+    },
+  ];
   return (
-    <Grid>
-      {isLoading ?
-        <CircularLoader text='Loading Complaints..' />
-        :
-        <CommonTable
-          data={complaintsStateData}
-          paginationData={complaintsState?.paginationData}
-          defaultColumns={columns}
-          setPageSize={setPageSize}
-          pageSize={pageSize}
-          page={page}
-          handleChangePerPage={handleChangePerPage}
-          handleChangePagination={handleChangePagination}
-          handleDelete={handleDeleteComplaint}
-          handleUpdate={updateProvider}
-          stackontable={<ComplaintsButtonsOnTable handleGetData={getComplaintData} filters={filters} />}
-          tableName="complaints"
-        />
-      }
-    </Grid>
+    <BasicTabs tabs={tabsData} />
   );
 }

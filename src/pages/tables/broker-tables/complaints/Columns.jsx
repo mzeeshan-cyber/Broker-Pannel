@@ -15,6 +15,7 @@ import { updateComplaintStatus } from 'store/reducers/complaintsSlide';
 import { BsChatSquare } from 'react-icons/bs';
 import ReusableDrawer from 'components/common/ReusableDrawer';
 import Conversation from 'pages/complaints/Conversation';
+import { Box } from '@mui/system';
 
 const changeStatus = async (id, status, dispatch) => {
     const API_URL = import.meta.env.VITE_APP_API_URL;
@@ -57,7 +58,7 @@ const changeStatus = async (id, status, dispatch) => {
 };
 
 function handleComments({ row }) {
-    const commentCount = row?.original?.comments_history?.filter(item => item.type === 'provider')?.filter(item => item.is_read === 0).length;
+    const commentCount = row?.original?.comments?.filter(item => item.user_role === 'provider')?.filter(item => item.is_read === 0).length;
     const [open, setOpen] = useState(false);
     const handleToggle = () => setOpen(!open);
     return (
