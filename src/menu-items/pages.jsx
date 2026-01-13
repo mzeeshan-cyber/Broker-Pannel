@@ -199,6 +199,35 @@ const pages = {
           url: '/complaints',
           target: false
         },
+        {
+          id: 'add complaint',
+          title: "Add Complaint",
+          type: 'item',
+          url: '/complaints/add',
+          target: false
+        },
+      ]
+    },
+    {
+      id: 'Standing Orders',
+      title: "Standing Orders",
+      type: 'collapse',
+      icon: icons.complaints,
+      children: [
+        {
+          id: 'Standing Orders',
+          title: "Standing Orders",
+          type: 'item',
+          url: '/standing-orders',
+          target: false
+        },
+        {
+          id: 'Add Standing Orders',
+          title: "Add Standing Orders",
+          type: 'item',
+          url: '/standing-orders/add',
+          target: false
+        },
       ]
     },
     {

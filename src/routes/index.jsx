@@ -70,6 +70,7 @@ import TripsInvoiceViewPage from 'pages/billings/trip-invoice-view-page';
 import Complaints from 'pages/complaints/Complaints';
 import AddComplaint from 'pages/complaints/AddComplaint';
 import UpdateComplaint from 'pages/complaints/UpdateComplaint';
+import { AddStandingOrder } from 'pages/standing-orders/AddStandingOrder';
 
 const MaintenanceError = Loadable(lazy(() => import('pages/maintenance/error/404')));
 
@@ -162,6 +163,9 @@ function Router() {
                 <Route path="complaints" element={<Complaints />} />
                 <Route path="complaints/add" element={<AddComplaint />} />
                 <Route path="complaints/:id/update" element={<UpdateComplaint />} />
+                
+                {/* Standing Orders */}
+                <Route path="standing-orders/add" element={<AddStandingOrder />} />
 
                 {/* Settings */}
                 <Route path="settings" element={<Settings />} />

@@ -11,7 +11,7 @@ import axios from "axios";
 import { decryptToken } from "utils/tokenUtils";
 import { MdKeyboardDoubleArrowDown } from "react-icons/md";
 import { BiCheckDouble } from "react-icons/bi";
-import { fetcher, fetcherPost } from "utils/axios";
+import { fetcherPost } from "utils/axios";
 
 const Conversation = ({ comments, open }) => {
     const theme = useTheme();
