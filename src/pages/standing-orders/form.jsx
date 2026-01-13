@@ -48,6 +48,9 @@ export default function AddTripForm({ mappedPatients }) {
     const [repeatDays, setRepeatDays] = useState([]);
     const [exceptDates, setExceptDates] = useState([]);
     const [finalDates, setFinalDates] = useState([]);
+    const [randomDates, setRandomDates] = useState([]);
+
+
 
     const isDark = theme.palette.mode === 'dark';
     const weekDays = [
@@ -314,7 +317,7 @@ export default function AddTripForm({ mappedPatients }) {
             }),
     });
     const generateDates = () => {
-        if (!dateRange[0] || !dateRange[1] || repeatDays.length === 0) return [];
+        if (!dateRange[0] || !dateRange[1] || repeatDays.length === 0) return [...randomDates];
 
         let start = dayjs(dateRange[0]);
         let end = dayjs(dateRange[1]);
@@ -332,15 +335,24 @@ export default function AddTripForm({ mappedPatients }) {
 
         // Remove except dates
         const except = exceptDates.map(d => dayjs(d).format('YYYY-MM-DD'));
+        let filtered = all.filter(d => !except.includes(d));
 
-        return all.filter(d => !except.includes(d));
+        // Append random dates if not already included
+        randomDates.forEach((d) => {
+            const formatted = dayjs(d).format('YYYY-MM-DD');
+            if (!filtered.includes(formatted)) {
+                filtered.push(formatted);
+            }
+        });
+
+        return filtered;
     };
 
 
     useEffect(() => {
         const dates = generateDates();
         setFinalDates(dates);
-    }, [dateRange, repeatDays, exceptDates]);
+    }, [dateRange, repeatDays, exceptDates, randomDates]);
 
 
     return (
@@ -464,41 +476,118 @@ export default function AddTripForm({ mappedPatients }) {
 
                 return (
                     <form noValidate onSubmit={handleSubmit}>
-                        <MainCard title="Recurring Schedule" sx={{ mb: 3 }}>
+                        <MainCard title="Recurring Schedule" sx={{ my: 3 }}>
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <Grid container spacing={2}>
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Start Date</InputLabel>
+                                        <Box
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: errors.start_date && touched.start_date ? 'error.main' : 'grey.400',
+                                                borderRadius: '8px',
+                                                background: 'transparent', // or '#f7f7f7' if you want a filled input
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: 48,
+                                            }}
+                                        >
+                                            <DatePicker
+                                                value={dateRange[0] || null}
+                                                onChange={(val) => setDateRange([val, dateRange[1]])}
+                                                disablePast
+                                                inputFormat="yyyy-MM-dd"
+                                                sx={{
+                                                    width: '100%',
+                                                    '& .MuiOutlinedInput-root, & .MuiInputBase-root, & .MuiInputBase-input, & fieldset': {
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        boxShadow: 'none',
+                                                    },
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        variant="standard"
+                                                        fullWidth
+                                                        sx={{
+                                                            '& .MuiInputBase-input': {
+                                                                padding: '12px 0',
+                                                                height: 'auto',
+                                                            },
+                                                            '& .MuiInputBase-root': {
+                                                                height: 'auto',
+                                                            },
+                                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                                border: 'none',
+                                                            },
+                                                        }}
+                                                        error={Boolean(errors.start_date && touched.start_date)}
+                                                        helperText={touched.start_date && errors.start_date ? errors.start_date : ''}
+                                                    />
+                                                )}
+                                            />
 
-                                    {/* Date Range */}
-                                    <Stack direction="row" spacing={2}>
-                                        <DatePicker
-                                            label="Start Date"
-                                            value={dateRange[0]}
-                                            onChange={(val) => setDateRange([val, dateRange[1]])}
-                                        />
+                                        </Box>
 
-                                        <DatePicker
-                                            label="End Date"
-                                            value={dateRange[1]}
-                                            minDate={dateRange[0]}
-                                            onChange={(val) => setDateRange([dateRange[0], val])}
-                                        />
-                                    </Stack>
+                                    </Grid>
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">End Date</InputLabel>
+                                        <Box
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: errors.start_date && touched.start_date ? 'error.main' : 'grey.400',
+                                                borderRadius: '8px',
+                                                background: 'transparent', // or '#f7f7f7' if you want a filled input
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: 48,
+                                            }}
+                                        >
 
-
+                                            <DatePicker
+                                                value={dateRange[1]}
+                                                minDate={dateRange[0]}
+                                                sx={{
+                                                    width: '100%',
+                                                    '& .MuiOutlinedInput-root, & .MuiInputBase-root, & .MuiInputBase-input, & fieldset': {
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        boxShadow: 'none',
+                                                    },
+                                                }}
+                                                onChange={(val) => setDateRange([dateRange[0], val])}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                        sx={{
+                                                            '& .MuiOutlinedInput-root': { height: 46, border: '1px solid red' },
+                                                            '& .MuiInputBase-input': { height: 46, padding: '16px 14px' },
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                        </Box>
+                                    </Grid>
                                     {/* Repeat Days */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Repeat On</InputLabel>
                                         <FormControl fullWidth>
-                                            <InputLabel>Repeat On</InputLabel>
                                             <Select
                                                 multiple
                                                 value={repeatDays}
                                                 onChange={(e) => setRepeatDays(e.target.value)}
-                                                input={<OutlinedInput label="Repeat On" />}
-                                                renderValue={(selected) =>
-                                                    selected
+                                                displayEmpty
+                                                input={<OutlinedInput />}
+                                                renderValue={(selected) => {
+                                                    if (selected.length === 0) {
+                                                        return <span style={{ color: '#999' }}>Repeat On</span>; // placeholder text
+                                                    }
+                                                    return selected
                                                         .map((v) => weekDays.find((d) => d.value === v)?.label.replace("Every ", ""))
-                                                        .join(", ")
-                                                }
+                                                        .join(", ");
+                                                }}
                                             >
                                                 {weekDays.map((day) => (
                                                     <MenuItem key={day.value} value={day.value}>
@@ -508,24 +597,115 @@ export default function AddTripForm({ mappedPatients }) {
                                                 ))}
                                             </Select>
                                         </FormControl>
-
                                     </Grid>
 
-                                    {/* Except Dates */}
-                                    <Grid item xs={12} md={6}>
-                                        <DatePicker
-                                            label="Except Date"
-                                            minDate={dateRange[0]}
-                                            maxDate={dateRange[1]}
-                                            onChange={(val) => {
-                                                if (!val) return;
-                                                const formatted = dayjs(val).format('YYYY-MM-DD');
-                                                if (!exceptDates.some(d => dayjs(d).format('YYYY-MM-DD') === formatted)) {
-                                                    setExceptDates(prev => [...prev, val]);
-                                                }
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Exept Date</InputLabel>
+                                        <Box
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: errors.start_date && touched.start_date ? 'error.main' : 'grey.400',
+                                                borderRadius: '8px',
+                                                background: 'transparent',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: 48,
                                             }}
-                                        />
+                                        >
+                                            <DatePicker
+                                                minDate={dateRange[0]}
+                                                maxDate={dateRange[1]}
+                                                onChange={(val) => {
+                                                    if (!val) return;
+                                                    const formatted = dayjs(val).format('YYYY-MM-DD');
+                                                    if (!exceptDates.some(d => dayjs(d).format('YYYY-MM-DD') === formatted)) {
+                                                        setExceptDates(prev => [...prev, val]);
+                                                    }
+                                                }}
+                                                sx={{
+                                                    width: '100%',
+                                                    '& .MuiOutlinedInput-root, & .MuiInputBase-root, & .MuiInputBase-input, & fieldset': {
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        boxShadow: 'none',
+                                                    },
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                        sx={{
+                                                            '& .MuiOutlinedInput-root': { height: 46 },
+                                                            '& .MuiInputBase-input': { height: 46, padding: '16px 14px' },
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                        </Box>
                                     </Grid>
+
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Random Date</InputLabel>
+                                        <Box
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: errors.start_date && touched.start_date ? 'error.main' : 'grey.400',
+                                                borderRadius: '8px',
+                                                background: 'transparent',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: 48,
+                                            }}
+                                        >
+
+                                            <DatePicker
+                                                value={null}
+                                                minDate={dateRange[0]}
+                                                maxDate={dateRange[1]}
+                                                onChange={(val) => {
+                                                    if (!val) return;
+                                                    const formatted = dayjs(val).format('YYYY-MM-DD');
+                                                    if (!randomDates.some(d => dayjs(d).format('YYYY-MM-DD') === formatted)) {
+                                                        setRandomDates(prev => [...prev, val]);
+                                                    }
+                                                }}
+                                                sx={{
+                                                    width: '100%',
+                                                    '& .MuiOutlinedInput-root, & .MuiInputBase-root, & .MuiInputBase-input, & fieldset': {
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        boxShadow: 'none',
+                                                    },
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                        sx={{
+                                                            '& .MuiOutlinedInput-root': { height: 46 },
+                                                            '& .MuiInputBase-input': { height: 46, padding: '16px 14px' },
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                        </Box>
+                                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                                            {randomDates.map((d, i) => (
+                                                <Button
+                                                    key={i}
+                                                    size="small"
+                                                    color="primary"
+                                                    variant="outlined"
+                                                    onClick={() => {
+                                                        setRandomDates(prev => prev.filter((_, index) => index !== i));
+                                                    }}
+                                                >
+                                                    {dayjs(d).format('MMM DD')} ✕
+                                                </Button>
+                                            ))}
+                                        </Stack>
+                                    </Grid>
+
 
                                     {/* Except Date Chips */}
                                     <Grid item xs={12}>
@@ -557,7 +737,7 @@ export default function AddTripForm({ mappedPatients }) {
                                 </Grid>
                             </LocalizationProvider>
                         </MainCard>
-                        <MainCard title="" sx={{ marginTop: '20px' }}>
+                        <MainCard title="Trip Details" sx={{ marginTop: '20px' }}>
                             <Grid container spacing={3} gridColumn={12}>
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Service Date</InputLabel>
