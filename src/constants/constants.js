@@ -108,6 +108,33 @@ export const paymentMethods = [
 ];
 
 // 
+// Complaints
+export const complaintsStatuses = [
+  { name: "in_progress", label: "In Progress", color: "info" },
+  { name: "resolved", label: "Resolved", color: "success" },
+  { name: "rejected", label: "Rejected", color: "error" },
+  { name: "close", label: "Close", color: "error" },
+  { name: "pending", label: "Pending", color: "secondary" }
+];
+
+export const complaintsPriority = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
+];
+export const complainstStatus = [
+  { value: "pending", label: "Pending" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "resolved", label: "Resolved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "close", label: "Close" },
+];
+export const targetRoles = [
+  { value: "provider", label: "Provider" },
+  { value: "driver", label: "Driver" },
+];
+
 // Provider
 export const providerStatuses = [
   { name: "active", label: "Active", color: "success" },
