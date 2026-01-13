@@ -23,7 +23,7 @@ export default function ComplaintsExpandingDetails({ data }) {
 
     return (
         <Grid container spacing={2.5} >
-            {data ?
+            {tripData ?
                 <>
                     <Grid item xs={12}>
                         <MainCard title="Trip Detail">
@@ -103,7 +103,7 @@ export default function ComplaintsExpandingDetails({ data }) {
                     </Grid>
                 </>
                 :
-                <Grid item xs={12}>-</Grid>
+                <Grid item xs={12} justifyContent={'center'} alignItems={'center'} display={'flex'}>No Trip Details Found!</Grid>
             }
         </Grid >
     );
