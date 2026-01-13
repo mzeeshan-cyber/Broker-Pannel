@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 import { useEffect, useState } from 'react';
 import MainCard from 'components/MainCard';
-import { Button, CircularProgress, FormHelperText, Grid, InputLabel, Stack, TextField } from '@mui/material';
+import { Button, FormHelperText, Grid, InputLabel, Stack, TextField } from '@mui/material';
 import { Formik } from 'formik';
 import { complaintsPriority, targetRoles } from 'constants/constants';
 import InputField from 'components/common/InputField';
@@ -20,8 +20,16 @@ export default function AddComplaint() {
     const theme = useTheme();
     const navigate = useNavigate();
 
-    const AddProviderSubmit = async (values, { setSubmitting, setErrors }) => {
+    const handleAddComplaint = async (values, { setSubmitting, setErrors }) => {
         try {
+            let finalTargetId = '';
+            if (values.trip_id) {
+                finalTargetId = values.target_id?.value || '';
+            } else {
+                if (values.target_role === 'driver') finalTargetId = values['target_id (driver)']?.value || '';
+                if (values.target_role === 'provider') finalTargetId = values['target_id (provider)']?.value || '';
+            }
+
             const response = await fetch(`${API_URL}store-complaint`, {
                 method: 'POST',
                 headers: {
@@ -32,9 +40,7 @@ export default function AddComplaint() {
                     ...values,
                     trip_id: values.trip_id?.value || '',
                     provider_id: values.provider_id?.value || '',
-                    target_id: values.target_role === 'driver'
-                        ? values['target_id (driver)']?.value || ''
-                        : values.target_id?.value || ''
+                    target_id: finalTargetId,
                 }),
             });
 
@@ -49,7 +55,7 @@ export default function AddComplaint() {
             setTimeout(() => navigate('/complaints'), 1500);
 
         } catch (error) {
-            openSnackbar({ open: true, message: `${error?.message} || Server error`, variant: 'alert', alert: { color: 'error' } });
+            openSnackbar({ open: true, message: `${response?.message} || Server error`, variant: 'alert', alert: { color: 'error' } });
         } finally {
             setSubmitting(false);
         }
@@ -65,19 +71,52 @@ export default function AddComplaint() {
                 target_id: null,
                 target_role: '',
                 provider_id: null,
+                'target_id (driver)': null,
+                'target_id (provider)': null,
             }}
             validationSchema={Yup.object().shape({
                 subject: Yup.string().max(255).required('Subject is required'),
-                description: Yup.string().min(8).max(255).required('Description should minimum 8 characters'),
+                description: Yup.string().min(10).max(255).required('Description should minimum 10 characters'),
+                target_role: Yup.string().required('Target role is required'),
+                priority: Yup.string().required('Priority is required'),
+                trip_id: Yup.mixed().nullable(),
+                target_id: Yup.mixed().when('trip_id', {
+                    is: (trip_id) => !!trip_id,
+                    then: (schema) => schema.required('Target is required'),
+                    otherwise: (schema) => schema.nullable(),
+                }),
+                'target_id (driver)': Yup.mixed().when(['trip_id', 'target_role'], {
+                    is: (trip_id, role) => !trip_id && role === 'driver',
+                    then: (schema) => schema.required('Driver is required'),
+                    otherwise: (schema) => schema.nullable(),
+                }),
+                'target_id (provider)': Yup.mixed().when(['trip_id', 'target_role'], {
+                    is: (trip_id, role) => !trip_id && role === 'provider',
+                    then: (schema) => schema.required('Provider is required'),
+                    otherwise: (schema) => schema.nullable(),
+                }),
+                provider_id: Yup.mixed().when(['trip_id', 'target_role'], {
+                    is: (trip_id, role) => !trip_id && role === 'driver',
+                    then: (schema) => schema.required('Provider is required'),
+                    otherwise: (schema) => schema.nullable(),
+                }),
             })}
-            onSubmit={AddProviderSubmit}
+            onSubmit={handleAddComplaint}
         >
             {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue }) => {
 
                 useEffect(() => {
                     if (!selectedTrip || !values.target_role) return;
-                    if (values.target_role === 'provider') setFieldValue('target_id', selectedTrip.provider_id || '');
-                    if (values.target_role === 'driver') setFieldValue('target_id', selectedTrip.provider_driver_id || '');
+
+                    if (values.target_role === 'provider') {
+                        const targetValue = selectedTrip.provider ? { value: selectedTrip.provider.id, displayLabel: selectedTrip.provider.name } : null;
+                        setFieldValue('target_id', targetValue);
+                    }
+
+                    if (values.target_role === 'driver') {
+                        const targetValue = selectedTrip.provider_driver ? { value: selectedTrip.provider_driver.id, displayLabel: selectedTrip.provider_driver.name } : null;
+                        setFieldValue('target_id', targetValue);
+                    }
                 }, [selectedTrip, values.target_role]);
 
                 useEffect(() => {
@@ -85,17 +124,36 @@ export default function AddComplaint() {
                         setSelectedTrip({});
                         setFieldValue('target_id', null);
                         setFieldValue('provider_id', null);
-                    } else {
-                        if (values.target_role === 'provider') setFieldValue('target_id', selectedTrip.provider_id || null);
-                        if (values.target_role === 'driver') setFieldValue('target_id', selectedTrip.provider_driver_id || null);
                     }
                 }, [values.trip_id]);
+
+                useEffect(() => {
+                    setFieldValue('target_id (driver)', null);
+                    setFieldValue('target_id (provider)', null);
+                    setFieldValue('provider_id', null);
+                }, [values.target_role]);
+
+                // Determine which target error to show
+                const showTargetError = () => {
+                    if (values.trip_id) return touched.target_id && errors.target_id;
+                    if (!values.trip_id && values.target_role === 'driver') return touched['target_id (driver)'] && errors['target_id (driver)'];
+                    if (!values.trip_id && values.target_role === 'provider') return touched['target_id (provider)'] && errors['target_id (provider)'];
+                    return false;
+                };
+
+                const targetErrorMessage = () => {
+                    if (values.trip_id) return errors.target_id;
+                    if (!values.trip_id && values.target_role === 'driver') return errors['target_id (driver)'];
+                    if (!values.trip_id && values.target_role === 'provider') return errors['target_id (provider)'];
+                    return '';
+                };
 
                 return (
                     <form noValidate onSubmit={handleSubmit}>
                         <MainCard title="Add New Complaint">
                             <Grid container spacing={3}>
 
+                                {/* Trip Dropdown */}
                                 <Grid item xs={12}>
                                     <DebouncedDropdown
                                         label="Trip Id"
@@ -107,6 +165,7 @@ export default function AddComplaint() {
                                     />
                                 </Grid>
 
+                                {/* Subject */}
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <InputField
                                         id="subject"
@@ -121,6 +180,7 @@ export default function AddComplaint() {
                                     {touched.subject && errors.subject && <FormHelperText error>{errors.subject}</FormHelperText>}
                                 </Grid>
 
+                                {/* Target Role */}
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
                                         label="Target Role"
@@ -131,45 +191,67 @@ export default function AddComplaint() {
                                         touched={touched}
                                         errors={errors}
                                     />
+                                    {touched.target_role && errors.target_role && <FormHelperText error>{errors.target_role}</FormHelperText>}
                                 </Grid>
 
-                                {values.target_role === 'driver' && !values.trip_id && (
+                                {/* When no trip is selected */}
+                                {!values.trip_id && values.target_role === 'driver' && (
+                                    <>
+                                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                                            <DebouncedDropdown
+                                                label="Provider Id"
+                                                values={values}
+                                                setFieldValue={setFieldValue}
+                                                apiEndpoint="/providers"
+                                                displayKeys={['name', 'id']}
+                                                searchPararm="name"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6} lg={4} xl={3}>
+                                            <DebouncedDropdown
+                                                label="Target Id (driver)"
+                                                values={values}
+                                                setFieldValue={setFieldValue}
+                                                apiEndpoint="/get-provider-drivers"
+                                                displayKeys={['name', 'id']}
+                                                queryParams={{ provider_id: values?.provider_id?.value }}
+                                                key={values.provider_id?.value || 'no-provider'}
+                                                searchPararm="name"
+                                            />
+                                            {showTargetError() && <FormHelperText error>{targetErrorMessage()}</FormHelperText>}
+                                        </Grid>
+                                    </>
+                                )}
+
+                                {!values.trip_id && values.target_role === 'provider' && (
                                     <Grid item xs={12} md={6} lg={4} xl={3}>
                                         <DebouncedDropdown
-                                            label="Provider Id"
+                                            label="Target Id (provider)"
                                             values={values}
                                             setFieldValue={setFieldValue}
                                             apiEndpoint="/providers"
                                             displayKeys={['name', 'id']}
+                                            searchPararm="name"
                                         />
+                                        {showTargetError() && <FormHelperText error>{targetErrorMessage()}</FormHelperText>}
                                     </Grid>
                                 )}
 
-                                {values.target_id ? (
+                                {/* When trip is selected */}
+                                {values.trip_id && (
                                     <Grid item xs={12} md={6} lg={4} xl={3}>
                                         <InputField
                                             id="target_id"
-                                            label={`Target Id (${values.target_role})`}
+                                            label={`Target (${values.target_role})`}
                                             type="text"
-                                            values={values.target_role === 'driver' ? selectedTrip.provider_driver_id : selectedTrip.provider_id}
+                                            values={values.target_id?.displayLabel || ''}
                                             disabled={true}
                                         />
-                                    </Grid>
-                                ) : (
-                                    <Grid item xs={12} md={6} lg={4} xl={3}>
-                                        <DebouncedDropdown
-                                            label={`Target Id (${values.target_role})`}
-                                            fieldName="target_id"
-                                            values={values}
-                                            setFieldValue={setFieldValue}
-                                            apiEndpoint="/get-provider-drivers"
-                                            displayKeys={['id', 'name', 'email']}
-                                            queryParams={{ provider_id: values.provider_id?.value }}
-                                            key={values.provider_id?.value || 'no-provider'}
-                                        />
+                                        {showTargetError() && <FormHelperText error>{targetErrorMessage()}</FormHelperText>}
                                     </Grid>
                                 )}
 
+                                {/* Priority */}
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
                                         label="Priority"
@@ -180,8 +262,10 @@ export default function AddComplaint() {
                                         touched={touched}
                                         errors={errors}
                                     />
+                                    {touched.priority && errors.priority && <FormHelperText error>{errors.priority}</FormHelperText>}
                                 </Grid>
 
+                                {/* Description */}
                                 <Grid item xs={12}>
                                     <Stack spacing={1}>
                                         <InputLabel htmlFor="description">Description</InputLabel>
@@ -201,10 +285,11 @@ export default function AddComplaint() {
                                     </Stack>
                                 </Grid>
 
+                                {/* Submit */}
                                 <Grid item xs={12}>
                                     <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 4 }}>
                                         <Button disableElevation disabled={isSubmitting} variant="contained" type="submit" sx={{ '&.Mui-disabled': { bgcolor: theme.palette.primary.main } }}>
-                                            {isSubmitting ? <CircularProgress sx={{ height: 20, width: 20, color: 'white' }} /> : 'Add Complaint'}
+                                            {isSubmitting ? 'Adding....' : 'Add Complaint'}
                                         </Button>
                                     </Stack>
                                 </Grid>

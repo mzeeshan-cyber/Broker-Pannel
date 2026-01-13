@@ -28,7 +28,7 @@ export default function ComplaintsExpandingDetails({ data }) {
                     <Grid item xs={12}>
                         <MainCard title="Trip Detail">
                             <Chip
-                                label={capitalize(tripData.trip_status)}
+                                label={capitalize(tripData?.trip_status)}
                                 size="small"
                                 sx={{
                                     position: 'absolute',

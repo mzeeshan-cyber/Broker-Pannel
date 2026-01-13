@@ -12,7 +12,8 @@ function DebouncedDropdown({
     valueKey = 'id',
     displayKeys = ['id'],
     extraDataMapper = null,
-    queryParams = {}
+    queryParams = {},
+    searchPararm
 }) {
     const [openDropdown, setOpenDropdown] = useState(false);
     const [data, setData] = useState([]);
@@ -25,7 +26,11 @@ function DebouncedDropdown({
     const getData = async (page = 1, search = '') => {
         setIsFetching(true);
         try {
-            const params = { page, search, ...queryParams };
+            const params = {
+                page,
+                ...(searchPararm ? { name: search } : { search }),
+                ...queryParams
+            };
             const response = await fetcher([apiEndpoint, { params }]);
             if (response.status === true) {
                 const newData = response?.data?.data || [];
@@ -79,20 +84,24 @@ function DebouncedDropdown({
     };
 
     // Remap data for dropdown
-    const mappedData = data.map((item) => ({
-        value: item[valueKey],
-        displayLabel: item[valueKey],
-        completeData: item,
-        label: (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                {displayKeys.map((k, i) => (
-                    <Box key={i} sx={{ fontSize: 13, color: 'text.secondary' }}>
-                        {k.charAt(0).toUpperCase() + k.slice(1)}: {k.split('.').reduce((o, key) => (o ? o[key] : ''), item)}
-                    </Box>
-                ))}
-            </Box>
-        )
-    }));
+    const mappedData = data.map((item) => {
+        // Try to find name field dynamically
+        const nameField = item.name || item.full_name || item.driver_name || item.provider_name || item.email || item.id;
+        return {
+            value: item[valueKey],
+            displayLabel: nameField, // ✅ use name instead of id
+            completeData: item,
+            label: (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                    {displayKeys.map((k, i) => (
+                        <Box key={i} sx={{ fontSize: 13, color: 'text.secondary' }}>
+                            {k.charAt(0).toUpperCase() + k.slice(1)}: {k.split('.').reduce((o, key) => (o ? o[key] : ''), item)}
+                        </Box>
+                    ))}
+                </Box>
+            )
+        };
+    });
 
     return (
         <ClickAwayListener onClickAway={() => setOpenDropdown(false)}>
@@ -148,7 +157,7 @@ function DebouncedDropdown({
 
                         {isFetching && (
                             <Box textAlign="center" p={1}>
-                                <CircularProgress size={20} />
+                                <CircularProgress />
                             </Box>
                         )}
 

@@ -29,15 +29,15 @@ const Conversation = ({ comments, open }) => {
 
         const payload = { message: comment };
         const newMessage = {
-            type: "broker",
-            message: comment,
+            user_role: "broker",
+            comment: comment,
             is_read: 0,
             created_at: new Date().toISOString()
         };
 
         setConversation(prev => ({
             ...prev,
-            comments_history: [...(prev.comments_history || []), newMessage]
+            comments: [...(prev.comments || []), newMessage]
         }));
 
         setComment("");
@@ -124,7 +124,7 @@ const Conversation = ({ comments, open }) => {
                 }}
             >
                 <>
-                    {conversation?.comments_history?.length < 1 ?
+                    {conversation?.comments?.length < 1 ?
                         <Box>No Conversation Yet</Box>
                         :
                         <Box sx={{
@@ -132,12 +132,12 @@ const Conversation = ({ comments, open }) => {
                             "MsOverflowStyle": "none",
                             "scrollbarWidth": "none"
                         }}>
-                            {conversation?.comments_history?.map((msg, index) => (
+                            {conversation?.comments?.map((msg, index) => (
                                 <Box
                                     key={index}
                                     sx={{
                                         display: "flex",
-                                        justifyContent: msg.type === "broker" ? "flex-end" : "flex-start",
+                                        justifyContent: msg.user_role === "broker" ? "flex-end" : "flex-start",
                                         mb: 2,
                                         px: 1
                                     }}
@@ -145,23 +145,34 @@ const Conversation = ({ comments, open }) => {
                                     <Box
                                         sx={{
                                             p: 1.5,
-                                            borderRadius: msg.type === "broker" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                                            bgcolor: msg.type === "broker" ? (isDark ? "#1D2630" : "white") : (isDark ? "#2e7d32cc" : "#e3f1e2ff"),
+                                            borderRadius: msg.user_role === "broker" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                                            bgcolor: msg.user_role === "broker" ? (isDark ? "#1D2630" : "white") : (isDark ? "#2e7d32cc" : "#e3f1e2ff"),
                                             boxShadow: isDark ? "0px 2px 6px rgba(255,255,255,0.1)" : "0px 2px 6px rgba(0,0,0,0.15)",
                                             maxWidth: "70%",
                                             color: isDark ? "#f5f5f5" : "#212121"
                                         }}
                                     >
-                                        <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5, color: msg.type === "broker" ? (isDark ? "#4dd0e1" : "#00796b") : (isDark ? "#81c784" : "#2e7d32") }}>
-                                            {msg.type === "broker" ? "Broker" : "Provider"}
+                                        <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5, color: msg.user_role === "broker" ? (isDark ? "#4dd0e1" : "#00796b") : (isDark ? "#81c784" : "#2e7d32") }}>
+                                            {msg.user_role === "broker" ? "Broker" : "Provider"}
                                         </Typography>
-                                        <Typography variant="body1">{msg.message}</Typography>
+                                        <Typography variant="body1">{msg.comment}</Typography>
                                         {msg.created_at && (
                                             <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', gap: '6px' }}>
                                                 <Typography variant="caption" sx={{ display: "block", mt: 0.5, fontWeight: "bold", color: isDark ? "#ddd" : "#424242" }}>
-                                                    {msg.created_at.split(" ")[1]}
+                                                    {msg.created_at &&
+                                                        new Date(msg.created_at).toLocaleTimeString([], {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit',
+                                                            hour12: false
+                                                        })
+                                                    }
                                                 </Typography>
-                                                <BiCheckDouble size={20} color={msg.is_read === 0 ? 'rgba(98, 109, 109, 1)' : 'rgba(22, 145, 216, 1)'} />
+                                                {msg.user_role === "broker" ?
+                                                    <BiCheckDouble size={20} color={msg.is_read === 0 ? 'rgba(98, 109, 109, 1)' : 'rgba(22, 145, 216, 1)'} />
+                                                    :
+                                                    null
+                                                }
                                             </Box>
                                         )}
 

@@ -69,6 +69,7 @@ import TripsInvoices from 'pages/billings/trips-invoice';
 import TripsInvoiceViewPage from 'pages/billings/trip-invoice-view-page';
 import Complaints from 'pages/complaints/Complaints';
 import AddComplaint from 'pages/complaints/AddComplaint';
+import UpdateComplaint from 'pages/complaints/UpdateComplaint';
 
 const MaintenanceError = Loadable(lazy(() => import('pages/maintenance/error/404')));
 
@@ -160,6 +161,7 @@ function Router() {
                 {/* Complaints */}
                 <Route path="complaints" element={<Complaints />} />
                 <Route path="complaints/add" element={<AddComplaint />} />
+                <Route path="complaints/:id/update" element={<UpdateComplaint />} />
 
                 {/* Settings */}
                 <Route path="settings" element={<Settings />} />
