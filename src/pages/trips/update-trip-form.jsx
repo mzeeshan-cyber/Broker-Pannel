@@ -367,7 +367,6 @@ export default function UpdateTripForm({ tripData }) {
                 return_dropoff_directions: dropoffDetails?.dropoff_directions,
             }}
             enableReinitialize={true}
-
             validationSchema={Valditions}
             validateOnBlur={true}
             validateOnChange={true}

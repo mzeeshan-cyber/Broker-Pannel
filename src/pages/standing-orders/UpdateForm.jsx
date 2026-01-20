@@ -14,8 +14,7 @@ import PhoneNumber from 'components/@extended/PhoneNumber';
 import axios from 'axios';
 import { decryptToken } from 'utils/tokenUtils';
 import AddressField from 'components/common/AddressField';
-
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import GoogleMapWithPolylineWithoutMatrixApi from 'components/common/map/google-map-without-matrix-api';
 import TimePicker24 from 'components/common/TimePicker24';
 import { useTheme } from '@emotion/react';
@@ -31,7 +30,7 @@ import {
     ListItemText
 } from "@mui/material";
 
-export default function AddTripForm({ mappedPatients }) {
+export default function UpdateForm({ standingOrdersData }) {
     const API_URL = import.meta.env.VITE_APP_API_URL;
     const encryptedFromStorage = localStorage.getItem("token");
     const decryptedToken = decryptToken(encryptedFromStorage);
@@ -40,7 +39,8 @@ export default function AddTripForm({ mappedPatients }) {
     const [showMap, setShowMap] = useState(false);
     const navigate = useNavigate();
     const formikRef = useRef();
-    const theme = useTheme()
+    const theme = useTheme();
+    const {id} = useParams();
     // dates
     const [dateRange, setDateRange] = useState([null, null]);
     const [repeatDays, setRepeatDays] = useState([]);
@@ -103,7 +103,7 @@ export default function AddTripForm({ mappedPatients }) {
     };
     const AddTrip = async (values, { setErrors, setSubmitting }) => {
         try {
-            const response = await axios.post(`${API_URL}store-standing-order`, values, {
+            const response = await axios.post(`${API_URL}update-standing-order/${id}`, values, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${decryptedToken}`,
@@ -137,7 +137,6 @@ export default function AddTripForm({ mappedPatients }) {
         const formattedTime = `${String(pickupHours).padStart(2, '0')}:${String(pickupMinutes).padStart(2, '0')}`;
         return formattedTime;
     }
-
     function calculateAppointmentTime(pickupTime, durationSeconds) {
         if (!pickupTime || !durationSeconds) return '';
         const [hours, minutes] = pickupTime.split(':').map(Number);
@@ -151,11 +150,17 @@ export default function AddTripForm({ mappedPatients }) {
         const appointmentMinutes = Math.floor((appointmentInSeconds % 3600) / 60);
         return `${String(appointmentHours).padStart(2, '0')}:${String(appointmentMinutes).padStart(2, '0')}`;
     }
-
     const validationSchema = Yup.object().shape({
         dates: Yup.array()
+            .of(
+                Yup.object({
+                    date: Yup.string().required(),
+                    type: Yup.string().oneOf(["recurring", "extra"]).required()
+                })
+            )
             .min(1, "At least one date is required")
             .required("Dates are required"),
+
         mobility: Yup.string()
             .required("Mobility is required")
             .oneOf(["minivan", "sedan", "wheelchair"], "Invalid mobility type"),
@@ -183,7 +188,6 @@ export default function AddTripForm({ mappedPatients }) {
             ),
 
         dropoff_address: Yup.string().required("This field is required"),
-
         pickup_hospital_id: Yup.string().when("pickup_facility_name", {
             is: (val) => val?.toLowerCase() === "hospital",
             then: (schema) => schema.required("Pickup hospital is required"),
@@ -196,7 +200,20 @@ export default function AddTripForm({ mappedPatients }) {
             otherwise: (schema) => schema.notRequired(),
         }),
         pet_animal: Yup.string().required('Required'),
-        
+        is_shared: Yup.string()
+            .required('Required')
+            .test(
+                'pet-animal-shared-rule',
+                'Shared trips are not allowed when pet animal is selected.',
+                function (value) {
+                    const { pet_animal } = this.parent;
+                    if (pet_animal === '1' && value !== '0') {
+                        return false;
+                    }
+                    return true;
+                }
+            ),
+
         // ---------------- attendants and booster_seats ----------------
         attendants: Yup.string()
             .required("This field is required")
@@ -309,54 +326,60 @@ export default function AddTripForm({ mappedPatients }) {
         setFinalDates(dates);
     }, [dateRange, repeatDays, exceptDates, randomDates]);
 
-    const standingOrderDates = finalDates.map(item => item.date);
     useEffect(() => {
         if (formikRef.current) {
-            formikRef.current.setFieldValue('dates', finalDates);
+            formikRef.current.setFieldValue("dates", finalDates);
         }
     }, [finalDates]);
 
+    useEffect(() => {
+        if (standingOrdersData?.dates?.length) {
+            setFinalDates(standingOrdersData.dates);
+        }
+    }, [standingOrdersData]);
+    console.log(standingOrdersData)
 
     return (
         <Formik
             innerRef={formikRef}
             initialValues={{
-                dates: finalDates.length ? finalDates : [],
-                patient_id: mappedPatients?.id,
-                mobility: '',
-                driver_gender: 'any',
-                attendants: '0',
-                booster_seats: '0',
-                pet_animal: '0',
-                is_two_way: '0',
-                is_bariatric: '0',
-                pickup_facility_name: '',
-                pickup_time: '',
-                pickup_phone: '',
-                pickup_address: '',
-                pickup_directions: '',
-                dropoff_facility_name: '',
-                dropoff_phone: '',
-                dropoff_address: '',
-                dropoff_directions: '',
-                pickup_hospital_id: '',
-                dropoff_hospital_id: '',
-                appointment_time: '',
+                dates: standingOrdersData?.dates || [],
+                patient_id: standingOrdersData?.patient_id,
+                mobility: standingOrdersData.mobility,
+                driver_gender: standingOrdersData.driver_gender,
+                attendants: standingOrdersData.attendants,
+                booster_seats: standingOrdersData.booster_seats || '0',
+                pet_animal: standingOrdersData.pet_animal ? 1 : 0,
+                is_shared: standingOrdersData.is_shared ? 1 : 0,
+                is_two_way: standingOrdersData?.is_two_way ? '1' : '0',
+                is_bariatric: standingOrdersData?.is_bariatric ? 1 : 0,
+                pickup_facility_name: standingOrdersData.pickup_facility_name,
+                pickup_time: standingOrdersData.pickup_time,
+                pickup_phone: standingOrdersData.pickup_phone,
+                pickup_address: standingOrdersData.pickup_address,
+                pickup_directions: standingOrdersData.pickup_directions,
+                dropoff_facility_name: standingOrdersData.dropoff_facility_name,
+                dropoff_phone: standingOrdersData.dropoff_phone,
+                dropoff_address: standingOrdersData.dropoff_address,
+                dropoff_directions: standingOrdersData.dropoff_directions,
+                pickup_hospital_id: standingOrdersData.pickup_hospital_id || '',
+                dropoff_hospital_id: standingOrdersData.dropoff_hospital_id || '',
+                appointment_time: standingOrdersData.appointment_time || '',
                 // return trip fields (consistent naming)
-                return_pickup_facility_name: '',
-                return_pickup_phone: '',
-                return_pickup_time: '',
-                return_pickup_address: '',
-                return_pickup_hospital_id: '',
-                return_pickup_directions: '',
-                return_dropoff_facility_name: '',
-                return_dropoff_phone: '',
-                return_appointment_time: '',
-                return_dropoff_address: '',
-                return_dropoff_hospital_id: '',
-                return_dropoff_directions: '',
+                return_pickup_facility_name: standingOrdersData.return_pickup_facility_name,
+                return_pickup_phone: standingOrdersData.return_pickup_phone,
+                return_pickup_time: standingOrdersData.return_pickup_time || '',
+                return_pickup_address: standingOrdersData.return_pickup_address,
+                return_pickup_hospital_id: standingOrdersData.return_pickup_hospital_id,
+                return_pickup_directions: standingOrdersData.return_pickup_directions,
+                return_dropoff_facility_name: standingOrdersData.return_dropoff_facility_name,
+                return_dropoff_phone: standingOrdersData.return_dropoff_phone,
+                return_appointment_time: standingOrdersData.return_appointment_time || '',
+                return_dropoff_address: standingOrdersData.return_dropoff_address,
+                return_dropoff_hospital_id: standingOrdersData.return_dropoff_hospital_id,
+                return_dropoff_directions: standingOrdersData.return_dropoff_directions,
             }}
-
+            enableReinitialize={true}
             validationSchema={validationSchema}
             validateOnChange={true}
             validateOnBlur={true}
@@ -738,6 +761,22 @@ export default function AddTripForm({ mappedPatients }) {
                                     {touched.pet_animal && errors.pet_animal && (
                                         <FormHelperText error id="helper-text-pet_animal">
                                             {errors.pet_animal}
+                                        </FormHelperText>
+                                    )}
+                                </Grid>
+                                <Grid item xs={12} md={6} lg={4} xl={3}>
+                                    <SelectDropDown
+                                        label="Shared Trip"
+                                        id="is_shared"
+                                        values={values.is_shared}
+                                        options={repeating}
+                                        setFieldValue={setFieldValue}
+                                        touched={touched}
+                                        errors={errors}
+                                    />
+                                    {touched.is_shared && errors.is_shared && (
+                                        <FormHelperText error id="helper-text-is_shared">
+                                            {errors.is_shared}
                                         </FormHelperText>
                                     )}
                                 </Grid>
@@ -1303,7 +1342,7 @@ export default function AddTripForm({ mappedPatients }) {
                                             {isSubmitting ? (
                                                 <CircularProgress sx={{ height: '20px !important', width: '20px !important', color: 'white' }} />
                                             ) : (
-                                                'Add Standing Order'
+                                                'Update Standing Order'
                                             )}
                                         </Button>
                                     </Stack>

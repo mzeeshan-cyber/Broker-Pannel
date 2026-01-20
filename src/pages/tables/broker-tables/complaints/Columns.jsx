@@ -58,7 +58,6 @@ const changeStatus = async (id, status, dispatch) => {
 };
 
 function handleComments({ row }) {
-    console.log(row.original)
     const commentCount = row?.original?.comments?.filter(item => item.user_role === 'provider')?.filter(item => item.is_read === 0).length;
     const [open, setOpen] = useState(false);
     const handleToggle = () => setOpen(!open);

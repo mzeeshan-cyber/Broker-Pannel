@@ -38,7 +38,6 @@ export const AddStandingOrder = () => {
         }
     };
     const filteredPatient = patientsData.filter((item) => item.id === selected?.value)
-    // const filteredPatient = await fetcher(["/search-trip-patients", {term : selected?.value}]);
 
     useEffect(() => {
         getPatients();
@@ -67,7 +66,7 @@ export const AddStandingOrder = () => {
     }));
     const SelectedPatient = filteredPatient[0];
     return (
-        <MainCard title={`Add New Trip`}>
+        <MainCard title={`Add New Standing Order`}>
             {SelectedPatient?.status && SelectedPatient?.status !== 'active' && (
                 <p style={{ color: 'red', position:'absolute', top:'7px', left:'115px'}}>
                     (Trips can only be added for active patients)
@@ -78,7 +77,7 @@ export const AddStandingOrder = () => {
                 :
                 <>
                     <SearchableSelect options={mappedPatients} placeholder="Select Patient" selected={selected} setSelected={setSelected} />
-                    <TripDetail filteredPatient={filteredPatient} setShowForm={setShowForm} buttonText="Add Trip" />
+                    <TripDetail filteredPatient={filteredPatient} setShowForm={setShowForm} buttonText="Add Standing Order" description='To add a stranding order first select a patient from above drop down.'/>
                     {showForm &&
                         <AddTripForm mappedPatients={SelectedPatient} />
                     }

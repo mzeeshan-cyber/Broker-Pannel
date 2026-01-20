@@ -107,7 +107,22 @@ export const paymentMethods = [
   { value: "cash", label: "Cash" },
 ];
 
-// 
+// Standing orders
+export const standingOrderStatuses = [
+  { name: "active", label: "Active", color: "success" },
+  { name: "paused", label: "Paused", color: "info" },
+  { name: "completed", label: "Completed", color: "success" },
+  { name: "cancelled", label: "Cancelled", color: "error" },
+  { name: "pending", label: "Pending", color: "secondary" }
+];
+export const standingOrderStatusesDropdown = [
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Paused" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "pending", label: "Pending" }
+];
+
 // Complaints
 export const complaintsStatuses = [
   { name: "in_progress", label: "In Progress", color: "info" },

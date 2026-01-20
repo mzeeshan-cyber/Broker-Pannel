@@ -1,6 +1,6 @@
 
 // assets
-import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar, Personalcard, Receipt } from 'iconsax-react';
+import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar, Personalcard, Receipt, CalendarTick  } from 'iconsax-react';
 
 const icons = {
   maintenance: MessageProgramming,
@@ -12,6 +12,7 @@ const icons = {
   patient: Personalcard,
   billing: Receipt,
   complaints: I24Support,
+  standingOrder: CalendarTick ,
 };
 
 // ==============================|| MENU ITEMS - PAGES ||============================== //
@@ -212,7 +213,7 @@ const pages = {
       id: 'Standing Orders',
       title: "Standing Orders",
       type: 'collapse',
-      icon: icons.complaints,
+      icon: icons.standingOrder,
       children: [
         {
           id: 'Standing Orders',
