@@ -3,6 +3,7 @@ import { Box, Stack, InputLabel, Popper, Paper, CircularProgress, InputBase, Ico
 import debounce from 'lodash/debounce';
 import { MdOutlineClear } from 'react-icons/md';
 import { fetcher } from 'utils/axios';
+import { User, Call, Sms, ShieldTick } from 'iconsax-react';
 
 function DebouncedDropdown({
     label,
@@ -82,24 +83,29 @@ function DebouncedDropdown({
         setPage(1);
         setHasMore(true);
     };
+    const formatKey = (key) =>
+        key
+            .replace(/[._]/g, ' ')
+            .replace(/\b\w/g, char => char.toUpperCase());
 
-    // Remap data for dropdown
     const mappedData = data.map((item) => {
-        // Try to find name field dynamically
         const nameField = item.name || item.full_name || item.driver_name || item.provider_name || item.email || item.id;
         return {
             value: item[valueKey],
-            displayLabel: nameField, // ✅ use name instead of id
+            displayLabel: nameField,
             completeData: item,
             label: (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                    {displayKeys.map((k, i) => (
-                        <Box key={i} sx={{ fontSize: 13, color: 'text.secondary' }}>
-                            {k.charAt(0).toUpperCase() + k.slice(1)}: {k.split('.').reduce((o, key) => (o ? o[key] : ''), item)}
-                        </Box>
-                    ))}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                        {displayKeys.map((k, i) => (
+                            <Box key={i} sx={{ fontSize: 13, color: 'text.secondary' }}>
+                                {formatKey(k)}: {k.split('.').reduce((o, key) => (o ? o[key] : ''), item)}
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
             )
+
         };
     });
 

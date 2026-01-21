@@ -2,23 +2,24 @@ import React, { useEffect, useState } from 'react'
 import MainCard from 'components/MainCard';
 import { openSnackbar } from 'api/snackbar';
 import { fetcher } from 'utils/axios';
-import SearchableSelect from 'components/common/SearchableSelect';
 import TripDetail from 'components/pages/reimbursement-trips/trip-detail';
-import { Call, ShieldTick, Sms, User } from 'iconsax-react';
 import CircularLoader from 'components/common/loader/CircularLoader';
 import AddTripForm from './form';
+import DebouncedDropdown from 'pages/standing-orders/PatientDropDown';
+import { Formik } from 'formik';
 
 export const AddStandingOrder = () => {
     const [selected, setSelected] = useState(null);
     const [patientsData, setPatientsData] = useState([])
     const [showForm, setShowForm] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [selectedTrip, setSelectedTrip] = useState({});
     const getPatients = async () => {
         setIsLoading(true)
         try {
             const response = await fetcher(["/search-trip-patients"]);
             if (response?.status === true) {
-                setPatientsData(response?.data);
+                setPatientsData(response?.data?.data);
                 setIsLoading(false)
             } else {
                 openSnackbar({
@@ -37,50 +38,60 @@ export const AddStandingOrder = () => {
             });
         }
     };
-    const filteredPatient = patientsData.filter((item) => item.id === selected?.value)
+    const filteredPatient = patientsData.filter((item) => item.id === selected?.value);
+    const SelectedPatient = filteredPatient[0];
 
     useEffect(() => {
         getPatients();
     }, [])
 
-    const mappedPatients = patientsData?.map((patient) => ({
-        value: patient.id,
-        iconPairs: [
-            {
-                icon: <User size="16" />,
-                label: patient.name
-            },
-            {
-                icon: <Sms size="16" />,
-                label: patient.email
-            },
-            {
-                icon: <Call size="16" />,
-                label: patient.patient_detail?.phone_number || 'N/A'
-            },
-            {
-                icon: <ShieldTick size="16" />,
-                label: patient.patient_detail?.social_security_number || 'N/A'
-            }
-        ]
-    }));
-    const SelectedPatient = filteredPatient[0];
     return (
         <MainCard title={`Add New Standing Order`}>
             {SelectedPatient?.status && SelectedPatient?.status !== 'active' && (
-                <p style={{ color: 'red', position:'absolute', top:'7px', left:'115px'}}>
-                    (Trips can only be added for active patients)
+                <p style={{ color: 'red', position: 'absolute', top: '7px', left: '195px' }}>
+                    (Standing Orders can only be added for active patients only)
                 </p>
             )}
             {isLoading ?
                 <CircularLoader height='100%' />
                 :
                 <>
-                    <SearchableSelect options={mappedPatients} placeholder="Select Patient" selected={selected} setSelected={setSelected} />
-                    <TripDetail filteredPatient={filteredPatient} setShowForm={setShowForm} buttonText="Add Standing Order" description='To add a stranding order first select a patient from above drop down.'/>
-                    {showForm &&
-                        <AddTripForm mappedPatients={SelectedPatient} />
-                    }
+                    <Formik
+                        initialValues={{
+                            trip_id: null,
+                        }}
+                    >
+                        {({ handleSubmit, values, setFieldValue }) => {
+                            return (
+                                <form noValidate onSubmit={handleSubmit}>
+                                    <DebouncedDropdown
+                                        label="Patient"
+                                        values={values}
+                                        setFieldValue={(field, value) => {
+                                            setFieldValue(field, value); 
+                                            setSelected(value);
+                                        }}
+                                        apiEndpoint="/search-trip-patients"
+                                        extraDataMapper={(item) => setSelectedTrip(item)}
+                                        valueKey="id"
+                                        displayKeys={[
+                                            'name',
+                                            'patient_detail.phone_number',
+                                            'patient_detail.social_security_number',
+                                            'patient_detail.medicaid_number',
+                                            'city',
+                                            'patient_detail.gender',
+                                            'patient_detail.mobility',
+                                            'patient_detail.funding_source'
+                                        ]}
+                                        searchPararm={true}
+                                    />
+                                </form>
+                            );
+                        }}
+                    </Formik>
+                    <TripDetail filteredPatient={filteredPatient} setShowForm={setShowForm} buttonText="Add Standing Order" description='To add a stranding order first select a patient from above drop down.' />
+                    {showForm && SelectedPatient?.status === 'active' && <AddTripForm mappedPatients={SelectedPatient} />}
                 </>
             }
         </MainCard>

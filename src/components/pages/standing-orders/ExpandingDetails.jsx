@@ -8,14 +8,13 @@ import MainCard from 'components/MainCard';
 import { Box, Chip, Divider, ListItemIcon, ListItemText } from '@mui/material';
 import { capitalize } from 'lodash';
 import { getStatusColor } from 'constants/constants';
-import { FiUsers, FiRepeat, FiPhone } from "react-icons/fi";
+import { FiRepeat, FiPhone } from "react-icons/fi";
 import { MdEventSeat, MdAccessibilityNew } from "react-icons/md";
 
 export default function StandingOrdersExpandingDetails({ data }) {
     const matchDownMD = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const items = [
         { icon: <MdEventSeat />, label: "Booster Seat", value: data?.booster_seats ? "Yes" : "No" },
-        { icon: <FiUsers />, label: "Shared Trip", value: data?.is_shared ? "Yes" : "No" },
         { icon: <MdAccessibilityNew />, label: "Is Bariatric", value: data?.is_bariatric ? "Yes" : "No" },
         { icon: <FiRepeat />, label: "Two Way Trip", value: data?.is_two_way ? "Yes" : "No" },
         { icon: <FiPhone />, label: "Pickup Phone Number", value: data?.pickup_phone },

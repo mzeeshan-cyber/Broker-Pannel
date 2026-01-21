@@ -100,8 +100,8 @@ export const columns =
         },
         {
             id: 'so_id',
-            header: 'Standing Order Id',
-            footer: 'Standing Order Id',
+            header: 'Id',
+            footer: 'Id',
             accessorKey: 'id',
             dataType: 'text',
             enableGrouping: false
