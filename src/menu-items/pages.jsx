@@ -229,6 +229,13 @@ const pages = {
           url: '/standing-orders/add',
           target: false
         },
+        {
+          id: 'Deleted Standing Orders',
+          title: "Deleted Standing Orders",
+          type: 'item',
+          url: '/standing-orders/deleted',
+          target: false
+        },
       ]
     },
     {

@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
     filterValue: {},
     standingOrderData: [],
+    deletedData: [],
     paginationData: {},
     loading: false,
 
@@ -36,9 +37,22 @@ const standingOrderSlice = createSlice({
         loading: (state, action) => {
             state.loading = action.payload;
         },
+        deletedData: (state, action) => {
+            state.deletedData = action.payload;
+        },
+        restoreData: (state, action) => {
+            state.deletedData = state.deletedData.filter(
+                item => item.id !== action.payload
+            );
+        },
+        restoreMultipleData: (state, action) => {
+            state.deletedData = state.deletedData.filter(
+                item => !action.payload.includes(String(item.id))
+            );
+        },
     },
 });
 
-export const { standingOrderData, paginationData, updateStandingOrderStatus, loading, filterValue, deleteStandingOrder } = standingOrderSlice.actions;
+export const { standingOrderData, paginationData, updateStandingOrderStatus, loading, filterValue, deleteStandingOrder, deletedData, restoreData, restoreMultipleData } = standingOrderSlice.actions;
 
 export default standingOrderSlice.reducer;

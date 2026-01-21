@@ -73,6 +73,7 @@ import UpdateComplaint from 'pages/complaints/UpdateComplaint';
 import { AddStandingOrder } from 'pages/standing-orders/AddStandingOrder';
 import StandingOrders from 'pages/standing-orders/StandingOrder';
 import { UpdateStandingOrder } from 'pages/standing-orders/UpdateStandigOrder';
+import DeletedStandingOrders from 'pages/standing-orders/DeletedStandingOrders';
 
 const MaintenanceError = Loadable(lazy(() => import('pages/maintenance/error/404')));
 
@@ -170,6 +171,7 @@ function Router() {
                 <Route path="standing-orders" element={<StandingOrders />} />
                 <Route path="standing-orders/add" element={<AddStandingOrder />} />
                 <Route path="standing-orders/:id/update" element={<UpdateStandingOrder />} />
+                <Route path="standing-orders/deleted" element={<DeletedStandingOrders />} />
 
                 {/* Settings */}
                 <Route path="settings" element={<Settings />} />

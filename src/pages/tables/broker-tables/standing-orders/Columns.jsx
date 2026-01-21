@@ -54,7 +54,7 @@ const changeStatus = async (id, status, dispatch) => {
 };
 
 function EditAction({ row, table }) {
-    const Loader = useSelector(state => state?.complaints.loading);
+    const Loader = useSelector(state => state.standingOrders.loading);
     const navigate = useNavigate()
 
     const [openModal, setOpenModal] = useState(false);
@@ -73,7 +73,7 @@ function EditAction({ row, table }) {
                     <Bag variant="Outline" />
                 </IconButton>
             </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete Standing Order" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' Loader={Loader}>
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete Standing Order" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' isSubmitting={Loader}>
                 <Typography id="modal-modal-description">Are you sure, you want to delete this standing order?</Typography>
             </TransitionsModal>
         </Stack>

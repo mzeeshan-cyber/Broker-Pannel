@@ -337,7 +337,6 @@ export default function UpdateForm({ standingOrdersData }) {
             setFinalDates(standingOrdersData.dates);
         }
     }, [standingOrdersData]);
-    console.log(standingOrdersData)
 
     return (
         <Formik
