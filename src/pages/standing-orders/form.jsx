@@ -8,18 +8,30 @@ import { Box, Button, CircularProgress, InputLabel, OutlinedInput, TextField, Ty
 import { useEffect, useRef, useState } from 'react';
 import { openSnackbar } from 'api/snackbar';
 import { fetcher } from 'utils/axios';
-import { repeating, mobility, gender, hospitalDischarge, pickupFacilityNamesAddTrip, dropoffFacilityNamesAddTrip, tripBoasterSeats, tripAttendant } from 'constants/constants';
+import { repeating, mobility, gender, hospitalDischarge, pickupFacilityNamesAddTrip, dropoffFacilityNamesAddTrip, tripAttendant, tripBoasterSeats } from 'constants/constants';
 import SelectDropDown from 'components/common/SelectDropDown';
 import PhoneNumber from 'components/@extended/PhoneNumber';
 import axios from 'axios';
 import { decryptToken } from 'utils/tokenUtils';
 import AddressField from 'components/common/AddressField';
+
 import { useNavigate } from 'react-router';
 import GoogleMapWithPolylineWithoutMatrixApi from 'components/common/map/google-map-without-matrix-api';
 import TimePicker24 from 'components/common/TimePicker24';
 import { useTheme } from '@emotion/react';
+import { DatePicker } from "@mui/x-date-pickers";
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import {
+    FormControl,
+    Select,
+    MenuItem,
+    Checkbox,
+    ListItemText
+} from "@mui/material";
 
-export default function UpdateTripForm({ tripData }) {
+export default function AddTripForm({ mappedPatients }) {
     const API_URL = import.meta.env.VITE_APP_API_URL;
     const encryptedFromStorage = localStorage.getItem("token");
     const decryptedToken = decryptToken(encryptedFromStorage);
@@ -29,7 +41,23 @@ export default function UpdateTripForm({ tripData }) {
     const navigate = useNavigate();
     const formikRef = useRef();
     const theme = useTheme()
+    // dates
+    const [dateRange, setDateRange] = useState([null, null]);
+    const [repeatDays, setRepeatDays] = useState([]);
+    const [exceptDates, setExceptDates] = useState([]);
+    const [finalDates, setFinalDates] = useState([]);
+    const [randomDates, setRandomDates] = useState([]);
+
     const isDark = theme.palette.mode === 'dark';
+    const weekDays = [
+        { label: 'Every Monday', value: 1 },
+        { label: 'Every Tuesday', value: 2 },
+        { label: 'Every Wednesday', value: 3 },
+        { label: 'Every Thursday', value: 4 },
+        { label: 'Every Friday', value: 5 },
+        { label: 'Every Saturday', value: 6 },
+        { label: 'Every Sunday', value: 0 }
+    ];
 
     const getLatLng = async (pickup, dropoff) => {
         try {
@@ -73,9 +101,9 @@ export default function UpdateTripForm({ tripData }) {
             );
         }
     };
-    const UpdateTrip = async (values, { setErrors, setSubmitting }) => {
+    const AddTrip = async (values, { setErrors, setSubmitting }) => {
         try {
-            const response = await axios.post(`${API_URL}trips/update/${tripData?.trip_detail?.id}`, values, {
+            const response = await axios.post(`${API_URL}store-standing-order`, values, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${decryptedToken}`,
@@ -89,7 +117,7 @@ export default function UpdateTripForm({ tripData }) {
                     variant: 'success',
                     alert: { color: 'success' }
                 });
-                navigate(-1);
+                navigate('/standing-orders');
             }
         } catch (error) {
             if (error.response?.data?.errors) {
@@ -99,165 +127,77 @@ export default function UpdateTripForm({ tripData }) {
             setSubmitting(false);
         }
     };
-
     function calculatePickupTime(appointmentTime, durationSeconds) {
-        // Validate inputs first
-        if (!appointmentTime || !durationSeconds || isNaN(durationSeconds)) {
-            return ''; // return empty string safely
-        }
-
-        const parts = appointmentTime.split(':');
-        if (parts.length < 2) return '';
-
-        const [hours, minutes] = parts.map(Number);
-        if (isNaN(hours) || isNaN(minutes)) return '';
-
-        // Convert to total seconds
+        const [hours, minutes] = appointmentTime.split(':').map(Number);
         const appointmentInSeconds = hours * 3600 + minutes * 60;
-
-        // Subtract (duration * 1.5)
         let pickupInSeconds = appointmentInSeconds - durationSeconds * 1.5;
-
-        // Handle negative (previous day wrap)
-        if (pickupInSeconds < 0) {
-            pickupInSeconds += 24 * 3600;
-        }
-
-        // Convert back to HH:mm
+        pickupInSeconds = ((pickupInSeconds % (24 * 3600)) + (24 * 3600)) % (24 * 3600);
         const pickupHours = Math.floor(pickupInSeconds / 3600);
         const pickupMinutes = Math.floor((pickupInSeconds % 3600) / 60);
-
-        // Format with leading zeros
-        return `${String(pickupHours).padStart(2, '0')}:${String(pickupMinutes).padStart(2, '0')}`;
+        const formattedTime = `${String(pickupHours).padStart(2, '0')}:${String(pickupMinutes).padStart(2, '0')}`;
+        return formattedTime;
     }
 
     function calculateAppointmentTime(pickupTime, durationSeconds) {
         if (!pickupTime || !durationSeconds) return '';
-
-        // Split pickup time
         const [hours, minutes] = pickupTime.split(':').map(Number);
         if (isNaN(hours) || isNaN(minutes)) return '';
-
-        // Convert to total seconds
         const pickupInSeconds = hours * 3600 + minutes * 60;
-
-        // Add (duration * 1.5)
         let appointmentInSeconds = pickupInSeconds + durationSeconds * 1.5;
-
-        // Handle overflow (next day wrap)
         if (appointmentInSeconds >= 24 * 3600) {
             appointmentInSeconds -= 24 * 3600;
         }
-
-        // Convert back to HH:mm
         const appointmentHours = Math.floor(appointmentInSeconds / 3600);
         const appointmentMinutes = Math.floor((appointmentInSeconds % 3600) / 60);
-
-        // Format with leading zeros
         return `${String(appointmentHours).padStart(2, '0')}:${String(appointmentMinutes).padStart(2, '0')}`;
     }
 
-    useEffect(() => {
-        getHospitals();
-    }, [])
+    const validationSchema = Yup.object().shape({
+        dates: Yup.array()
+            .min(1, "At least one date is required")
+            .required("Dates are required"),
+        mobility: Yup.string()
+            .required("Mobility is required")
+            .oneOf(["minivan", "sedan", "wheelchair"], "Invalid mobility type"),
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setShowMap(true);
-        }, 1000);
+        driver_gender: Yup.string().min(1).required("Driver gender is required"),
+        is_two_way: Yup.string().required("This field is required"),
+        is_bariatric: Yup.string().required("This field is required"),
 
-        return () => clearTimeout(timer);
-    }, []);
-
-    const Valditions = Yup.object().shape({
-        service_date: Yup.date()
-            .required('Service date is required')
-            .min(new Date(), 'Service date must be today or later'),
-        mobility: Yup.string().required('Mobility is required'),
-        driver_gender: Yup.string().min(1).required('Driver gender is required'),
-        is_two_way: Yup.string().required('This field is required'),
-        is_bariatric: Yup.string().required('This field is required'),
-        pickup_facility_name: Yup.string().required('This field is required'),
+        pickup_facility_name: Yup.string().required("This field is required"),
         pickup_phone: Yup.string()
             .required("This field is required")
             .matches(
                 /^(\+1\s?)?(\([0-9]{3}\)|[0-9]{3})[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}$/,
                 "Enter a valid US phone number"
             ),
-        pickup_time: Yup.string().required('This field is required'),
-        appointment_time: Yup.string().required('This field is required'),
-        return_pickup_time: Yup.string()
-            .when('is_two_way', {
-                is: (is_two_way) => is_two_way === '1',
-                then: (schema) =>
-                    schema
-                        .required('This field is required'),
-                otherwise: (schema) => schema.notRequired(),
-            }),
-        return_dropoff_time: Yup.string()
-            .when('is_two_way', {
-                is: (is_two_way) => is_two_way === '1',
-                then: (schema) =>
-                    schema
-                        .required('This field is required'),
-                otherwise: (schema) => schema.notRequired(),
-            }),
-        pickup_address: Yup.string().required('This field is required'),
-        dropoff_facility_name: Yup.string().required('This field is required'),
+        pickup_time: Yup.string().required("This field is required"),
+        appointment_time: Yup.string().required("This field is required"),
+        pickup_address: Yup.string().required("This field is required"),
+        dropoff_facility_name: Yup.string().required("This field is required"),
         dropoff_phone: Yup.string()
             .required("This field is required")
             .matches(
                 /^(\+1\s?)?(\([0-9]{3}\)|[0-9]{3})[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}$/,
                 "Enter a valid US phone number"
             ),
-        return_dropoff_phone: Yup.string()
-            .when('is_two_way', {
-                is: (is_two_way) => is_two_way === '1',
-                then: (schema) =>
-                    schema
-                        .required('This field is required').matches(
-                            /^(\+1\s?)?(\([0-9]{3}\)|[0-9]{3})[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}$/,
-                            "Enter a valid US phone number"
-                        ),
-                otherwise: (schema) => schema.notRequired(),
-            }),
-        return_pickup_phone: Yup.string()
-            .when('is_two_way', {
-                is: (is_two_way) => is_two_way === '1',
-                then: (schema) =>
-                    schema
-                        .required('This field is required').matches(
-                            /^(\+1\s?)?(\([0-9]{3}\)|[0-9]{3})[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}$/,
-                            "Enter a valid US phone number"
-                        ),
-                otherwise: (schema) => schema.notRequired(),
-            }),
-        dropoff_address: Yup.string().required('This field is required'),
-        hospital_discharge: Yup.string().required('This field is required'),
-        pickup_hospital_id: Yup.string().when('pickup_facility_name', {
-            is: (val) => val?.toLowerCase() === 'hospital',
-            then: (schema) => schema.required('Pickup hospital is required'),
+
+        dropoff_address: Yup.string().required("This field is required"),
+
+        pickup_hospital_id: Yup.string().when("pickup_facility_name", {
+            is: (val) => val?.toLowerCase() === "hospital",
+            then: (schema) => schema.required("Pickup hospital is required"),
             otherwise: (schema) => schema.notRequired(),
         }),
-        dropoff_hospital_id: Yup.string().when('dropoff_facility_name', {
-            is: (val) => val?.toLowerCase() === 'hospital',
-            then: (schema) => schema.required('Dropoff hospital is required'),
+
+        dropoff_hospital_id: Yup.string().when("dropoff_facility_name", {
+            is: (val) => val?.toLowerCase() === "hospital",
+            then: (schema) => schema.required("Dropoff hospital is required"),
             otherwise: (schema) => schema.notRequired(),
         }),
-        pet_animal: Yup.string().required('Pet Animal is required'),
-        is_shared: Yup.string()
-            .required('Required')
-            .test(
-                'pet-animal-shared-rule',
-                'Shared trips are not allowed when pet animal is selected.',
-                function (value) {
-                    const { pet_animal } = this.parent;
-                    if (pet_animal === '1' && value !== '0') {
-                        return false;
-                    }
-                    return true;
-                }
-            ),
+        pet_animal: Yup.string().required('Required'),
+        
+        // ---------------- attendants and booster_seats ----------------
         attendants: Yup.string()
             .required("This field is required")
             .test("mobility-limit-attendants", null, function (value) {
@@ -319,63 +259,113 @@ export default function UpdateTripForm({ tripData }) {
 
                 return true;
             }),
+    });
+    const generateDates = () => {
+        if (!dateRange[0] || !dateRange[1]) return [];
 
-    })
-    const pickupDetails = tripData?.outbound_trip;
-    const dropoffDetails = tripData?.inbound_trip;
+        const start = dayjs(dateRange[0]);
+        const end = dayjs(dateRange[1]);
+        let all = [];
+
+        let cursor = start.clone();
+        while (cursor.isBefore(end) || cursor.isSame(end, 'day')) {
+            if (repeatDays.includes(cursor.day())) {
+                all.push({ date: cursor.format('YYYY-MM-DD'), type: 'recurring' });
+            }
+            cursor = cursor.add(1, 'day');
+        }
+
+        const except = exceptDates.map(d => dayjs(d).format('YYYY-MM-DD'));
+        let filtered = all.filter(d => !except.includes(d.date));
+
+        // Add randomDates with type = extra
+        randomDates.forEach(d => {
+            const formatted = dayjs(d).format('YYYY-MM-DD');
+            if (!filtered.some(f => f.date === formatted)) {
+                filtered.push({ date: formatted, type: 'extra' });
+            }
+        });
+
+        // Sort ascending
+        filtered.sort((a, b) => (a.date > b.date ? 1 : -1));
+
+        return filtered;
+    };
+
+    useEffect(() => {
+        getHospitals();
+    }, [])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowMap(true);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        const dates = generateDates();
+        setFinalDates(dates);
+    }, [dateRange, repeatDays, exceptDates, randomDates]);
+
+    const standingOrderDates = finalDates.map(item => item.date);
+    useEffect(() => {
+        if (formikRef.current) {
+            formikRef.current.setFieldValue('dates', finalDates);
+        }
+    }, [finalDates]);
+
+
     return (
         <Formik
             innerRef={formikRef}
             initialValues={{
-                patient_id: tripData?.trip_detail?.patient_id,
-                outbound_trip_id: pickupDetails?.trip_id,
-                inbound_trip_id: dropoffDetails?.trip_id,
-                service_date: tripData?.trip_detail?.service_date,
-                mobility: tripData?.trip_detail?.mobility,
-                driver_gender: tripData?.trip_detail?.driver_gender,
-                attendants: tripData?.trip_detail?.attendants,
-                pet_animal: tripData?.trip_detail?.pet_animal,
-                booster_seats: tripData?.trip_detail?.booster_seats,
-                is_shared: tripData?.trip_detail?.is_shared,
-                is_two_way: tripData?.trip_detail?.is_two_way,
-                is_bariatric: tripData?.trip_detail?.is_bariatric,
-                hospital_discharge: tripData?.trip_detail?.hospital_discharge,
-                pickup_facility_name: pickupDetails?.pickup_facility_name,
-                pickup_time: pickupDetails?.pickup_time,
-                pickup_phone: pickupDetails?.pickup_phone,
-                pickup_address: pickupDetails?.pickup_address,
-                pickup_directions: pickupDetails?.pickup_directions,
-                dropoff_facility_name: pickupDetails?.dropoff_facility_name,
-                dropoff_phone: pickupDetails?.dropoff_phone,
-                dropoff_address: pickupDetails?.dropoff_address,
-                dropoff_directions: pickupDetails?.dropoff_directions,
-                pickup_hospital_id: pickupDetails?.pickup_hospital_id,
-                dropoff_hospital_id: pickupDetails?.dropoff_hospital_id,
-                appointment_time: pickupDetails?.appointment_time,
+                dates: finalDates.length ? finalDates : [],
+                patient_id: mappedPatients?.id,
+                mobility: '',
+                driver_gender: 'any',
+                attendants: '0',
+                booster_seats: '0',
+                pet_animal: '0',
+                is_two_way: '0',
+                is_bariatric: '0',
+                pickup_facility_name: '',
+                pickup_time: '',
+                pickup_phone: '',
+                pickup_address: '',
+                pickup_directions: '',
+                dropoff_facility_name: '',
+                dropoff_phone: '',
+                dropoff_address: '',
+                dropoff_directions: '',
+                pickup_hospital_id: '',
+                dropoff_hospital_id: '',
+                appointment_time: '',
                 // return trip fields (consistent naming)
-                return_pickup_facility_name: dropoffDetails?.pickup_facility_name,
-                return_pickup_phone: dropoffDetails?.pickup_phone,
-                return_pickup_time: dropoffDetails?.pickup_time,
-                return_pickup_address: dropoffDetails?.pickup_address,
-                return_pickup_hospital_id: dropoffDetails?.pickup_hospital_id,
-                return_pickup_directions: dropoffDetails?.pickup_directions,
-                return_dropoff_facility_name: dropoffDetails?.dropoff_facility_name,
-                return_dropoff_phone: dropoffDetails?.dropoff_phone,
-                return_dropoff_time: dropoffDetails?.appointment_time,
-                return_dropoff_address: dropoffDetails?.dropoff_address,
-                return_dropoff_hospital_id: dropoffDetails?.dropoff_hospital_id,
-                return_dropoff_directions: dropoffDetails?.dropoff_directions,
+                return_pickup_facility_name: '',
+                return_pickup_phone: '',
+                return_pickup_time: '',
+                return_pickup_address: '',
+                return_pickup_hospital_id: '',
+                return_pickup_directions: '',
+                return_dropoff_facility_name: '',
+                return_dropoff_phone: '',
+                return_appointment_time: '',
+                return_dropoff_address: '',
+                return_dropoff_hospital_id: '',
+                return_dropoff_directions: '',
             }}
-            enableReinitialize={true}
-            validationSchema={Valditions}
-            validateOnBlur={true}
+
+            validationSchema={validationSchema}
             validateOnChange={true}
-            onSubmit={UpdateTrip}
+            validateOnBlur={true}
+            onSubmit={AddTrip}
         >
-            {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue }) => {
+            {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue, setErrors }) => {
                 const isHospitalPickup = values.pickup_facility_name?.toLowerCase() === 'hospital';
                 const isHospitalDropoff = values.dropoff_facility_name?.toLowerCase() === 'hospital';
-                const isRoundtrip = values.is_two_way == '1';
+                const isRoundtrip = values.is_two_way?.toLowerCase() == '1';
 
                 useEffect(() => {
                     if (values.pickup_address && values.dropoff_address) {
@@ -426,7 +416,6 @@ export default function UpdateTripForm({ tripData }) {
                     values.dropoff_hospital_id,
                     values.dropoff_address,
                 ]);
-
                 const pickupTime = calculatePickupTime(values?.appointment_time, loacationData?.details?.duration_seconds);
                 const appointmentTime = calculateAppointmentTime(values?.return_pickup_time, loacationData?.details?.duration_seconds);
                 useEffect(() => {
@@ -440,34 +429,270 @@ export default function UpdateTripForm({ tripData }) {
                 useEffect(() => {
                     if (values?.return_pickup_time && loacationData?.details?.duration_seconds) {
                         if (appointmentTime) {
-                            setFieldValue('return_dropoff_time', appointmentTime);
+                            setFieldValue('return_appointment_time', appointmentTime);
                         }
                     }
                 }, [appointmentTime]);
 
                 return (
                     <form noValidate onSubmit={handleSubmit}>
-                        <MainCard title="" sx={{ marginTop: '20px' }}>
-                            <Grid container spacing={3} gridColumn={12}>
-                                <Grid item xs={12} md={6} lg={4} xl={3}>
-                                    <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Service Date</InputLabel>
-                                    <OutlinedInput
-                                        fullWidth
-                                        error={Boolean(touched.service_date && errors.service_date)}
-                                        id="service_date"
-                                        type="date"
-                                        value={values.service_date}
-                                        name="service_date"
-                                        onBlur={handleBlur}
-                                        onChange={handleChange}
-                                        inputProps={{ min: new Date().toISOString().split("T")[0] }}
-                                    />
-                                    {touched.service_date && errors.service_date && (
-                                        <FormHelperText error id="helper-text-service_date">
-                                            {errors.service_date}
+                        <MainCard title="Recurring Schedule" sx={{ my: 3, background: isDark ? '#131d27ff' : '#f4f4f5ff', }}>
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Start Date</InputLabel>
+                                        <Box
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: errors.start_date && touched.start_date ? 'error.main' : 'grey.400',
+                                                borderRadius: '8px',
+                                                background: 'transparent',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: 48,
+                                            }}
+                                        >
+                                            <DatePicker
+                                                value={dateRange[0] || null}
+                                                onChange={(val) => setDateRange([val, dateRange[1]])}
+                                                disablePast
+                                                inputFormat="yyyy-MM-dd"
+                                                sx={{
+                                                    width: '100%',
+                                                    '& .MuiOutlinedInput-root, & .MuiInputBase-root, & .MuiInputBase-input, & fieldset': {
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        boxShadow: 'none',
+                                                    },
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        variant="standard"
+                                                        fullWidth
+                                                        sx={{
+                                                            '& .MuiInputBase-input': {
+                                                                padding: '12px 0',
+                                                                height: 'auto',
+                                                            },
+                                                            '& .MuiInputBase-root': {
+                                                                height: 'auto',
+                                                            },
+                                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                                border: 'none',
+                                                            },
+                                                        }}
+                                                        error={Boolean(errors.start_date && touched.start_date)}
+                                                        helperText={touched.start_date && errors.start_date ? errors.start_date : ''}
+                                                    />
+                                                )}
+                                            />
+
+                                        </Box>
+
+                                    </Grid>
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">End Date</InputLabel>
+                                        <Box
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: errors.start_date && touched.start_date ? 'error.main' : 'grey.400',
+                                                borderRadius: '8px',
+                                                background: 'transparent',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: 48,
+                                            }}
+                                        >
+
+                                            <DatePicker
+                                                value={dateRange[1]}
+                                                minDate={dateRange[0]}
+                                                sx={{
+                                                    width: '100%',
+                                                    '& .MuiOutlinedInput-root, & .MuiInputBase-root, & .MuiInputBase-input, & fieldset': {
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        boxShadow: 'none',
+                                                    },
+                                                }}
+                                                onChange={(val) => setDateRange([dateRange[0], val])}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                        sx={{
+                                                            '& .MuiOutlinedInput-root': { height: 46, border: '1px solid red' },
+                                                            '& .MuiInputBase-input': { height: 46, padding: '16px 14px' },
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                        </Box>
+                                    </Grid>
+                                    {/* Repeat Days */}
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">Repeat On</InputLabel>
+                                        <FormControl fullWidth>
+                                            <Select
+                                                multiple
+                                                value={repeatDays}
+                                                onChange={(e) => setRepeatDays(e.target.value)}
+                                                displayEmpty
+                                                input={<OutlinedInput />}
+                                                renderValue={(selected) => {
+                                                    if (selected.length === 0) {
+                                                        return <span style={{ color: '#999' }}>Repeat On</span>;
+                                                    }
+                                                    return selected
+                                                        .map((v) => weekDays.find((d) => d.value === v)?.label.replace("Every ", ""))
+                                                        .join(", ");
+                                                }}
+                                            >
+                                                {weekDays.map((day) => (
+                                                    <MenuItem key={day.value} value={day.value}>
+                                                        <Checkbox checked={repeatDays.includes(day.value)} />
+                                                        <ListItemText primary={day.label} />
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6} lg={3}>
+                                        <InputLabel sx={{ marginBottom: '4px' }} htmlFor="service_date">More Dates</InputLabel>
+                                        <Box
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: errors.start_date && touched.start_date ? 'error.main' : 'grey.400',
+                                                borderRadius: '8px',
+                                                background: 'transparent',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: 48,
+                                            }}
+                                        >
+
+                                            <DatePicker
+                                                value={null}
+                                                minDate={dateRange[0]}
+                                                maxDate={dateRange[1]}
+                                                onChange={(val) => {
+                                                    if (!val) return;
+                                                    const formatted = dayjs(val).format('YYYY-MM-DD');
+                                                    if (!randomDates.some(d => dayjs(d).format('YYYY-MM-DD') === formatted)) {
+                                                        setRandomDates(prev => [...prev, val]);
+                                                    }
+                                                }}
+                                                sx={{
+                                                    width: '100%',
+                                                    '& .MuiOutlinedInput-root, & .MuiInputBase-root, & .MuiInputBase-input, & fieldset': {
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        boxShadow: 'none',
+                                                    },
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                        sx={{
+                                                            '& .MuiOutlinedInput-root': { height: 46 },
+                                                            '& .MuiInputBase-input': { height: 46, padding: '16px 14px' },
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            Generated Trip Dates
+                                        </Typography>
+
+                                        <Box
+                                            sx={{
+                                                background: isDark
+                                                    ? ''
+                                                    : '#fcfbfbff',
+                                                border: '1px solid',
+                                                borderColor: isDark ? '#545557ff' : '#e5e7eb',
+                                                borderRadius: 2,
+                                                p: 2,
+                                                maxHeight: 'calc(100vh - 120px)',
+                                                overflowY: 'auto',
+                                                boxShadow: isDark
+                                                    ? '0 0 0 1px #1e293b'
+                                                    : '0 4px 12px rgba(0,0,0,0.05)',
+                                            }}
+                                        >
+                                            {finalDates.length === 0 ? (
+                                                <Typography sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}>
+                                                    No dates generated yet
+                                                </Typography>
+                                            ) : (
+                                                <Grid container spacing={1}>
+                                                    {finalDates.map((dObj, i) => {
+                                                        const isExtra = dObj.type === 'extra';
+                                                        return (
+                                                            <Grid item key={i}>
+                                                                <Box
+                                                                    sx={{
+                                                                        px: 1,
+                                                                        py: 0.8,
+                                                                        borderRadius: 2,
+                                                                        fontSize: 13,
+                                                                        fontWeight: 500,
+                                                                        background: isExtra ? '#fef3c7' : isDark ? '#131d27ff' : '#fff', // extra = yellow
+                                                                        border: '1px solid',
+                                                                        borderColor: isDark ? '#1e293b' : '#e5e7eb',
+                                                                        color: isExtra ? '#92400e' : isDark ? '#e5e7eb' : '#111827',
+                                                                        whiteSpace: 'nowrap',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                    }}
+                                                                >
+                                                                    {dayjs(dObj.date).format('ddd, MMM DD')}
+
+                                                                    <Box
+                                                                        onClick={() =>
+                                                                            setFinalDates((prev) => prev.filter((_, index) => index !== i))
+                                                                        }
+                                                                        sx={{
+                                                                            cursor: 'pointer',
+                                                                            fontSize: 14,
+                                                                            lineHeight: 1,
+                                                                            px: 0.5,
+                                                                            borderRadius: '50%',
+                                                                            color: isDark ? '#94a3b8' : '#6b7280',
+                                                                            '&:hover': {
+                                                                                background: isDark ? '#1e293b' : '#f3f4f6',
+                                                                                color: isDark ? '#e5e7eb' : '#111827',
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        ✕
+                                                                    </Box>
+                                                                </Box>
+                                                            </Grid>
+                                                        );
+                                                    })}
+                                                </Grid>
+
+                                            )}
+                                        </Box>
+                                    </Grid>
+                                    {touched.dates && errors.dates && (
+                                        <FormHelperText error id="helper-text-dates">
+                                            {errors.dates}
                                         </FormHelperText>
                                     )}
                                 </Grid>
+                            </LocalizationProvider>
+                        </MainCard>
+                        <MainCard title="Trip Details" sx={{ marginTop: '20px' }}>
+                            <Grid container spacing={3} gridColumn={12}>
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
                                         label="Gender"
@@ -486,23 +711,7 @@ export default function UpdateTripForm({ tripData }) {
                                 </Grid>
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
-                                        label="Hospital Discharge"
-                                        id="hospital_discharge"
-                                        values={values.hospital_discharge}
-                                        options={hospitalDischarge}
-                                        setFieldValue={setFieldValue}
-                                        touched={touched}
-                                        errors={errors}
-                                    />
-                                    {touched.hospital_discharge && errors.hospital_discharge && (
-                                        <FormHelperText error id="helper-text-hospital_discharge">
-                                            {errors.hospital_discharge}
-                                        </FormHelperText>
-                                    )}
-                                </Grid>
-                                <Grid item xs={12} md={6} lg={4} xl={3}>
-                                    <SelectDropDown
-                                        label="Is Bariotric"
+                                        label="Is Bariatric"
                                         id="is_bariatric"
                                         values={values.is_bariatric}
                                         options={repeating}
@@ -534,22 +743,6 @@ export default function UpdateTripForm({ tripData }) {
                                 </Grid>
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
-                                        label="Shared Trip"
-                                        id="is_shared"
-                                        values={values.is_shared}
-                                        options={repeating}
-                                        setFieldValue={setFieldValue}
-                                        touched={touched}
-                                        errors={errors}
-                                    />
-                                    {touched.is_shared && errors.is_shared && (
-                                        <FormHelperText error id="helper-text-is_shared">
-                                            {errors.is_shared}
-                                        </FormHelperText>
-                                    )}
-                                </Grid>
-                                <Grid item xs={12} md={6} lg={4} xl={3}>
-                                    <SelectDropDown
                                         label="Round Trip"
                                         id="is_two_way"
                                         values={values.is_two_way}
@@ -564,7 +757,7 @@ export default function UpdateTripForm({ tripData }) {
                                         </FormHelperText>
                                     )}
                                 </Grid>
-                                <Grid item xs={12} sx={{ borderRadius: '10px', background: isDark ? '#18222cff':'#f7f7f794', border: isDark ? '':'1px solid #e0e0e0ff', padding: '10px 25px 30px 10px', marginLeft: "25px", marginTop: '30px' }}>
+                                <Grid item xs={12} sx={{ borderRadius: '10px', background: isDark ? '#18222cff' : '#f7f7f794', border: isDark ? '' : '1px solid #e0e0e0ff', padding: '10px 25px 30px 10px', marginLeft: "25px", marginTop: '30px' }}>
                                     <Grid container spacing={3} gridColumn={12}>
                                         <Grid item xs={12} md={6} lg={4}>
                                             <SelectDropDown
@@ -620,7 +813,7 @@ export default function UpdateTripForm({ tripData }) {
                                         </Grid>
                                     </Grid>
                                 </Grid>
-                                <Box sx={isRoundtrip ? { background: isDark ? '#18222cff':'#f7f7f794', border: isDark ? '':'1px solid #e0e0e0ff', marginTop: '20px', marginLeft: '25px', padding: '20px', width: "100%", borderRadius: '20px' } : { marginLeft: '0px', width: "98%" }}>
+                                <Box sx={isRoundtrip ? { background: isDark ? '#18222cff' : '#f7f7f794', border: isDark ? '' : '1px solid #e0e0e0ff', marginTop: '20px', marginLeft: '25px', padding: '20px', width: "100%", borderRadius: '20px' } : { marginLeft: '0px', width: "98%" }}>
                                     {isRoundtrip &&
                                         <Typography variant='h4'>Round Trip</Typography>
                                     }
@@ -670,6 +863,7 @@ export default function UpdateTripForm({ tripData }) {
                                                             values={values.pickup_time}
                                                             handleBlur={handleBlur}
                                                             handleChange={handleChange}
+                                                            disabled={!values?.appointment_time || !loacationData?.details?.duration_seconds}
                                                         />
                                                     </Grid>
                                                     {isHospitalPickup && hospitalsData && (
@@ -896,7 +1090,7 @@ export default function UpdateTripForm({ tripData }) {
                                                             <Grid item xs={12} md={6} lg={4}>
                                                                 <TimePicker24
                                                                     id="return_pickup_time"
-                                                                    label="App/Dropoff Time"
+                                                                    label="Pickup Time"
                                                                     type="time"
                                                                     touched={touched.return_pickup_time}
                                                                     errors={errors.return_pickup_time}
@@ -1002,14 +1196,15 @@ export default function UpdateTripForm({ tripData }) {
 
                                                             <Grid item xs={12} md={6} lg={4}>
                                                                 <TimePicker24
-                                                                    id="return_dropoff_time"
-                                                                    label="App/Dropoff Time"
+                                                                    id="return_appointment_time"
+                                                                    label="Dropoff Time"
                                                                     type="time"
-                                                                    touched={touched.return_dropoff_time}
-                                                                    errors={errors.return_dropoff_time}
-                                                                    values={values.return_dropoff_time}
+                                                                    touched={touched.return_appointment_time}
+                                                                    errors={errors.return_appointment_time}
+                                                                    values={values.return_appointment_time}
                                                                     handleBlur={handleBlur}
                                                                     handleChange={handleChange}
+                                                                    disabled={!values?.return_pickup_time || !loacationData?.details?.duration_seconds}
                                                                 />
                                                             </Grid>
 
@@ -1101,14 +1296,14 @@ export default function UpdateTripForm({ tripData }) {
                                 <Grid item xs={12}>
                                     <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 4 }}>
                                         <Button disableElevation disabled={isSubmitting} variant="contained" type="submit" sx={{
-                                                    '&.Mui-disabled': {
-                                                        bgcolor: theme.palette.primary.main,
-                                                    }
-                                                }}>
+                                            '&.Mui-disabled': {
+                                                bgcolor: theme.palette.primary.main,
+                                            }
+                                        }}>
                                             {isSubmitting ? (
-                                                <CircularProgress sx={{ height: '20px !important', width: '20px !important', color:'white' }} />
+                                                <CircularProgress sx={{ height: '20px !important', width: '20px !important', color: 'white' }} />
                                             ) : (
-                                                'Update Trip'
+                                                'Add Standing Order'
                                             )}
                                         </Button>
                                     </Stack>

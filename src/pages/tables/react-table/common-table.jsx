@@ -64,6 +64,7 @@ import TripsExpandingDetails from 'components/pages/trips/tripsExpandingDetails'
 import AssignAndMerge from 'components/pages/trips/assignAndMerge';
 import ExpandingDetails from 'components/pages/tripsInvoices/ExpandingDetails';
 import ComplaintsExpandingDetails from 'components/pages/complaints/ExpandingDetails';
+import StandingOrdersExpandingDetails from 'components/pages/standing-orders/ExpandingDetails';
 
 export const fuzzyFilter = (row, columnId, value, addMeta) => {
     // rank the item
@@ -186,6 +187,8 @@ export default function CommonTable({ isSubmitting, data, tripIds, handleDelete,
                 return <ExpandingDetails data={row} />
             case "complaints":
                 return <ComplaintsExpandingDetails data={row} />
+            case "standing-orders":
+                return <StandingOrdersExpandingDetails data={row} />
             default:
                 return ''
         }

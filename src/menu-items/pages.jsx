@@ -1,6 +1,6 @@
 
 // assets
-import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar, Personalcard, Receipt } from 'iconsax-react';
+import { Car, I24Support, MessageProgramming, People, Setting2, SmartCar, Personalcard, Receipt, CalendarTick  } from 'iconsax-react';
 
 const icons = {
   maintenance: MessageProgramming,
@@ -12,6 +12,7 @@ const icons = {
   patient: Personalcard,
   billing: Receipt,
   complaints: I24Support,
+  standingOrder: CalendarTick ,
 };
 
 // ==============================|| MENU ITEMS - PAGES ||============================== //
@@ -197,6 +198,42 @@ const pages = {
           title: "Complaints",
           type: 'item',
           url: '/complaints',
+          target: false
+        },
+        {
+          id: 'add complaint',
+          title: "Add Complaint",
+          type: 'item',
+          url: '/complaints/add',
+          target: false
+        },
+      ]
+    },
+    {
+      id: 'Standing Orders',
+      title: "Standing Orders",
+      type: 'collapse',
+      icon: icons.standingOrder,
+      children: [
+        {
+          id: 'Standing Orders',
+          title: "Standing Orders",
+          type: 'item',
+          url: '/standing-orders',
+          target: false
+        },
+        {
+          id: 'Add Standing Orders',
+          title: "Add Standing Orders",
+          type: 'item',
+          url: '/standing-orders/add',
+          target: false
+        },
+        {
+          id: 'Deleted Standing Orders',
+          title: "Deleted Standing Orders",
+          type: 'item',
+          url: '/standing-orders/deleted',
           target: false
         },
       ]

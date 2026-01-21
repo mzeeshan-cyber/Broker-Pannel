@@ -9,7 +9,7 @@ import error404 from 'assets/images/maintenance/img-error-404.svg';
 import { capitalize } from 'lodash';
 import { getStatusColor } from 'constants/constants';
 
-export default function TripDetail({ filteredPatient, setShowForm, buttonText }) {
+export default function TripDetail({ filteredPatient, setShowForm, buttonText, description = 'To add a trip first select a patient from above drop down.' }) {
     const SelectedPatient = filteredPatient[0];
     const IMAGE_URL = import.meta.env.VITE_SERVER_IMAGE_PATH;
 
@@ -183,7 +183,7 @@ export default function TripDetail({ filteredPatient, setShowForm, buttonText })
                         <Stack spacing={2} justifyContent="center" alignItems="center">
                             <Typography variant="h1">Select Patient</Typography>
                             <Typography color="text.secondary" align="center" sx={{ width: { xs: '73%', sm: '61%' } }}>
-                                To add a trip first select a patient from above drop down.
+                                {description}
                             </Typography>
                         </Stack>
                     </Grid>
