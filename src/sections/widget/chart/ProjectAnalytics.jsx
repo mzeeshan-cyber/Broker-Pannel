@@ -1,255 +1,226 @@
-import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
-
-// material-ui
-import { useTheme } from '@mui/material/styles';
-import Tab from '@mui/material/Tab';
-import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Grid from '@mui/material/Grid';
-import List from '@mui/material/List';
-import Stack from '@mui/material/Stack';
-import ListItem from '@mui/material/ListItem';
-import MenuItem from '@mui/material/MenuItem';
-import Typography from '@mui/material/Typography';
-import FormControl from '@mui/material/FormControl';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import Select from '@mui/material/Select';
-
-// third-party
-import ReactApexChart from 'react-apexcharts';
-
-// project-imports
+import {
+  Box,
+  Tabs,
+  Tab,
+  Stack,
+  Grid,
+  FormControl,
+  Select,
+  MenuItem,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Tooltip,
+  Card,
+  CardContent,
+} from '@mui/material';
+import dayjs from 'dayjs';
+import axios from 'axios';
 import MainCard from 'components/MainCard';
 import Avatar from 'components/@extended/Avatar';
-import IconButton from 'components/@extended/IconButton';
-import MoreIcon from 'components/@extended/MoreIcon';
-import { ThemeMode } from 'config';
+import { decryptToken } from 'utils/tokenUtils';
+import TripsChart from './TripsChart';
+import {
+  ArrowDown,
+  ArrowUp,
+  Chart,
+  HomeTrendUp,
+  Clock,
+  TickCircle,
+  CloseCircle,
+  UserRemove,
+  UserTick
+} from 'iconsax-react';
+import { MdOutlineArrowBackIos, MdOutlineArrowForwardIos } from 'react-icons/md';
+import { useTheme } from '@emotion/react';
+import TripSkeleton from './TripSkeleton';
+import { StatusItem } from './StatusItem';
 
-// assets
-import { ArrowDown, ArrowSwapHorizontal, ArrowUp, Bookmark, Chart, Edit, HomeTrendUp, Maximize4, ShoppingCart } from 'iconsax-react';
-import RepeatCustomerChart from './RepeatCustomerChart';
 
-function a11yProps(index) {
-  return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`
-  };
-}
+const API_URL = import.meta.env.VITE_APP_API_URL;
+const encryptedFromStorage = localStorage.getItem("token");
+const decryptedToken = decryptToken(encryptedFromStorage);
 
-// ==============================|| CHART ||============================== //
+const tripTabs = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'No Show', value: 'no_show' },
+  { label: 'Assigned', value: 'assigned' }
+];
 
-function EcommerceDataChart({ data }) {
+export default function ProjectAnalytics() {
+  const [selectedTab, setSelectedTab] = useState('pending');
+  const [range, setRange] = useState('monthly'); // weekly/monthly/yearly
+  const [apiData, setApiData] = useState([]);
+  const [stats, setStats] = useState({});
+  const [currentDate, setCurrentDate] = useState(dayjs());
+  const [loading, setLoading] = useState(false);
+
   const theme = useTheme();
-  const mode = theme.palette.mode;
 
-  // chart options
-  const areaChartOptions = {
-    chart: {
-      type: 'bar',
-      toolbar: {
-        show: false
-      }
-    },
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: '55%',
-        borderRadius: 4,
-        borderRadiusApplication: 'end'
-      }
-    },
-    legend: {
-      show: true,
-      position: 'top',
-      horizontalAlign: 'left'
-    },
-    dataLabels: {
-      enabled: false
-    },
-    stroke: {
-      show: true,
-      width: 3,
-      colors: ['transparent']
-    },
-    fill: {
-      opacity: [1, 0.5]
-    },
-    grid: {
-      strokeDashArray: 4
-    },
-    tooltip: {
-      y: {
-        formatter: (val) => '$ ' + val + ' thousands'
-      }
+  // Calculate default from/to based on range
+  const getFromTo = () => {
+    if (range === 'monthly') {
+      return {
+        from_date: currentDate.startOf('month').format('YYYY-MM-DD'),
+        to_date: currentDate.endOf('month').format('YYYY-MM-DD')
+      };
+    }
+    if (range === 'weekly') {
+      return {
+        from_date: currentDate.startOf('week').format('YYYY-MM-DD'),
+        to_date: currentDate.endOf('week').format('YYYY-MM-DD')
+      };
+    }
+    if (range === 'yearly') {
+      return {
+        from_date: currentDate.startOf('year').format('YYYY-MM-DD'),
+        to_date: currentDate.endOf('year').format('YYYY-MM-DD')
+      };
     }
   };
 
-  const { primary, secondary } = theme.palette.text;
-  const line = theme.palette.divider;
+  const fetchGraphData = async () => {
+    const { from_date, to_date } = getFromTo();
+    setLoading(true);
+    try {
+      const values = { from_date, to_date, type: range };
 
-  const [options, setOptions] = useState(areaChartOptions);
-
-  useEffect(() => {
-    setOptions((prevState) => ({
-      ...prevState,
-      colors: [theme.palette.primary.main, theme.palette.primary.main],
-      xaxis: {
-        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        labels: {
-          style: {
-            colors: [secondary, secondary, secondary, secondary, secondary, secondary, secondary]
-          }
-        },
-        axisBorder: {
-          show: false,
-          color: line
-        },
-        axisTicks: {
-          show: false
-        },
-        tickAmount: 11
-      },
-      yaxis: {
-        labels: {
-          style: {
-            colors: [secondary]
-          }
+      const response = await axios.post(`${API_URL}trips/graph`, values, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${decryptedToken}`
         }
-      },
-      grid: {
-        borderColor: line
-      },
-      legend: {
-        labels: {
-          colors: 'secondary.main'
-        }
-      },
-      theme: {
-        mode: mode === ThemeMode.DARK ? 'dark' : 'light'
-      }
-    }));
-  }, [mode, primary, secondary, line, theme]);
+      });
 
-  const [series, setSeries] = useState(data);
-
-  useEffect(() => {
-    setSeries(data);
-  }, [data]);
-
-  return <ReactApexChart options={options} series={series} type="bar" height={250} />;
-}
-
-// ==============================|| CHART WIDGET - PROJECT ANALYTICS ||============================== //
-
-export default function ProjectAnalytics() {
-  const [value, setValue] = useState(0);
-  const [age, setAge] = useState('30');
-
-  const chartData = [
-    [
-      {
-        name: 'Net Profit',
-        data: [76, 85, 101, 98, 87, 105, 91]
-      },
-      {
-        name: 'Revenue',
-        data: [44, 55, 57, 56, 61, 58, 63]
-      }
-    ],
-    [
-      {
-        name: 'Net Profit',
-        data: [80, 101, 90, 65, 120, 105, 85]
-      },
-      {
-        name: 'Revenue',
-        data: [45, 30, 57, 45, 78, 48, 63]
-      }
-    ],
-    [
-      {
-        name: 'Net Profit',
-        data: [79, 85, 107, 95, 83, 115, 97]
-      },
-      {
-        name: 'Revenue',
-        data: [48, 56, 50, 54, 68, 53, 65]
-      }
-    ],
-    [
-      {
-        name: 'Net Profit',
-        data: [90, 111, 105, 55, 70, 65, 75]
-      },
-      {
-        name: 'Revenue',
-        data: [55, 80, 57, 45, 38, 48, 43]
-      }
-    ]
-  ];
-
-  const [data, setData] = useState(chartData[0]);
-
-  const handleChangeSelect = (event) => {
-    setAge(event.target.value);
+      setStats(response.data.data.invoice);
+      setApiData(response.data.data.data || []);
+    } catch (error) {
+      console.error('Graph API Error:', error);
+      setApiData([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-    setData(chartData[newValue]);
+  useEffect(() => {
+    fetchGraphData();
+  }, [range, currentDate]);
+
+  const handlePrev = () => {
+    setCurrentDate(prev => {
+      if (range === 'monthly') return prev.subtract(1, 'month');
+      if (range === 'weekly') return prev.subtract(1, 'week');
+      if (range === 'yearly') return prev.subtract(1, 'year');
+    });
   };
 
+  const handleNext = () => {
+    setCurrentDate(prev => {
+      const next = range === 'monthly' ? prev.add(1, 'month') :
+        range === 'weekly' ? prev.add(1, 'week') :
+          prev.add(1, 'year');
+      return next.isAfter(dayjs()) ? prev : next;
+    });
+  };
+
+  // Disable next button if future
+  const isNextDisabled = () => {
+    if (range === 'monthly') return currentDate.add(1, 'month').isAfter(dayjs(), 'month');
+    if (range === 'weekly') return currentDate.add(1, 'week').isAfter(dayjs(), 'week');
+    if (range === 'yearly') return currentDate.add(1, 'year').isAfter(dayjs(), 'year');
+  };
   return (
     <MainCard content={false}>
-      <Box sx={{ width: '100%' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" sx={{ px: 3, pt: 1, '& .MuiTab-root': { mb: 0.5 } }}>
-            <Tab label="Overview" {...a11yProps(0)} />
-            <Tab label="Marketing" {...a11yProps(1)} />
-            <Tab label="Project" {...a11yProps(2)} />
-            <Tab label="Order" {...a11yProps(2)} />
-          </Tabs>
-        </Box>
-        <Box sx={{ p: 3 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={8}>
-              <Stack spacing={2}>
-                <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1}>
-                  <Box sx={{ minWidth: 120 }}>
-                    <FormControl fullWidth>
-                      <Select id="demo-simple-select" value={age} onChange={handleChangeSelect}>
-                        <MenuItem value={10}>Today</MenuItem>
-                        <MenuItem value={20}>Weekly</MenuItem>
-                        <MenuItem value={30}>Monthly</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
-                  <IconButton color="secondary" variant="outlined" sx={{ color: 'text.secondary' }}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton color="secondary" variant="outlined" sx={{ color: 'text.secondary' }}>
-                    <Maximize4 />
-                  </IconButton>
-                  <IconButton color="secondary" variant="outlined" sx={{ transform: 'rotate(90deg)', color: 'text.secondary' }}>
-                    <MoreIcon />
-                  </IconButton>
+      {loading ?
+        <TripSkeleton />
+        :
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={8}>
+            {/* Top Controls */}
+            <Box sx={{ p: 3, pb: 1 }}>
+              <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+                <Stack direction="row" spacing={2} justifyContent={'center'} alignItems={'center'}>
+                  <Typography variant="subtitle1">
+                    {range === 'monthly' && currentDate.format('MMMM YYYY')}
+                    {range === 'weekly' && `${currentDate.startOf('week').format('ddd DD MMM')} - ${currentDate.endOf('week').format('ddd DD MMM YYYY')}`}
+                    {range === 'yearly' && currentDate.format('YYYY')}
+                  </Typography>
+                  <Tooltip title="Previous Interval">
+                    <Box
+                      color={theme.palette.primary.main}
+                      onClick={handlePrev}
+                      sx={{
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <MdOutlineArrowBackIos size={20} />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip title="Next Interval">
+                    <Box
+                      color={theme.palette.primary.main}
+                      onClick={handleNext}
+                      sx={{
+                        cursor: isNextDisabled() ? 'not-allowed' : 'pointer',
+                        opacity: isNextDisabled() ? 0.4 : 1,
+                      }}
+                      disabled={isNextDisabled()}
+                    >
+                      <MdOutlineArrowForwardIos size={20} />
+                    </Box>
+                  </Tooltip>
                 </Stack>
-                {/* <EcommerceDataChart data={data} /> */}
-                <RepeatCustomerChart />
+
+                <FormControl size="small">
+                  <Select value={range} onChange={(e) => setRange(e.target.value)}>
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                    <MenuItem value="monthly">Monthly</MenuItem>
+                    <MenuItem value="yearly">Yearly</MenuItem>
+                  </Select>
+                </FormControl>
               </Stack>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <List disablePadding sx={{ '& .MuiListItem-root': { px: 3, py: 1.5 } }}>
+            </Box>
+
+            {/* Status Tabs */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
+              <Tabs
+                value={selectedTab}
+                onChange={(e, v) => setSelectedTab(v)}
+                variant="scrollable"
+              >
+                {tripTabs.map((tab) => (
+                  <Tab key={tab.value} label={tab.label} value={tab.value} />
+                ))}
+              </Tabs>
+            </Box>
+
+            {/* Chart */}
+            <Box sx={{ px: 3, pt: 3 }}>
+              <Grid container minHeight={'300px'}>
+                <Grid item xs={12}>
+                  <TripsChart
+                    apiData={apiData}
+                    status={selectedTab}
+                    loading={loading}
+                    range={range}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ height: '100%', borderLeft: '1px solid #f1f1f1ff' }}>
+              <List disablePadding sx={{ '& .MuiListItem-root': { px: 3, py: 1.5, } }}>
                 <ListItem
                   divider
                   secondaryAction={
                     <Stack spacing={0.25} alignItems="flex-end">
-                      <Typography variant="subtitle1">-245</Typography>
-                      <Typography color="error" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <ArrowDown style={{ transform: 'rotate(45deg)' }} size={14} /> 10.6%
-                      </Typography>
+                      <Typography variant="subtitle1">{stats.total_invoices}</Typography>
                     </Stack>
                   }
                 >
@@ -259,20 +230,13 @@ export default function ProjectAnalytics() {
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={<Typography color="text.secondary">Total Sales</Typography>}
-                    secondary={<Typography variant="subtitle1">1,800</Typography>}
+                    primary={<Typography color="text.secondary">Total Invoices</Typography>}
+                    // secondary={<Typography variant="subtitle1">{stats.total_invoices}</Typography>}
                   />
                 </ListItem>
                 <ListItem
                   divider
-                  secondaryAction={
-                    <Stack spacing={0.25} alignItems="flex-end">
-                      <Typography variant="subtitle1">+2,100</Typography>
-                      <Typography color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <ArrowUp style={{ transform: 'rotate(45deg)' }} size={14} /> 30.6%
-                      </Typography>
-                    </Stack>
-                  }
+                  secondaryAction={<Typography variant="subtitle1">$ {stats.total_cost}</Typography>}
                 >
                   <ListItemAvatar>
                     <Avatar variant="rounded" color="secondary" sx={{ color: 'text.secondary' }}>
@@ -280,58 +244,66 @@ export default function ProjectAnalytics() {
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={<Typography color="text.secondary">Revenue</Typography>}
-                    secondary={<Typography variant="subtitle1">$5,667</Typography>}
-                  />
-                </ListItem>
-                <ListItem
-                  divider
-                  secondaryAction={
-                    <Stack spacing={0.25} alignItems="flex-end">
-                      <Typography variant="subtitle1">-26</Typography>
-                      <Typography color="warning.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <ArrowSwapHorizontal size={14} /> 5%
-                      </Typography>
-                    </Stack>
-                  }
-                >
-                  <ListItemAvatar>
-                    <Avatar variant="rounded" color="secondary" sx={{ color: 'text.secondary' }}>
-                      <ShoppingCart />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={<Typography color="text.secondary">Abandon Cart</Typography>}
-                    secondary={<Typography variant="subtitle1">128</Typography>}
-                  />
-                </ListItem>
-                <ListItem
-                  secondaryAction={
-                    <Stack spacing={0.25} alignItems="flex-end">
-                      <Typography variant="subtitle1">+200</Typography>
-                      <Typography color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <ArrowUp style={{ transform: 'rotate(45deg)' }} size={14} /> 10.6%
-                      </Typography>
-                    </Stack>
-                  }
-                >
-                  <ListItemAvatar>
-                    <Avatar variant="rounded" color="secondary" sx={{ color: 'text.secondary' }}>
-                      <Bookmark />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={<Typography color="text.secondary">Ads Spent</Typography>}
-                    secondary={<Typography variant="subtitle1">$2,500</Typography>}
+                    primary={<Typography color="text.secondary">Total Cost</Typography>}
+                    // secondary={<Typography variant="subtitle1">$ {stats.total_cost}</Typography>}
                   />
                 </ListItem>
               </List>
-            </Grid>
+              <Grid item xs={12}>
+                <Box sx={{ height: '100%', borderLeft: '1px solid #f1f1f1ff' }}>
+                  <Box>
+                    <Card variant="outlined1">
+                      <CardContent>
+                        <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                          Trips Stats
+                        </Typography>
+
+                        <Grid container spacing={2}>
+                          <StatusItem
+                            label="Pending"
+                            value={stats?.trips?.pending}
+                            icon={<Clock />}
+                            color="warning.main"
+                            bgcolor="warning.lighter"
+                          />
+                          <StatusItem
+                            label="Completed"
+                            value={stats?.trips?.completed}
+                            icon={<TickCircle />}
+                            color="success.main"
+                            bgcolor="success.lighter"
+                          />
+                          <StatusItem
+                            label="Cancelled"
+                            value={stats?.trips?.cancelled}
+                            icon={<CloseCircle />}
+                            color="error.main"
+                            bgcolor="error.lighter"
+                          />
+                          <StatusItem
+                            label="No Show"
+                            value={stats?.trips?.no_show}
+                            icon={<UserRemove />}
+                            color="text.secondary"
+                            bgcolor="text.lighter"
+                          />
+                          <StatusItem
+                            label="Assigned"
+                            value={stats?.trips?.assigned}
+                            icon={<UserTick />}
+                            color="primary.main"
+                            bgcolor="primary.lighter"
+                          />
+                        </Grid>
+                      </CardContent>
+                    </Card>
+                  </Box>
+                </Box>
+              </Grid>
+            </Box>
           </Grid>
-        </Box>
-      </Box>
+        </Grid>
+      }
     </MainCard>
   );
 }
-
-EcommerceDataChart.propTypes = { data: PropTypes.array };

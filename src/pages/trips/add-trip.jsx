@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react'
 import MainCard from 'components/MainCard';
 import { openSnackbar } from 'api/snackbar';
 import { fetcher } from 'utils/axios';
-import SearchableSelect from 'components/common/SearchableSelect';
 import TripDetail from 'components/pages/reimbursement-trips/trip-detail';
-import { Call, ShieldTick, Sms, User } from 'iconsax-react';
 import AddTripForm from './add-trip-form';
 import CircularLoader from 'components/common/loader/CircularLoader';
 import { Formik } from 'formik';
