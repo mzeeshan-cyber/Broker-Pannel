@@ -39,15 +39,13 @@ export const AddStandingOrder = () => {
         }
     };
     const filteredPatient = patientsData.filter((item) => item.id === selected?.value);
-    const SelectedPatient = filteredPatient[0];
-
     useEffect(() => {
         getPatients();
     }, [])
 
     return (
         <MainCard title={`Add New Standing Order`}>
-            {SelectedPatient?.status && SelectedPatient?.status !== 'active' && (
+            {selectedTrip?.status && selectedTrip?.status !== 'active' && (
                 <p style={{ color: 'red', position: 'absolute', top: '7px', left: '195px' }}>
                     (Standing Orders can only be added for active patients only)
                 </p>
@@ -91,7 +89,7 @@ export const AddStandingOrder = () => {
                         }}
                     </Formik>
                     <TripDetail filteredPatient={filteredPatient} setShowForm={setShowForm} buttonText="Add Standing Order" description='To add a stranding order first select a patient from above drop down.' />
-                    {showForm && SelectedPatient?.status === 'active' && <AddTripForm mappedPatients={SelectedPatient} />}
+                    {showForm && selectedTrip?.status === 'active' && <AddTripForm mappedPatients={selectedTrip} />}
                 </>
             }
         </MainCard>
