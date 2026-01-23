@@ -43,7 +43,7 @@ const StatListItemSkeleton = () => (
 const TripSkeleton = () => {
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={8}>
+      <Grid item xs={12}>
         <Box sx={{ p: 3, pb: 1 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Skeleton width={180} height={24} />
@@ -61,28 +61,6 @@ const TripSkeleton = () => {
         </Box>
         <Box sx={{ px: 3 }}>
           <Skeleton variant="rectangular" height={300} />
-        </Box>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Box sx={{ height: '100%', borderLeft: '1px solid #f1f1f1ff' }}>
-          <List disablePadding sx={{ '& .MuiListItem-root': { px: 3, py: 1.5 } }}>
-            <StatListItemSkeleton />
-            <StatListItemSkeleton />
-          </List>
-
-          <Box sx={{ p: 3 }}>
-            <Card variant="outlined1">
-              <CardContent>
-                <Skeleton width={120} height={24} sx={{ mb: 2 }} />
-
-                <Grid container spacing={2}>
-                  {[...Array(5)].map((_, i) => (
-                    <StatusItemSkeleton key={i} />
-                  ))}
-                </Grid>
-              </CardContent>
-            </Card>
-          </Box>
         </Box>
       </Grid>
     </Grid>

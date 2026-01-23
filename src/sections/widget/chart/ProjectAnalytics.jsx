@@ -9,36 +9,16 @@ import {
   Select,
   MenuItem,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
   Tooltip,
-  Card,
-  CardContent,
 } from '@mui/material';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import MainCard from 'components/MainCard';
-import Avatar from 'components/@extended/Avatar';
 import { decryptToken } from 'utils/tokenUtils';
 import TripsChart from './TripsChart';
-import {
-  ArrowDown,
-  ArrowUp,
-  Chart,
-  HomeTrendUp,
-  Clock,
-  TickCircle,
-  CloseCircle,
-  UserRemove,
-  UserTick
-} from 'iconsax-react';
 import { MdOutlineArrowBackIos, MdOutlineArrowForwardIos } from 'react-icons/md';
 import { useTheme } from '@emotion/react';
 import TripSkeleton from './TripSkeleton';
-import { StatusItem } from './StatusItem';
-
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 const encryptedFromStorage = localStorage.getItem("token");
@@ -52,17 +32,14 @@ const tripTabs = [
   { label: 'Assigned', value: 'assigned' }
 ];
 
-export default function ProjectAnalytics() {
+export default function ProjectAnalytics({stats, setStats, loading, setLoading}) {
   const [selectedTab, setSelectedTab] = useState('pending');
-  const [range, setRange] = useState('monthly'); // weekly/monthly/yearly
+  const [range, setRange] = useState('monthly'); 
   const [apiData, setApiData] = useState([]);
-  const [stats, setStats] = useState({});
   const [currentDate, setCurrentDate] = useState(dayjs());
-  const [loading, setLoading] = useState(false);
 
   const theme = useTheme();
 
-  // Calculate default from/to based on range
   const getFromTo = () => {
     if (range === 'monthly') {
       return {
@@ -140,7 +117,7 @@ export default function ProjectAnalytics() {
         <TripSkeleton />
         :
         <Grid container spacing={2}>
-          <Grid item xs={12} md={8}>
+          <Grid item xs={12}>
             {/* Top Controls */}
             <Box sx={{ p: 3, pb: 1 }}>
               <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
@@ -210,95 +187,6 @@ export default function ProjectAnalytics() {
                     range={range}
                   />
                 </Grid>
-              </Grid>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Box sx={{ height: '100%', borderLeft: '1px solid #f1f1f1ff' }}>
-              <List disablePadding sx={{ '& .MuiListItem-root': { px: 3, py: 1.5, } }}>
-                <ListItem
-                  divider
-                  secondaryAction={
-                    <Stack spacing={0.25} alignItems="flex-end">
-                      <Typography variant="subtitle1">{stats.total_invoices}</Typography>
-                    </Stack>
-                  }
-                >
-                  <ListItemAvatar>
-                    <Avatar variant="rounded" color="secondary" sx={{ color: 'text.secondary' }}>
-                      <Chart />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={<Typography color="text.secondary">Total Invoices</Typography>}
-                    // secondary={<Typography variant="subtitle1">{stats.total_invoices}</Typography>}
-                  />
-                </ListItem>
-                <ListItem
-                  divider
-                  secondaryAction={<Typography variant="subtitle1">$ {stats.total_cost}</Typography>}
-                >
-                  <ListItemAvatar>
-                    <Avatar variant="rounded" color="secondary" sx={{ color: 'text.secondary' }}>
-                      <HomeTrendUp />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={<Typography color="text.secondary">Total Cost</Typography>}
-                    // secondary={<Typography variant="subtitle1">$ {stats.total_cost}</Typography>}
-                  />
-                </ListItem>
-              </List>
-              <Grid item xs={12}>
-                <Box sx={{ height: '100%', borderLeft: '1px solid #f1f1f1ff' }}>
-                  <Box>
-                    <Card variant="outlined1">
-                      <CardContent>
-                        <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                          Trips Stats
-                        </Typography>
-
-                        <Grid container spacing={2}>
-                          <StatusItem
-                            label="Pending"
-                            value={stats?.trips?.pending}
-                            icon={<Clock />}
-                            color="warning.main"
-                            bgcolor="warning.lighter"
-                          />
-                          <StatusItem
-                            label="Completed"
-                            value={stats?.trips?.completed}
-                            icon={<TickCircle />}
-                            color="success.main"
-                            bgcolor="success.lighter"
-                          />
-                          <StatusItem
-                            label="Cancelled"
-                            value={stats?.trips?.cancelled}
-                            icon={<CloseCircle />}
-                            color="error.main"
-                            bgcolor="error.lighter"
-                          />
-                          <StatusItem
-                            label="No Show"
-                            value={stats?.trips?.no_show}
-                            icon={<UserRemove />}
-                            color="text.secondary"
-                            bgcolor="text.lighter"
-                          />
-                          <StatusItem
-                            label="Assigned"
-                            value={stats?.trips?.assigned}
-                            icon={<UserTick />}
-                            color="primary.main"
-                            bgcolor="primary.lighter"
-                          />
-                        </Grid>
-                      </CardContent>
-                    </Card>
-                  </Box>
-                </Box>
               </Grid>
             </Box>
           </Grid>

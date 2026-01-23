@@ -4,16 +4,20 @@ import Stack from '@mui/material/Stack';
 import EcommerceDataCard from 'components/cards/EcommerceDataCard';
 import WelcomeBanner from 'sections/dashboard/default/WelcomeBanner';
 import ProjectAnalytics from 'sections/widget/chart/ProjectAnalytics';
-import ProjectOverview from 'sections/widget/chart/ProjectOverview';
-import AssignUsers from 'sections/widget/statistics/AssignUsers';
 import { useCallback, useEffect, useState } from 'react';
 import { fetcherPost } from 'utils/axios';
 import EcommerceDataChart from 'sections/widget/chart/EcommerceDataChart';
 import { Car, People, SmartCar, Personalcard } from 'iconsax-react';
 import SkeletonCard from 'components/pages/dashboard/skeletonCard';
+import ComplaintsOverview from 'sections/widget/chart/ComplaintsOverview';
+import StandingOrders from 'sections/widget/chart/StandingOrders';
+import InvoiceCharts from 'sections/widget/chart/InvoiceCharts';
+import InvoiceChartsSkeleton from 'sections/widget/chart/InvoiceChartSkeleton';
 
 export default function DashboardDefault() {
   const theme = useTheme();
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(false);
   const getInitialDateByFilter = useCallback((filter) => {
     const d = new Date();
     if (filter === 'weekly') d.setDate(d.getDate() - 7);
@@ -29,16 +33,10 @@ export default function DashboardDefault() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // ==============================|| STATES ||============================== //
   const [patientsFilter, setPatientsFilter] = useState('weekly');
   const [providersFilter, setProvidersFilter] = useState('weekly');
   const [tripsFilter, setTripsFilter] = useState('weekly');
   const [reimbursementTripsFilter, setReimbursementreTripsFilter] = useState('weekly');
-
-  // const [patientsDate, setPatientsDate] = useState(getPreviousMonthDate());
-  // const [providersDate, setProvidersDate] = useState(getPreviousMonthDate());
-  // const [tripsDate, setTripsDate] = useState(getPreviousMonthDate());
-  // const [reimbursementDate, setReimbursementDate] = useState(getPreviousMonthDate());
   const [patientsDate, setPatientsDate] = useState(
     getInitialDateByFilter(patientsFilter)
   );
@@ -264,7 +262,6 @@ export default function DashboardDefault() {
   const reimbursementInterval = getIntervalRange(reimbursementDate, reimbursementTripsFilter);
 
 
-  // ==============================|| RENDER ||============================== //
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
       <Grid item xs={12}><WelcomeBanner /></Grid>
@@ -398,13 +395,22 @@ export default function DashboardDefault() {
       </Grid>
 
       {/* Other Dashboard Sections */}
-      <Grid item xs={12}><ProjectAnalytics /></Grid>
-      <Grid item xs={12} md={8} lg={9}><ProjectOverview /></Grid>
-      <Grid item xs={12} md={4} lg={3}>
+      <Grid item xs={12} md={4}>
+        <ComplaintsOverview />
+      </Grid>
+      <Grid item xs={12} md={4}>
         <Stack spacing={3} sx={{ height: '100%' }}>
-          <AssignUsers />
+          <StandingOrders />
         </Stack>
       </Grid>
+      <Grid item xs={12} md={4}>
+        {loading ?
+          <InvoiceChartsSkeleton />
+          :
+          <InvoiceCharts loading={loading} setLoading={setLoading} stats={stats} setStats={setStats} />
+        }
+      </Grid>
+      <Grid item xs={12}><ProjectAnalytics loading={loading} setLoading={setLoading} stats={stats} setStats={setStats} /></Grid>
     </Grid>
   );
 }
