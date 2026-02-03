@@ -4,7 +4,7 @@ import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetcher, fetcherDelete, fetcherUpdate } from 'utils/axios';
-import { filterValue, loading, providerData, providerPaginationData } from 'store/reducers/providerSlice';
+import { filterValue, loading, providerData, providerPaginationData, providersDataAfterDelete } from 'store/reducers/providerSlice';
 import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/providers/providerTableColumn';
 import ProviderButtonsOnTable from 'components/pages/providers/ProviderButtonsOnTable';
@@ -16,9 +16,10 @@ export default function Provider() {
   const [page, setPage] = useState(1);
   const dispatch = useDispatch();
   const [filters, setFilters] = useState({});
+  const [isFetching, setIsFetching] = useState(false);
 
   const getProviderData = async (values = {}) => {
-    dispatch(loading(true));
+    setIsFetching(true);
     const query = {
       name: values?.name || '',
       company_phone: values?.phone_number || '',
@@ -36,7 +37,7 @@ export default function Provider() {
       dispatch(providerData(response.data.data));
       dispatch(filterValue(values));
       dispatch(providerPaginationData(response.data));
-      dispatch(loading(false));
+      setIsFetching(false);
     }
   };
   const handleChangePerPage = async (event) => {
@@ -73,6 +74,7 @@ export default function Provider() {
     dispatch(loading(true));
     const response = await fetcherDelete([`/provider/${id}`]);
     if (response.status === 200) {
+      dispatch(providersDataAfterDelete({ id }))
       openSnackbar({
         open: true,
         message: 'Provider deleted successfuly!',
@@ -83,8 +85,6 @@ export default function Provider() {
         }
       });
       dispatch(loading(false));
-      getProviderData()
-
     }
   }
   const updateProvider = async (id, data) => {
@@ -101,8 +101,7 @@ export default function Provider() {
       });
     }
   }
-  const providerState = useSelector(state => state?.provider)
-  const isLoading = providerState.loading;
+  const providerState = useSelector(state => state?.provider);
   const providerStateData = providerState.providerData;
 
   useEffect(() => {
@@ -111,7 +110,7 @@ export default function Provider() {
 
   return (
     <Grid>
-      {isLoading ?
+      {isFetching ?
         <CircularLoader text='Loading providers..' />
         :
         <CommonTable
@@ -127,7 +126,6 @@ export default function Provider() {
           handleUpdate={updateProvider}
           stackontable={<ProviderButtonsOnTable handleGetData={getProviderData} tableType="provider" filters={filters} />}
           tableName="provider"
-
         />
       }
     </Grid>

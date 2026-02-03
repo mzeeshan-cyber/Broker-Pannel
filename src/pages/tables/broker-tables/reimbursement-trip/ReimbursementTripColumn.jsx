@@ -78,9 +78,9 @@ function EditAction({ row, table }) {
                         </IconButton>
                     </Tooltip>
                     <TransitionsModal openModal={openRescheduleModal} setOpenModal={setOpenRescheduleModal} title="Reschedule Reimbursement Trip" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Reschedule Trip' isSubmitting={stateData.loading} noFooter={true}>
-                        <RescheduleTrip tripId={row.original.id} setOpenRescheduleModal={setOpenRescheduleModal}/>
+                        <RescheduleTrip tripId={row.original.id} setOpenRescheduleModal={setOpenRescheduleModal} />
                     </TransitionsModal>
-                </> : <Box sx={{paddingLeft:'36px'}}/>
+                </> : <Box sx={{ paddingLeft: '36px' }} />
             }
             <Tooltip title='Edit'>
                 <IconButton color={'primary'} onClick={() => navigate(`/reimbursement-trips/${row?.original.id}/update`)}>
@@ -106,7 +106,7 @@ const StatusTransitions = {
     rejected: ["approved", "rejected", "pending", "cancel_by_patient", "cancel_by_broker"],
     approved: ["approved", "rejected", "pending", "completed", "cancel_by_patient", "cancel_by_broker"],
     completed: ["return_to_patient_for_rebilling", "completed"],
-    pending_for_review: ["completed", "return_to_patient_for_rebilling","pending_for_review"],
+    pending_for_review: ["completed", "return_to_patient_for_rebilling", "pending_for_review"],
     return_to_patient_for_rebilling: ["return_to_patient_for_rebilling", "completed"]
 };
 
@@ -140,7 +140,7 @@ export const columns =
             id: 'departure_date',
             header: 'Departure Date',
             footer: 'Departure Date',
-            accessorKey: 'departure_date',
+            accessorFn: row => row?.departure_date?.split('T')[0] || '',
             dataType: 'text',
             enableGrouping: false
         },

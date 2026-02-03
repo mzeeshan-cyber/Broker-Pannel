@@ -100,7 +100,7 @@ export const fuzzySort = (rowA, rowB, columnId) => {
 
 function EditAction({ row, table }) {
     const meta = table?.options?.meta;
-
+    const Loader = useSelector(state => state?.attendants?.loading)
     const [openModal, setOpenModal] = useState(false);
     const handleOpenModal = () => {
         setOpenModal(prevState => !prevState)
@@ -113,7 +113,7 @@ function EditAction({ row, table }) {
                     <RefreshCircle variant="Outline" />
                 </IconButton>
             </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore patient attendent" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' >
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore patient attendent" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' isSubmitting={Loader}>
                 <Typography id="modal-modal-description">Are you sure, you want to restore this patient's attendent?</Typography>
             </TransitionsModal>
         </Stack>
@@ -141,9 +141,9 @@ function ReactTable({ defaultColumns, handleDelete, handleUpdate, handleRestoreM
     );
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const driverStateData = useSelector(state => state?.driver)
-    const driverPaginationData = driverStateData?.driversPaginationData;
-    let data = driverStateData?.deletedDriversData;
+    const driverStateData = useSelector(state => state?.attendants)
+    const driverPaginationData = driverStateData?.attendantsPaginationData;
+    let data = driverStateData?.deletedAttendantsData;
 
     const patientId = useParams()
     const dispatch = useDispatch()
@@ -256,6 +256,7 @@ function ReactTable({ defaultColumns, handleDelete, handleUpdate, handleRestoreM
     const seletedPateints = [...Object.keys(rowSelection)];
 
     const [openModal, setOpenModal] = useState(false);
+    const Loader = useSelector(state => state?.attendants?.loading)
     const handleOpenModal = () => {
         setOpenModal(prevState => !prevState)
     }
@@ -294,7 +295,7 @@ function ReactTable({ defaultColumns, handleDelete, handleUpdate, handleRestoreM
                     </Button>
                 </Stack>
             </Stack>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore patient attendents" handleSubmit={() => handleRestoreMultiple(seletedPateints)} btnText='Restore' >
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore patient attendents" handleSubmit={() => { handleRestoreMultiple(seletedPateints), handleOpenModal(false) }} btnText='Restore' isSubmitting={Loader}>
                 <Typography id="modal-modal-description">Are you sure, you want to restore these patient attendents?</Typography>
             </TransitionsModal>
 

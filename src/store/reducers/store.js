@@ -13,6 +13,7 @@ import citiesReduces from "./providerCitiesSlice"
 import tripsInvoicesReducers from "./tripsInvoicesSlice"
 import complaintsSliceReducers from "./complaintsSlide"
 import standingOrderSliceReducers from "./standingOrderSlice"
+import AttendantsSliceReducers from "./attendantSlice"
 
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // Uses localStorage for web
@@ -42,6 +43,7 @@ const store = configureStore({
     tripsInvoices: tripsInvoicesReducers,
     complaints: complaintsSliceReducers,
     standingOrders: standingOrderSliceReducers,
+    attendants: AttendantsSliceReducers,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

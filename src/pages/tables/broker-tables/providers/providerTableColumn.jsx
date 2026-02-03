@@ -56,7 +56,7 @@ const changeStatus = async (id, status, dispatch) => {
 };
 
 function EditAction({ row, table }) {
-    const Loader = useSelector(state => state?.driver.loader);
+    const Loader = useSelector(state => state?.provider?.loading);
     const navigate = useNavigate()
 
     const [openModal, setOpenModal] = useState(false);
@@ -77,7 +77,7 @@ function EditAction({ row, table }) {
                     <Bag variant="Outline" />
                 </IconButton>
             </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete provider" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' Loader={Loader}>
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete provider" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' isSubmitting={Loader}>
                 <Typography id="modal-modal-description">Are you sure, you want to delete a provider?</Typography>
             </TransitionsModal>
         </Stack>

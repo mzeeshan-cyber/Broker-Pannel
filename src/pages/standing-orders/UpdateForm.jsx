@@ -200,19 +200,19 @@ export default function UpdateForm({ standingOrdersData }) {
             otherwise: (schema) => schema.notRequired(),
         }),
         pet_animal: Yup.string().required('Required'),
-        is_shared: Yup.string()
-            .required('Required')
-            .test(
-                'pet-animal-shared-rule',
-                'Shared trips are not allowed when pet animal is selected.',
-                function (value) {
-                    const { pet_animal } = this.parent;
-                    if (pet_animal === '1' && value !== '0') {
-                        return false;
-                    }
-                    return true;
-                }
-            ),
+        // is_shared: Yup.string()
+        //     .required('Required')
+        //     .test(
+        //         'pet-animal-shared-rule',
+        //         'Shared trips are not allowed when pet animal is selected.',
+        //         function (value) {
+        //             const { pet_animal } = this.parent;
+        //             if (pet_animal === '1' && value !== '0') {
+        //                 return false;
+        //             }
+        //             return true;
+        //         }
+        //     ),
 
         // ---------------- attendants and booster_seats ----------------
         attendants: Yup.string()
@@ -222,15 +222,15 @@ export default function UpdateForm({ standingOrdersData }) {
                 const a = parseInt(value ?? "0", 10);
                 const b = parseInt(booster_seats ?? "0", 10);
 
-                if (is_shared === "1") {
-                    if (a !== 0) {
-                        return this.createError({
-                            path: "attendants",
-                            message: "Attendants must be 0 when trip is shared",
-                        });
-                    }
-                    return true;
-                }
+                // if (is_shared === "1") {
+                //     if (a !== 0) {
+                //         return this.createError({
+                //             path: "attendants",
+                //             message: "Attendants must be 0 when trip is shared",
+                //         });
+                //     }
+                //     return true;
+                // }
 
                 const total = a + b;
                 const limits = { minivan: 5, sedan: 3, wheelchair: 2 };
@@ -253,15 +253,15 @@ export default function UpdateForm({ standingOrdersData }) {
                 const a = parseInt(attendants ?? "0", 10);
                 const b = parseInt(value ?? "0", 10);
 
-                if (is_shared === "1") {
-                    if (b !== 0) {
-                        return this.createError({
-                            path: "booster_seats",
-                            message: "Booster seats must be 0 when trip is shared",
-                        });
-                    }
-                    return true;
-                }
+                // if (is_shared === "1") {
+                //     if (b !== 0) {
+                //         return this.createError({
+                //             path: "booster_seats",
+                //             message: "Booster seats must be 0 when trip is shared",
+                //         });
+                //     }
+                //     return true;
+                // }
 
                 const total = a + b;
                 const limits = { minivan: 5, sedan: 3, wheelchair: 2 };
@@ -349,7 +349,7 @@ export default function UpdateForm({ standingOrdersData }) {
                 attendants: standingOrdersData.attendants,
                 booster_seats: standingOrdersData.booster_seats || '0',
                 pet_animal: standingOrdersData.pet_animal ? 1 : 0,
-                is_shared: standingOrdersData.is_shared ? 1 : 0,
+                // is_shared: standingOrdersData.is_shared ? 1 : 0,
                 is_two_way: standingOrdersData?.is_two_way ? '1' : '0',
                 is_bariatric: standingOrdersData?.is_bariatric ? 1 : 0,
                 pickup_facility_name: standingOrdersData.pickup_facility_name,
@@ -763,7 +763,7 @@ export default function UpdateForm({ standingOrdersData }) {
                                         </FormHelperText>
                                     )}
                                 </Grid>
-                                <Grid item xs={12} md={6} lg={4} xl={3}>
+                                {/* <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
                                         label="Shared Trip"
                                         id="is_shared"
@@ -778,7 +778,7 @@ export default function UpdateForm({ standingOrdersData }) {
                                             {errors.is_shared}
                                         </FormHelperText>
                                     )}
-                                </Grid>
+                                </Grid> */}
                                 <Grid item xs={12} md={6} lg={4} xl={3}>
                                     <SelectDropDown
                                         label="Round Trip"

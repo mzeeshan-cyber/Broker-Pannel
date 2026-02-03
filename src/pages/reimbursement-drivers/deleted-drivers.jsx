@@ -1,16 +1,13 @@
-// material-ui
 import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import DeletedDriversTable from 'pages/tables/broker-tables/drivers/deletedDriverTable';
 import { useDispatch } from 'react-redux';
-import { deletedDriversData, driversPaginationData, resetFilter } from 'store/reducers/driverSlice';
+import { deletedDriversData, driversPaginationData, loading, restoreData, restoreMultipleData } from 'store/reducers/driverSlice';
 import { fetcher } from 'utils/axios';
 import { decryptToken } from 'utils/tokenUtils';
 import CircularLoader from 'components/common/loader/CircularLoader';
-
-// ==============================|| DASHBOARD - DEFAULT ||============================== //
 
 export default function DeletedDrivers() {
     const [errorMsg, setErrorMsg] = useState(false);
@@ -39,7 +36,7 @@ export default function DeletedDrivers() {
     };
 
     const restoreDriver = async (id) => {
-        setIsLoading(true);
+         dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}reimbursement-driver/${id}/restore`, {
                 method: 'PATCH',
@@ -63,6 +60,7 @@ export default function DeletedDrivers() {
                 });
                 throw new Error(errorData || 'failed!');
             }
+            dispatch(restoreData(id));
             openSnackbar({
                 open: true,
                 message: 'Reimbursement driver restored successfuly!',
@@ -76,12 +74,11 @@ export default function DeletedDrivers() {
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsLoading(false);
-            getDeteledReimbursementDrivers()
+            dispatch(loading(false));
         }
     }
     const restoreMultipleDrivers = async (restoreIds) => {
-        setIsLoading(true);
+        dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}reimbursement-drivers/restore`, {
                 method: 'PATCH',
@@ -108,6 +105,7 @@ export default function DeletedDrivers() {
                 throw new Error(errorData || 'failed!');
             }
             else {
+                dispatch(restoreMultipleData(restoreIds));
                 openSnackbar({
                     open: true,
                     message: 'Driver restored successfuly!',
@@ -122,8 +120,7 @@ export default function DeletedDrivers() {
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsLoading(false);
-            getDeteledReimbursementDrivers();
+            dispatch(loading(false));
         }
     }
 

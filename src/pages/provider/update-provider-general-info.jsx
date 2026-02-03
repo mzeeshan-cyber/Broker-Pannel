@@ -77,7 +77,6 @@ export default function UpdateProviderGeneralInfo() {
                     open: true,
                     message: errorData.message || 'Provider general info is not updated!',
                     variant: 'alert',
-
                     alert: {
                         color: 'error'
                     }

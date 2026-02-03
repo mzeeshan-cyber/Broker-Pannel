@@ -7,69 +7,71 @@ import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/complaints/Columns';
 import CircularLoader from 'components/common/loader/CircularLoader';
 import ComplaintsButtonsOnTable from 'components/pages/complaints/ComplaintsButtonsOnTable';
-import BasicTabs from 'sections/components-overview/tabs/BasicTabs';
-
+import ConmplaintsTabs from './ConmplaintsTabs';
 
 export default function Complaints() {
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const dispatch = useDispatch();
   const [filters, setFilters] = useState({});
+  const [activeTab, setActiveTab] = useState(0);
 
-  const getComplaintData = async (values = {}) => {
+  const dispatch = useDispatch();
+  const complaintsState = useSelector(state => state?.complaints);
+  const complaintsStateData = complaintsState.complaintsData;
+
+  const getComplaintData = async (values = {}, tabIndex, resetPage = true) => {
+    if (resetPage) setPage(1);
+
     setIsLoading(true);
     const query = {
       complaint_number: values?.complaint_number || '',
       priority: values?.priority || '',
       status: values?.status || '',
-      page: 1,
+      raised_by_role: tabIndex === 0 ? 'broker' : 'other',
+      page: resetPage ? 1 : page,
       per_page: pageSize
     };
+
     setFilters(query);
-    setPage(1)
+
     try {
-      const response = await fetcher([
-        "/get-assigned-complaints",
-        { params: query }
-      ]);
+      const response = await fetcher(['/get-assigned-complaints', { params: query }]);
       if (response.status === true) {
         dispatch(complaintsData(response.data.data));
         dispatch(filterValue(values));
         dispatch(paginationData(response.data));
-        setIsLoading(false);
       }
-    }
-    catch (error) { }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   };
+
   const handleChangePerPage = async (event) => {
     const per_page = Number(event.target.value);
     setPageSize(per_page);
-    setPage(1);
-
-    const response = await fetcher([
-      "/get-assigned-complaints",
-      { params: { ...filters, page: 1, per_page } }
-    ]);
-
-    if (response.status === true) {
-      dispatch(complaintsData(response.data.data));
-      dispatch(paginationData(response.data));
-    }
+    getComplaintData({}, activeTab);
   };
+
   const handleChangePagination = async (event, value) => {
     setPage(value);
 
-    const response = await fetcher([
-      "/get-assigned-complaints",
-      { params: { ...filters, page: value, per_page: pageSize } }
-    ]);
-    if (response.status === true) {
-      dispatch(complaintsData(response.data.data));
-      dispatch(paginationData(response.data));
+    const query = {
+      ...filters,
+      page: value,
+      per_page: pageSize,
+      raised_by_role: activeTab === 0 ? 'broker' : 'other'
+    };
+
+    setIsLoading(true);
+    try {
+      const response = await fetcher(['/get-assigned-complaints', { params: query }]);
+      if (response.status === true) {
+        dispatch(complaintsData(response.data.data));
+        dispatch(paginationData(response.data));
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,84 +81,64 @@ export default function Complaints() {
     if (response.status === 200) {
       openSnackbar({
         open: true,
-        message: response.message || 'Complaint deleted successfuly!',
+        message: response.message || 'Complaint deleted successfully!',
         variant: 'alert',
-
-        alert: {
-          color: 'success'
-        }
+        alert: { color: 'success' }
       });
       dispatch(deleteComplaint({ id }));
       dispatch(loading(false));
     }
-  }
+  };
+
   const updateProvider = async (id, data) => {
-    const response = await fetcherUpdate(`/patient/${id}`, JSON.stringify(data))
+    const response = await fetcherUpdate(`/patient/${id}`, JSON.stringify(data));
     if (response.status === 200) {
       openSnackbar({
         open: true,
-        message: response.message || 'Complaint updated successfuly!',
+        message: response.message || 'Complaint updated successfully!',
         variant: 'alert',
-        alert: {
-          color: 'success'
-        }
+        alert: { color: 'success' }
       });
     }
-  }
-  const complaintsState = useSelector(state => state?.complaints)
-  const complaintsStateData = complaintsState.complaintsData;
+  };
 
   useEffect(() => {
-    getComplaintData({}, page, pageSize);
+    getComplaintData({}, activeTab);
   }, []);
 
+  const tableContent = (
+    isLoading
+      ? <CircularLoader />
+      : <CommonTable
+        data={complaintsStateData}
+        paginationData={complaintsState?.paginationData}
+        defaultColumns={columns}
+        setPageSize={setPageSize}
+        pageSize={pageSize}
+        page={page}
+        handleChangePerPage={handleChangePerPage}
+        handleChangePagination={handleChangePagination}
+        handleDelete={handleDeleteComplaint}
+        handleUpdate={updateProvider}
+        stackontable={<ComplaintsButtonsOnTable handleGetData={getComplaintData} filters={filters} />}
+        tableName="complaints"
+      />
+  );
+
   const tabsData = [
-    {
-      label: 'My Complaints',
-      icon: '',
-      content:
-        isLoading ?
-          <CircularLoader />
-          :
-          <CommonTable
-            data={complaintsStateData.filter(item => item.raised_by_role === 'broker')}
-            paginationData={complaintsState?.paginationData}
-            defaultColumns={columns}
-            setPageSize={setPageSize}
-            pageSize={pageSize}
-            page={page}
-            handleChangePerPage={handleChangePerPage}
-            handleChangePagination={handleChangePagination}
-            handleDelete={handleDeleteComplaint}
-            handleUpdate={updateProvider}
-            stackontable={<ComplaintsButtonsOnTable handleGetData={getComplaintData} filters={filters} />}
-            tableName="complaints"
-          />
-    },
-    {
-      label: 'Other Complaints',
-      icon: '',
-      content:
-        isLoading ?
-          <CircularLoader />
-          :
-          <CommonTable
-            data={complaintsStateData.filter(item => item.raised_by_role !== 'broker')}
-            paginationData={complaintsState?.paginationData}
-            defaultColumns={columns}
-            setPageSize={setPageSize}
-            pageSize={pageSize}
-            page={page}
-            handleChangePerPage={handleChangePerPage}
-            handleChangePagination={handleChangePagination}
-            handleDelete={handleDeleteComplaint}
-            handleUpdate={updateProvider}
-            stackontable={<ComplaintsButtonsOnTable handleGetData={getComplaintData} filters={filters} />}
-            tableName="complaints"
-          />
-    },
+    { label: 'My Complaints', icon: '', content: tableContent },
+    { label: 'Other Complaints', icon: '', content: tableContent },
   ];
+
   return (
-    <BasicTabs tabs={tabsData} />
+    <ConmplaintsTabs
+      value={activeTab}
+      onChange={(event, newValue) => {
+        setActiveTab(newValue);
+        getComplaintData({}, newValue);
+      }}
+      tabs={tabsData}
+    />
+
   );
 }

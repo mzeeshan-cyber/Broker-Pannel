@@ -9,9 +9,11 @@ import { ArrowDown2, ArrowRight2, CloseCircle, RefreshCircle } from 'iconsax-rea
 import TransitionsModal from 'sections/components-overview/modal/TransitionsModal';
 import { Typography } from '@mui/material';
 import { IndeterminateCheckbox } from 'components/third-party/react-table';
+import { useSelector } from 'react-redux';
 
 function EditAction({ row, table }) {
     const [openModal, setOpenModal] = useState(false);
+    const loader = useSelector(state => state?.provider.loading);
     const handleOpenModal = () => {
         setOpenModal(prevState => !prevState)
     }
@@ -22,7 +24,7 @@ function EditAction({ row, table }) {
                     <RefreshCircle variant="Outline" />
                 </IconButton>
             </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore provider" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' >
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore provider" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' isSubmitting={loader}>
                 <Typography id="modal-modal-description">Are you sure, you want to restore this provider?</Typography>
             </TransitionsModal>
         </Stack>

@@ -72,7 +72,7 @@ export default function AddCity() {
         } catch (error) {
             openSnackbar({
                 open: true,
-                message:  `${response.message}`|| `${error?.message}` || `Server error`,
+                message: `${response.message}` || `${error?.message}` || `Server error`,
                 variant: 'alert',
 
                 alert: {
@@ -153,28 +153,30 @@ export default function AddCity() {
                                 </Grid>
                                 {cityDetail && placeId &&
                                     <Grid item xs={12}>
-                                        {loading ? 
-                                        <CircularLoader/>
-                                        : 
-                                        <CityInfoCard data={[cityDetail]} noStatus={true}/>
+                                        {loading ?
+                                            <CircularLoader />
+                                            :
+                                            <CityInfoCard data={[cityDetail]} noStatus={true} />
                                         }
                                     </Grid>
                                 }
-                                <Grid item xs={12}>
-                                    <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 4 }}>
-                                        <Button disableElevation disabled={isSubmitting} variant="contained" type="submit" sx={{
-                                                    '&.Mui-disabled': {
-                                                        bgcolor: theme.palette.primary.main,
-                                                    }
-                                                }}>
-                                            {isSubmitting ? (
-                                                <CircularProgress sx={{ height: '20px !important', width: '20px !important', color: 'white' }} />
-                                            ) : (
-                                                'Add City'
-                                            )}
-                                        </Button>
-                                    </Stack>
-                                </Grid>
+                                { !loading &&
+                                    <Grid item xs={12}>
+                                        <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 4 }}>
+                                            <Button disableElevation disabled={isSubmitting} variant="contained" type="submit" sx={{
+                                                '&.Mui-disabled': {
+                                                    bgcolor: theme.palette.primary.main,
+                                                }
+                                            }}>
+                                                {isSubmitting ? (
+                                                    <CircularProgress sx={{ height: '20px !important', width: '20px !important', color: 'white' }} />
+                                                ) : (
+                                                    'Add City' 
+                                                )}
+                                            </Button>
+                                        </Stack>
+                                    </Grid>
+                                }
                             </Grid>
                         </MainCard>
                     </form>

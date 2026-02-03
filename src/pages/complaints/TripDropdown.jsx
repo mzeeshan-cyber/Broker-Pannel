@@ -149,7 +149,14 @@ function DebouncedDropdown({
                         {mappedData.map((item, index) => (
                             <Box
                                 key={`${item.value}-${index}`}
-                                sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'grey.100' }, borderBottom: '1px solid #eee' }}
+                                sx={{
+                                    p: 1, cursor: 'pointer', '&:hover': {
+                                        bgcolor: (theme) =>
+                                            theme.palette.mode === 'dark'
+                                                ? 'grey.800'
+                                                : 'grey.100'
+                                    }, borderBottom: '1px solid #eee'
+                                }}
                                 onClick={() => {
                                     setFieldValue(label.toLowerCase().replace(' ', '_'), { value: item.value, displayLabel: item.displayLabel });
                                     setInputValue(item.displayLabel);

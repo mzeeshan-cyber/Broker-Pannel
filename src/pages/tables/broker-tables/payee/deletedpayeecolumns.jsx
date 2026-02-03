@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-// material-ui
 import Tooltip from '@mui/material/Tooltip';
 import Stack from '@mui/material/Stack';
-// project import
-import Avatar from 'components/@extended/Avatar';
 import IconButton from 'components/@extended/IconButton';
-import { getImageUrl, ImagePath } from 'utils/getImageUrl';
-//assets
 import { ArrowDown2, ArrowRight2, CloseCircle, RefreshCircle } from 'iconsax-react';
 import TransitionsModal from 'sections/components-overview/modal/TransitionsModal';
 import { Typography } from '@mui/material';
 import { IndeterminateCheckbox } from 'components/third-party/react-table';
+import { useSelector } from 'react-redux';
 
 function EditAction({ row, table }) {
+    const Loading = useSelector(state => state.payee.loading)
     const [openModal, setOpenModal] = useState(false);
     const handleOpenModal = () => {
         setOpenModal(prevState => !prevState)
@@ -24,7 +21,7 @@ function EditAction({ row, table }) {
                     <RefreshCircle variant="Outline" />
                 </IconButton>
             </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore patient payee" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' >
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore patient payee" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' isSubmitting={Loading} >
                 <Typography id="modal-modal-description">Are you sure, you want to restore this patient's payee?</Typography>
             </TransitionsModal>
         </Stack>

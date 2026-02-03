@@ -100,11 +100,12 @@ export const fuzzySort = (rowA, rowB, columnId) => {
 
 function EditAction({ row, table }) {
   const meta = table?.options?.meta;
-
   const [openModal, setOpenModal] = useState(false);
+  const Loader = useSelector(state => state?.driver.loading);
   const handleOpenModal = () => {
     setOpenModal(prevState => !prevState)
   }
+
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">
@@ -113,7 +114,7 @@ function EditAction({ row, table }) {
           <RefreshCircle variant="Outline" />
         </IconButton>
       </Tooltip>
-      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore reimbursement driver" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' >
+      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore reimbursement driver" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Yes' isSubmitting={Loader} >
         <Typography id="modal-modal-description">Are you sure, you want to restore this reimbursement driver?</Typography>
       </TransitionsModal>
     </Stack>
@@ -254,7 +255,7 @@ function ReactTable({ defaultColumns, handleDelete, handleUpdate, handleRestoreM
   );
 
   const seletedPateints = [...Object.keys(rowSelection)];
-
+  const Loader = useSelector(state => state?.driver.loading);
   const [openModal, setOpenModal] = useState(false);
   const handleOpenModal = () => {
     setOpenModal(prevState => !prevState)
@@ -294,7 +295,12 @@ function ReactTable({ defaultColumns, handleDelete, handleUpdate, handleRestoreM
           </Button>
         </Stack>
       </Stack>
-      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore reimburdement drivers" handleSubmit={() => handleRestoreMultiple(seletedPateints)} btnText='Restore' isSubmitting="" >
+      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Restore reimburdement drivers" handleSubmit={() => {
+        if (!seletedPateints?.length) return;
+        handleRestoreMultiple(seletedPateints);
+        handleOpenModal(false);
+      }}
+        btnText='Restore' isSubmitting={Loader} >
         <Typography id="modal-modal-description">Are you sure, you want to restore these reimburdement driver?</Typography>
       </TransitionsModal>
 

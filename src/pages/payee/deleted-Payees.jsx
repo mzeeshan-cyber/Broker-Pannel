@@ -1,14 +1,12 @@
 import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
-import Loader from 'components/Loader';
 import { useParams } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetcher } from 'utils/axios';
-import { loading } from 'store/reducers/patientSlice';
 import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/payee/deletedpayeecolumns';
-import { deletedPayeesData, payeesPaginationData, resetFilter } from 'store/reducers/payeeSlice';
+import { deletedPayeesData, loading, payeesPaginationData, resetFilter, restoreData, restoreMultipleData } from 'store/reducers/payeeSlice';
 import { decryptToken } from 'utils/tokenUtils';
 import CircularLoader from 'components/common/loader/CircularLoader';
 
@@ -41,7 +39,7 @@ export default function DeletedPayees() {
     };
 
     const restorePayee = async (id) => {
-        setIsLoading(true);
+        dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}patient-payees/${id}/restore`, {
                 method: 'POST',
@@ -74,16 +72,16 @@ export default function DeletedPayees() {
                     color: 'success'
                 }
             });
+            dispatch(restoreData(id));
 
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsLoading(false);
-            getDeteledPayees()
+            dispatch(loading(false));
         }
     }
     const restoreMultiplePayees = async (restoreIds) => {
-        setIsLoading(true);
+        dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}restore-multiple-patient-payees`, {
                 method: 'POST',
@@ -110,6 +108,7 @@ export default function DeletedPayees() {
                 throw new Error(errorData || 'failed!');
             }
             else {
+                dispatch(restoreMultipleData(restoreIds));
                 openSnackbar({
                     open: true,
                     message: 'Payees restored successfuly!',
@@ -124,42 +123,41 @@ export default function DeletedPayees() {
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsLoading(false);
-            getDeteledPayees();
+            dispatch(loading(false));
         }
     }
 
     // Pagination
-      const handleChangePerPage = async (event) => {
+    const handleChangePerPage = async (event) => {
         setPageSize(Number(event.target.value));
         const per_page = Number(event.target.value);
         const response = await fetcher([`/deleted-patient-payees?patient_id=${patientId.id}&per_page=${per_page}`]);
         if (response.status === true) {
-          dispatch(deletedPayeesData(response?.data?.data))
-          dispatch(resetFilter(false))
-          openSnackbar({
-            open: true,
-            message: response.message || 'data is fetched',
-            variant: 'alert',
-            alert: { color: 'success' }
-          });
+            dispatch(deletedPayeesData(response?.data?.data))
+            dispatch(resetFilter(false))
+            openSnackbar({
+                open: true,
+                message: response.message || 'data is fetched',
+                variant: 'alert',
+                alert: { color: 'success' }
+            });
         }
-      };
-      const handleChangePagination = async (event, value) => {
+    };
+    const handleChangePagination = async (event, value) => {
         const eventValue = event.target.value;
         setPage(eventValue ? eventValue : value);
         const response = await fetcher([`/deleted-patient-payees?patient_id=${patientId.id}&page=${eventValue ? eventValue : value}`]);
         if (response.status === true) {
-          dispatch(deletedPayeesData(response?.data?.data))
-          dispatch(resetFilter(false))
-          openSnackbar({
-            open: true,
-            message: response.message || 'data is fetched',
-            variant: 'alert',
-            alert: { color: 'success' }
-          });
+            dispatch(deletedPayeesData(response?.data?.data))
+            dispatch(resetFilter(false))
+            openSnackbar({
+                open: true,
+                message: response.message || 'data is fetched',
+                variant: 'alert',
+                alert: { color: 'success' }
+            });
         }
-      };
+    };
 
     useEffect(() => { getDeteledPayees() }, [])
 
@@ -168,9 +166,10 @@ export default function DeletedPayees() {
     return (
         <Grid>
             {isLoading ?
-                <CircularLoader text='Loading deleted payee..'/>
+                <CircularLoader text='Loading deleted payee..' />
                 :
                 <CommonTable
+                    isSubmitting={payeeState.loading}
                     data={payeeState?.deletedPayeesData}
                     paginationData={payeeState?.payeesPaginationData}
                     defaultColumns={columns}

@@ -61,6 +61,7 @@ function EditAction({ row, table }) {
     const handleOpenModal = () => {
         setOpenModal(prevState => !prevState)
     }
+    if(row.original.status === 'completed') return 'No Actions'
     return (
         <Stack direction="row" spacing={1} alignItems="center">
             <Tooltip title='Update Complaint'>
@@ -142,7 +143,7 @@ export const columns =
             id: 'is_two_way',
             header: 'Is Round',
             footer: 'Is Round',
-            accessorFn: row => capitalize(row.is_two_way ? 'Yes': 'No'),
+            accessorFn: row => capitalize(row.is_two_way ? 'Yes' : 'No'),
             dataType: 'text',
             enableGrouping: false
         },
@@ -158,20 +159,26 @@ export const columns =
                     changeStatus(rowId, newValue, dispatch)
                 };
                 return (
-                    <Select
-                        labelId="editable-select-label"
-                        sx={{ '& .MuiOutlinedInput-input': { py: 0.75, px: 1 } }}
-                        id={`editable-select-${row.original.id}`}
-                        value={row.original.status}
-                        onChange={(event) => handleChange(event, row.original.id)}
-                        size="small"
-                    >
-                        {standingOrderStatuses.map((item, index) => (
-                            <MenuItem value={item.name} key={index}>
-                                <Chip color={item.color} label={item.label} size="small" variant="light" />
-                            </MenuItem>
-                        ))}
-                    </Select>
+                    <>
+                        {row.original.status === 'completed' ?
+                            <Chip color={'success'} label={row.original.status} size="small" variant="light" />
+                            :
+                            <Select
+                                labelId="editable-select-label"
+                                sx={{ '& .MuiOutlinedInput-input': { py: 0.75, px: 1 } }}
+                                id={`editable-select-${row.original.id}`}
+                                value={row.original.status}
+                                onChange={(event) => handleChange(event, row.original.id)}
+                                size="small"
+                            >
+                                {standingOrderStatuses.map((item, index) => (
+                                    <MenuItem value={item.name} key={index}>
+                                        <Chip color={item.color} label={item.label} size="small" variant="light" />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        }
+                    </>
                 );
             },
             dataType: 'select',

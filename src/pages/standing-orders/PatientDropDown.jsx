@@ -9,7 +9,8 @@ import {
     InputBase,
     IconButton,
     ClickAwayListener,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
 import debounce from 'lodash/debounce';
 import { MdOutlineClear } from 'react-icons/md';
@@ -26,6 +27,7 @@ import {
 import { fetcher } from 'utils/axios';
 
 /* ---------------- ICON MAP ---------------- */
+
 const FIELD_ICONS = {
     name: <MdPerson />,
     phone_number: <MdPhone />,
@@ -51,11 +53,17 @@ const ICON_COLORS = {
 
 /* ---------------- HIGHLIGHT TEXT ---------------- */
 const highlightText = (text, search) => {
+    const theme = useTheme();
     if (!search) return text;
     const regex = new RegExp(`(${search})`, 'gi');
     return text.split(regex).map((part, i) =>
         part.toLowerCase() === search.toLowerCase() ? (
-            <span key={i} style={{ backgroundColor: '#fff59d' }}>
+            <span key={i} style={{
+                backgroundColor: theme.palette.mode === 'dark'
+                    ? '#4a3f00'
+                    : '#fff59d'
+            }}
+            >
                 {part}
             </span>
         ) : (
@@ -190,7 +198,12 @@ function DebouncedDropdown({
                                         p: 1.2,
                                         cursor: 'pointer',
                                         borderBottom: '1px solid #eee',
-                                        '&:hover': { bgcolor: 'grey.100' }
+                                        '&:hover': {
+                                            bgcolor: (theme) =>
+                                                theme.palette.mode === 'dark'
+                                                    ? 'grey.800'
+                                                    : 'grey.100'
+                                        }
                                     }}
                                     onClick={() => {
                                         setFieldValue(formKey, {
@@ -272,7 +285,7 @@ function DebouncedDropdown({
                     </Paper>
                 </Popper>
             </Stack>
-        </ClickAwayListener>
+        </ClickAwayListener >
     );
 }
 

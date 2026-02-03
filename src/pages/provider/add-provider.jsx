@@ -1,12 +1,7 @@
-// material-ui
 import Grid from '@mui/material/Grid';
 import FormHelperText from '@mui/material/FormHelperText';
 import Stack from '@mui/material/Stack';
-
-// project-imports
 import MainCard from 'components/MainCard';
-
-// third-party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
 import { Button, CircularProgress } from '@mui/material';
@@ -35,39 +30,39 @@ export default function AddProvider() {
                 },
                 body: JSON.stringify(values),
             });
-            if (!response.ok) {
-                const errorData = await response.json();
-                setErrors(errorData);
+            const data = await response.json();
+            if (!response.ok || data.status === false) {
+                if (data.errors) {
+                    setErrors(data.errors);
+                }
                 openSnackbar({
                     open: true,
-                    message: errorData.message || 'Provider is not added!',
+                    message: data.message || 'Provider is not added!',
                     variant: 'alert',
-
                     alert: {
                         color: 'error'
                     }
                 });
-                throw new Error(errorData || 'failed!');
+                return;
             }
+
             openSnackbar({
                 open: true,
-                message: 'Provider added Successfuly!',
+                message: 'Provider added successfully!',
                 variant: 'alert',
-
                 alert: {
                     color: 'success'
                 }
             });
             setTimeout(() => {
-                navigate('/providers')
+                navigate('/providers');
             }, 1500);
 
         } catch (error) {
             openSnackbar({
                 open: true,
-                message: `${error?.message} || Server error`,
+                message: error?.message || 'Server error',
                 variant: 'alert',
-
                 alert: {
                     color: 'error'
                 }
@@ -75,7 +70,7 @@ export default function AddProvider() {
         } finally {
             setSubmitting(false);
         }
-    }
+    };
 
     return (
         <Formik

@@ -5,9 +5,9 @@ const initialState = {
   resetFilter: false,
   providerById: {},
   filterValue: {},
-  providerData:[],
-  deletedProviderData:[],
-  providerPaginationData:{},
+  providerData: [],
+  deletedProviderData: [],
+  providerPaginationData: {},
   loading: false,
 
 };
@@ -40,15 +40,29 @@ const providerSlice = createSlice({
         provider.id === id ? { ...provider, status } : provider
       );
     },
+    providersDataAfterDelete: (state, action) => {
+      const { id } = action.payload;
+      state.providerData = state?.providerData.filter(item => item.id !== id);
+    },
     filterValue: (state, action) => {
       state.filterValue = action.payload;
     },
     loading: (state, action) => {
-        state.loading = action.payload;
-      },  
+      state.loading = action.payload;
+    },
+    restoreData: (state, action) => {
+      state.deletedProviderData = state.deletedProviderData.filter(
+        item => item.id !== action.payload
+      );
+    },
+    restoreMultipleData: (state, action) => {
+      state.deletedProviderData = state.deletedProviderData.filter(
+        item => !action.payload.includes(String(item.id))
+      );
+    },
   },
 });
 
-export const { allProviders, resetFilter, providerById, providerData, deletedProviderData, providerPaginationData, updateProviderStatus, loading, filterValue } = providerSlice.actions;
+export const { allProviders, resetFilter, providerById, providerData, deletedProviderData, providerPaginationData, updateProviderStatus, loading, filterValue, providersDataAfterDelete, restoreData, restoreMultipleData } = providerSlice.actions;
 
 export default providerSlice.reducer;

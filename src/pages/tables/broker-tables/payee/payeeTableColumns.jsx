@@ -61,7 +61,7 @@ const changePatientPayeesStatus = async (id, status, dispatch) => {
 
 function EditAction({ row, table }) {
     const { patient_id } = useParams()
-    const Loader = useSelector(state => state?.driver.loader);
+    const Loader = useSelector(state => state.patient.loading)
     const navigate = useNavigate()
 
     const [openModal, setOpenModal] = useState(false);
@@ -82,7 +82,7 @@ function EditAction({ row, table }) {
                     <Bag variant="Outline" />
                 </IconButton>
             </Tooltip>
-            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete payee" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' Loader={Loader}>
+            <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete payee" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' isSubmitting={Loader}>
                 <Typography id="modal-modal-description">Are you sure, you want to delete a patient's payee?</Typography>
             </TransitionsModal>
         </Stack>

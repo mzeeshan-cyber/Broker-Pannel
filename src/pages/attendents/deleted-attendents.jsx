@@ -1,23 +1,20 @@
-// material-ui
 import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { useDispatch } from 'react-redux';
-import { deletedDriversData, driversPaginationData } from 'store/reducers/driverSlice';
 import { fetcher } from 'utils/axios';
 import DeletedAttendentTable from 'pages/tables/broker-tables/attendents/deletedAttendentTable';
 import { decryptToken } from 'utils/tokenUtils';
 import CircularLoader from 'components/common/loader/CircularLoader';
-
-// ==============================|| DASHBOARD - DEFAULT ||============================== //
+import { attendantsPaginationData, deletedAttendantsData, loading, restoreData, restoreMultipleData } from 'store/reducers/attendantSlice';
 
 export default function DeletedAttendents() {
     const [errorMsg, setErrorMsg] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const API_URL = import.meta.env.VITE_APP_API_URL;
     const encryptedFromStorage = localStorage.getItem("token");
-      const decryptedToken = decryptToken(encryptedFromStorage);
+    const decryptedToken = decryptToken(encryptedFromStorage);
     const dispatch = useDispatch()
     const patientId = useParams()
 
@@ -29,14 +26,14 @@ export default function DeletedAttendents() {
         const response = await fetcher(["/deleted-patient-attendants", { params }]);
 
         if (response.status === true) {
-            dispatch(deletedDriversData(response?.data?.data || []));
-            dispatch(driversPaginationData(response?.data));
+            dispatch(deletedAttendantsData(response?.data?.data || []));
+            dispatch(attendantsPaginationData(response?.data));
             setIsLoading(false);
         }
     };
 
     const restoreAttendent = async (id) => {
-        setIsLoading(true);
+        dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}patient-attendants/${id}/restore`, {
                 method: 'POST',
@@ -64,21 +61,20 @@ export default function DeletedAttendents() {
                 open: true,
                 message: 'Attendent restored successfuly!',
                 variant: 'alert',
-
                 alert: {
                     color: 'success'
                 }
             });
+            dispatch(restoreData(id));
 
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsLoading(false);
-            getDeteledAttendents()
+            dispatch(loading(false));
         }
     }
     const restoreMultipleAttendents = async (restoreIds) => {
-        setIsLoading(true);
+        dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}restore-patient-attendants`, {
                 method: 'POST',
@@ -114,23 +110,22 @@ export default function DeletedAttendents() {
                         color: 'success'
                     }
                 });
+                dispatch(restoreMultipleData(restoreIds));
             }
 
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsLoading(false);
-            getDeteledAttendents();
+            dispatch(loading(false));
         }
     }
-
 
     useEffect(() => { getDeteledAttendents() }, [])
 
     return (
         <Grid>
             {isLoading ?
-                <CircularLoader text='Loading deleted attendants..'/>
+                <CircularLoader text='Loading deleted attendants..' />
                 :
                 <DeletedAttendentTable handleDelete={restoreAttendent} handleRestoreMultiple={restoreMultipleAttendents} />
             }

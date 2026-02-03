@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetcher } from 'utils/axios';
 import CommonTable from 'pages/tables/react-table/common-table';
 import { columns } from 'pages/tables/broker-tables/providers/deletedProviderColumns';
-import { deletedProviderData, loading, providerPaginationData } from 'store/reducers/providerSlice';
+import { deletedProviderData, loading, providerPaginationData, restoreData, restoreMultipleData } from 'store/reducers/providerSlice';
 import { decryptToken } from 'utils/tokenUtils';
 import CircularLoader from 'components/common/loader/CircularLoader';
 
@@ -22,18 +22,18 @@ export default function DeletedProvider() {
     const patientId = useParams()
 
     const getDeteledProviders = async () => {
-        dispatch(loading(true));
+        setIsSubmitting(true);
         const response = await fetcher(["/deleted-providers"]);
 
         if (response.status === true) {
             dispatch(deletedProviderData(response?.data?.data));
             dispatch(providerPaginationData(response?.data));
-            dispatch(loading(false));
+            setIsSubmitting(false);
         }
     };
 
     const restoreProvider = async (id) => {
-        setIsSubmitting(true);
+        dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}provider/${id}/restore`, {
                 method: 'POST',
@@ -66,16 +66,16 @@ export default function DeletedProvider() {
                     color: 'success'
                 }
             });
+            dispatch(restoreData(id));
 
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsSubmitting(false);
-            getDeteledProviders()
+            dispatch(loading(false));
         }
     }
     const restoreMultipleProviders = async (restoreIds) => {
-        setIsSubmitting(true);
+        dispatch(loading(true));
         try {
             const response = await fetch(`${API_URL}restore-multiple-provider`, {
                 method: 'POST',
@@ -94,7 +94,6 @@ export default function DeletedProvider() {
                     open: true,
                     message: errorData ? errorMsg?.message : 'Providers are not restored!',
                     variant: 'alert',
-
                     alert: {
                         color: 'error'
                     }
@@ -106,23 +105,20 @@ export default function DeletedProvider() {
                     open: true,
                     message: 'Providers restored successfuly!',
                     variant: 'alert',
-
                     alert: {
                         color: 'success'
                     }
                 });
-                getDeteledProviders();
+                dispatch(restoreMultipleData(restoreIds));
             }
 
         } catch (err) {
             setErrorMsg(err);
         } finally {
-            setIsSubmitting(false);
-            getDeteledProviders();
+            dispatch(loading(false));
         }
     }
-
-    // Pagination
+    
     const handleChangePerPage = async (event) => {
         setPageSize(Number(event.target.value));
         const per_page = Number(event.target.value);
@@ -156,15 +152,15 @@ export default function DeletedProvider() {
 
     useEffect(() => { getDeteledProviders() }, [])
 
-    const providerState = useSelector(state => state?.provider)
-    const isLoading = providerState.loading;
+    const providerState = useSelector(state => state?.provider);
 
     return (
         <Grid>
-            {isLoading ?
+            {isSubmitting ?
                 <CircularLoader text='Loading Deleted Providers..' />
                 :
                 <CommonTable
+                    isSubmitting={providerState.loading}
                     data={providerState?.deletedProviderData}
                     paginationData={providerState?.providerPaginationData}
                     defaultColumns={columns}

@@ -308,12 +308,11 @@ export default function UpdateTripForm({ tripData }) {
 
     const payeeList = payeeData.map(item => ({ value: item.id, label: item.account_holder_name }));
     const driverList = reimbursementDriverData.map(item => ({ value: item.id, label: item.driver_name }));
-
     return (
         <Formik
             initialValues={{
                 patient_id: tripData.patient_id || '',
-                departure_date: tripData.departure_date || '',
+                departure_date: tripData.departure_date?.split('T')[0] || '',
                 app_time: tripData.app_time || '',
                 mobility: tripData.mobility || [],
                 reimbursement_driver_id: tripData.reimbursement_driver_id || '',

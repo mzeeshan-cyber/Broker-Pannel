@@ -101,9 +101,9 @@ export const fuzzySort = (rowA, rowB, columnId) => {
 
 function EditAction({ row, table }) {
   const { patient_id } = useParams()
-  const Loader = useSelector(state => state?.driver.loader);
+  const Loader = useSelector(state => state?.attendants?.loading);
+  console.log(Loader)
   const navigate = useNavigate()
-
   const [openModal, setOpenModal] = useState(false);
   const handleOpenModal = () => {
     setOpenModal(prevState => !prevState)
@@ -122,7 +122,7 @@ function EditAction({ row, table }) {
           <Bag variant="Outline" />
         </IconButton>
       </Tooltip>
-      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete patients attendent" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' Loader={Loader}>
+      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete patients attendent" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' isSubmitting={Loader}>
         <Typography id="modal-modal-description">Are you sure, you want to delete a patient's attendent?</Typography>
       </TransitionsModal>
     </Stack>
@@ -134,9 +134,9 @@ function EditAction({ row, table }) {
 function ReactTable({ defaultColumns, handleDelete, handleUpdate, handleGetBySearch, handleChangePagination, handleChange, pageSize, page  }) {
   const theme = useTheme();
   const matchDownSM = useMediaQuery(theme.breakpoints.down('sm'));
-  const driverStateData = useSelector(state => state?.driver)
-  const driverPaginationData = driverStateData?.driversPaginationData;
-  let data = driverStateData?.driversData;
+  const attendantState = useSelector(state => state?.attendants)
+  const driverPaginationData = attendantState?.attendantsPaginationData;
+  let data = attendantState?.attendantsData;
 
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState([]);
@@ -414,7 +414,7 @@ export default function AttendentTable({ handleDelete, handleUpdate, handleGetBy
   const decryptedToken = decryptToken(encryptedFromStorage);
   const dispatch = useDispatch()
 
-  const changePatientAttendentStatus = async (id, status) => {
+  const updateAttendantsStatus = async (id, status) => {
     try {
       const response = await fetch(`${API_URL}patient-attendants/${id}/status`, {
         method: 'POST',
@@ -517,7 +517,7 @@ export default function AttendentTable({ handleDelete, handleUpdate, handleGetBy
           const dispatch = useDispatch();
           const handleChangeStatus = (event, rowId) => {
             const newValue = event.target.value;
-            changePatientAttendentStatus(rowId, newValue, dispatch)
+            updateAttendantsStatus(rowId, newValue, dispatch)
           };
           return (
             <Select

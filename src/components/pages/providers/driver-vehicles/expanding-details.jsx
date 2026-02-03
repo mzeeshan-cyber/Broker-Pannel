@@ -10,7 +10,12 @@ import Carousel from 'components/common/carousel/carousel';
 export default function DriverVehicleExpandingDetails({ data }) {
     const matchDownMD = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const IMAGE_URL = import.meta.env.VITE_SERVER_IMAGE_PATH;
-    const images = JSON.parse(data?.images)?.map((item) => `${IMAGE_URL}${item}`)
+    const images = data?.images
+        ? Array.isArray(data.images)
+            ? data.images.map((item) => `${IMAGE_URL}${item}`)
+            : JSON.parse(data.images).map((item) => `${IMAGE_URL}${item}`)
+        : [];
+
 
     return (
         <Grid container spacing={2.5} >
@@ -146,7 +151,11 @@ export default function DriverVehicleExpandingDetails({ data }) {
             </Grid>
             <Grid item xs={12} md={6}>
                 <MainCard title="Images" sx={{ minHeight: '100%' }}>
-                    <Carousel images={images} />
+                    {images.length > 0 ? (
+                        <Carousel images={images} />
+                    ) : (
+                        'No images are available'
+                    )}
                 </MainCard>
             </Grid>
             <Grid item xs={12} md={6}>

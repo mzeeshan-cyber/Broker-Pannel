@@ -1,12 +1,7 @@
-// material-ui
 import Grid from '@mui/material/Grid';
 import FormHelperText from '@mui/material/FormHelperText';
 import Stack from '@mui/material/Stack';
-
-// project-imports
 import MainCard from 'components/MainCard';
-
-// third-party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
 import { Button, CircularProgress } from '@mui/material';
@@ -32,14 +27,32 @@ export default function ProviderGeneralInfo() {
     const navigate = useNavigate();
     const { provider_id } = useParams();
     const [companyLogo, setCompanyLogo] = useState(null);
-
     const AddProviderGeneralInfo = async (values, { setSubmitting, setErrors }) => {
         try {
+            if (companyLogo && companyLogo.size > 500 * 1024) {
+    setErrors({ company_logo: 'Company logo must be 500KB or less!' });
+    setSubmitting(false);
+
+    // Delay snackbar to ensure it shows
+    setTimeout(() => {
+        openSnackbar({
+            open: true,
+            message: 'Company logo must be 500KB or less!',
+            variant: 'alert',
+            alert: { color: 'error' }
+        });
+    }, 0);
+
+    return;
+}
+
             const formData = new FormData();
             formData.append('company_logo', companyLogo);
+
             Object.keys(values).forEach(key => {
                 formData.append(key, values[key]);
             });
+
             const response = await fetch(`${API_URL}store-provider-detail`, {
                 method: 'POST',
                 headers: {
@@ -47,6 +60,7 @@ export default function ProviderGeneralInfo() {
                 },
                 body: formData,
             });
+
             if (!response.ok) {
                 const errorData = await response.json();
                 setErrors(errorData);
@@ -54,24 +68,20 @@ export default function ProviderGeneralInfo() {
                     open: true,
                     message: errorData.message || 'Provider general info is not added!',
                     variant: 'alert',
-
-                    alert: {
-                        color: 'error'
-                    }
+                    alert: { color: 'error' }
                 });
                 throw new Error(errorData || 'failed!');
             }
+
             openSnackbar({
                 open: true,
-                message: 'Provider general info added Successfuly!',
+                message: 'Provider general info added Successfully!',
                 variant: 'alert',
-
-                alert: {
-                    color: 'success'
-                }
+                alert: { color: 'success' }
             });
+
             setTimeout(() => {
-                navigate('/providers')
+                navigate('/providers');
             }, 1500);
 
         } catch (error) {
@@ -79,15 +89,13 @@ export default function ProviderGeneralInfo() {
                 open: true,
                 message: 'Server error',
                 variant: 'alert',
-
-                alert: {
-                    color: 'error'
-                }
+                alert: { color: 'error' }
             });
         } finally {
             setSubmitting(false);
         }
-    }
+    };
+
 
     const FetchSingleProvider = async () => {
         const response = await fetcher(`/provider/${provider_id}`);
@@ -158,8 +166,9 @@ export default function ProviderGeneralInfo() {
                                     <Grid item xs={12}>
                                         <ImageUploader image={companyLogo} setImage={setCompanyLogo} label="Company Logo" />
                                         <FormHelperText error id="helper-text-company_logo">
-                                            {errors?.errors?.company_logo}
+                                            {errors.company_logo}
                                         </FormHelperText>
+
                                     </Grid>
                                     <Grid item xs={12} md={6} lg={4} xl={3}>
                                         <InputField
@@ -469,10 +478,10 @@ export default function ProviderGeneralInfo() {
                                     <Grid item xs={12}>
                                         <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 4 }}>
                                             <Button disableElevation disabled={isSubmitting} variant="contained" type="submit" sx={{
-                                                    '&.Mui-disabled': {
-                                                        bgcolor: theme.palette.primary.main,
-                                                    }
-                                                }}>
+                                                '&.Mui-disabled': {
+                                                    bgcolor: theme.palette.primary.main,
+                                                }
+                                            }}>
                                                 {isSubmitting ? (
                                                     <CircularProgress sx={{ height: '20px !important', width: '20px !important', color: 'white' }} />
                                                 ) : (

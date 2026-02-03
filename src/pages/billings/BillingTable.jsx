@@ -225,13 +225,21 @@ export default function CommonTable({ isSubmitting, data, tripIds, handleDelete,
                                         return (
                                             <TableRow
                                                 key={row.id}
-                                                sx={{
-                                                    backgroundColor: highlightRow ? 'rgba(238, 215, 212, 1)' : 'transparent',
+                                                sx={(theme) => ({
+                                                    backgroundColor: highlightRow
+                                                        ? theme.palette.mode === 'dark'
+                                                            ? 'rgba(255, 160, 122, 0.15)'
+                                                            : 'rgba(238, 215, 212, 1)'   
+                                                        : 'transparent',
                                                     '&:hover': {
-                                                        backgroundColor: highlightRow ? 'rgba(238, 215, 212, 1) !important' : 'transparent !important',
+                                                        backgroundColor: highlightRow
+                                                            ? theme.palette.mode === 'dark'
+                                                                ? 'rgba(255, 160, 122, 0.15)'
+                                                                : 'rgba(238, 215, 212, 1)'
+                                                            : 'transparent',
                                                         cursor: 'default'
                                                     }
-                                                }}
+                                                })}
                                             >
                                                 {row.getVisibleCells().map((cell) => (
                                                     <TableCell key={cell.id}>

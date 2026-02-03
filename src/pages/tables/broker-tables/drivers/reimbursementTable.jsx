@@ -100,7 +100,7 @@ export const fuzzySort = (rowA, rowB, columnId) => {
 
 function EditAction({ row, table }) {
 
-  const Loader = useSelector(state => state?.driver.loader);
+  const Loader = useSelector(state => state?.driver.loading);
 
   const navigate = useNavigate()
   const { id } = useParams()
@@ -123,7 +123,7 @@ function EditAction({ row, table }) {
           <Bag variant="Outline" />
         </IconButton>
       </Tooltip>
-      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete reimbursement driver" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' Loader={Loader}>
+      <TransitionsModal openModal={openModal} setOpenModal={setOpenModal} title="Delete reimbursement driver" handleSubmit={() => table.options.meta.deleteRow(row.original.id)} btnText='Delete' isSubmitting={Loader}>
         <Typography id="modal-modal-description">Are you sure, you want to delete a reimbursement driver?</Typography>
       </TransitionsModal>
     </Stack>

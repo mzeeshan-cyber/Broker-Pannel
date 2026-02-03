@@ -3,14 +3,12 @@ import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { filterValue, resetFilter } from 'store/reducers/driverSlice';
+import { driversDataAfterDelete, filterValue, loading, resetFilter } from 'store/reducers/driverSlice';
 import ReimbursementTable from 'pages/tables/broker-tables/drivers/reimbursementTable';
 import { useParams } from 'react-router';
 import { driversData, driversPaginationData } from 'store/reducers/driverSlice';
 import { fetcher, fetcherDelete, fetcherUpdate } from 'utils/axios';
 import CircularLoader from 'components/common/loader/CircularLoader';
-
-// ==============================|| DASHBOARD - DEFAULT ||============================== //
 
 export default function ReimbursementDrivers() {
   const [isLoading, setIsLoading] = useState(false);
@@ -72,22 +70,21 @@ export default function ReimbursementDrivers() {
     }
   };
   const deleteReimbursementDrivers = async (id) => {
-    setIsLoading(true);
+    dispatch(loading(true));
     const response = await fetcherDelete([`/reimbursement-driver/${id}`]);
     if (response.status === 200) {
-      getDriversBySearch()
+      dispatch(driversDataAfterDelete({ id }))
       openSnackbar({
         open: true,
         message: 'Patient deleted successfuly!',
         variant: 'alert',
-
         alert: {
           color: 'success'
         }
       });
-      setIsLoading(false);
-
+      
     }
+    dispatch(loading(false));
   }
   const updateReimbursementDriver = async (id, data) => {
     const response = await fetcherUpdate(`/patient/${id}`, JSON.stringify(data))
@@ -96,7 +93,6 @@ export default function ReimbursementDrivers() {
         open: true,
         message: 'Driver updated successfuly!',
         variant: 'alert',
-
         alert: {
           color: 'success'
         }

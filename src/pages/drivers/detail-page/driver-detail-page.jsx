@@ -125,7 +125,7 @@ export default function DriverDetailPage() {
     },
     {
       label: 'Driver Vehicles',
-      content: <Vehicles data={driverData?.driver_vehicles} loading={loading} />
+      content: <Vehicles data={driverData?.vehicles} loading={loading} />
     },
   ];
   return (

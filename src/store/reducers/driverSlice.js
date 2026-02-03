@@ -3,12 +3,12 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   allDrivers: [],
   resetFilter: false,
+  loading: false,
   driverById: {},
-  driversData:[],
-  deletedDriversData:[],
-  driversPaginationData:{},
-  filterValue:{}
-
+  driversData: [],
+  deletedDriversData: [],
+  driversPaginationData: {},
+  filterValue: {}
 };
 
 const driverSlice = createSlice({
@@ -41,10 +41,27 @@ const driverSlice = createSlice({
     },
     filterValue: (state, action) => {
       state.filterValue = action.payload;
-    },  
+    },
+    driversDataAfterDelete: (state, action) => {
+      const { id } = action.payload;
+      state.driversData = state?.driversData.filter(item => item.id !== id);
+    },
+    restoreData: (state, action) => {
+      state.deletedDriversData = state.deletedDriversData.filter(
+        item => item.id !== action.payload
+      );
+    },
+    restoreMultipleData: (state, action) => {
+      state.deletedDriversData = state.deletedDriversData.filter(
+        item => !action.payload.includes(String(item.id))
+      );
+    },
+    loading: (state, action) => {
+      state.loading = action.payload;
+    },
   },
 });
 
-export const { allDrivers, resetFilter, driverById, driversData, deletedDriversData, driversPaginationData, updateDriverStatus, filterValue } = driverSlice.actions;
+export const { allDrivers, resetFilter, driverById, driversData, deletedDriversData, driversPaginationData, updateDriverStatus, filterValue, driversDataAfterDelete, restoreData, restoreMultipleData, loading } = driverSlice.actions;
 
 export default driverSlice.reducer;

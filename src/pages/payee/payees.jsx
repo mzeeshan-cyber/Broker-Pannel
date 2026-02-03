@@ -1,4 +1,3 @@
-// material-ui
 import Grid from '@mui/material/Grid';
 import { openSnackbar } from 'api/snackbar';
 import { useEffect, useState } from 'react';
@@ -9,19 +8,18 @@ import { loading, resetFilter } from 'store/reducers/patientSlice';
 import CommonTable from 'pages/tables/react-table/common-table';
 import PayeeButtonsOnTable from 'components/pages/payees/payeeButtonsOnTable';
 import { columns } from 'pages/tables/broker-tables/payee/payeeTableColumns';
-import { payeesData, payeesPaginationData } from 'store/reducers/payeeSlice';
+import { payeeDataAfterDelete, payeesData, payeesPaginationData } from 'store/reducers/payeeSlice';
 import CircularLoader from 'components/common/loader/CircularLoader';
-        
-// ==============================|| DASHBOARD - DEFAULT ||============================== //
-export default function Payees() { 
+
+export default function Payees() {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
+  const [fetching, setFetching] = useState(false);
   const dispatch = useDispatch();
-  const {patient_id} = useParams();
-  const Loading = useSelector(state => state.patient.loading)
+  const { patient_id } = useParams();
 
   const getPayeeData = async (values) => {
-    dispatch(loading(true));
+    setFetching(true)
     const params = {
       patient_id: patient_id,
       attendant_name: values?.attendant_name,
@@ -31,7 +29,7 @@ export default function Payees() {
     }
     const response = await fetcher(["/patient-payees", { params }]);
     if (response.status === true) {
-      dispatch(loading(false));
+      setFetching(false);
       dispatch(payeesData(response?.data?.data));
       dispatch(payeesPaginationData(response?.data));
       if (values) {
@@ -43,18 +41,16 @@ export default function Payees() {
     dispatch(loading(true));
     const response = await fetcherDelete([`/patient-payees/${id}`]);
     if (response.status === 200) {
+      dispatch(payeeDataAfterDelete({id}));
       openSnackbar({
         open: true,
         message: 'Payee deleted successfuly!',
         variant: 'alert',
-        
         alert: {
           color: 'success'
         }
       });
       dispatch(loading(false));
-      getPayeeData()
-
     }
   }
   const updatePayee = async (id, data) => {
@@ -72,7 +68,6 @@ export default function Payees() {
     }
   }
 
-  // Pagination
   const handleChangePerPage = async (event) => {
     setPageSize(Number(event.target.value));
     const per_page = Number(event.target.value);
@@ -111,21 +106,21 @@ export default function Payees() {
       .replace(/_/g, ' ')
       .replace(/\b\w/g, char => char.toUpperCase())
   }));
-  
+
   useEffect(() => { getPayeeData() }, [])
 
-  
+
   return (
     <Grid>
-      {Loading ?
-        <CircularLoader text='Loading payees..'/>
+      {fetching ?
+        <CircularLoader text='Loading payees..' />
         :
         <CommonTable
           data={PayeeData}
           paginationData={payeeState?.payeesPaginationData}
           defaultColumns={columns}
           setPageSize={setPageSize}
-          pageSize={pageSize} 
+          pageSize={pageSize}
           page={page}
           handleChangePerPage={handleChangePerPage}
           handleChangePagination={handleChangePagination}
