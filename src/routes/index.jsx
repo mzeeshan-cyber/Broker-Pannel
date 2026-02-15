@@ -74,6 +74,7 @@ import { AddStandingOrder } from 'pages/standing-orders/AddStandingOrder';
 import StandingOrders from 'pages/standing-orders/StandingOrder';
 import { UpdateStandingOrder } from 'pages/standing-orders/UpdateStandigOrder';
 import DeletedStandingOrders from 'pages/standing-orders/DeletedStandingOrders';
+import AccountProfile from 'components/pages/accounts';
 
 const MaintenanceError = Loadable(lazy(() => import('pages/maintenance/error/404')));
 
@@ -175,6 +176,10 @@ function Router() {
 
                 {/* Settings */}
                 <Route path="settings" element={<Settings />} />
+
+                {/* Account Settings */}
+                <Route path="notification-settings" element={<AccountProfile />} />
+                
 
             </Route>
             <Route path="/" element={<AuthLayout />}>

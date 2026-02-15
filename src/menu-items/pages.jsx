@@ -268,6 +268,14 @@ const pages = {
       icon: icons.settings,
       target: false
     },
+    {
+      id: 'Notification settings',
+      title: "Notification Settings",
+      type: 'item',
+      url: '/notification-settings',
+      icon: icons.settings,
+      target: false
+    },
   ]
 };
 

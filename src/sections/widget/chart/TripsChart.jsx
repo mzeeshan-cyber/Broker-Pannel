@@ -15,7 +15,7 @@ export default function TripsChart({ apiData, status, range }) {
   const theme = useTheme();
   let categories = [];
   if (range === 'weekly') {
-    categories = apiData.map(item => dayjs(item.date).format('ddd')); 
+    categories = apiData.map(item => dayjs(item.date).format('ddd'));
   } else if (range === 'monthly') {
     categories = apiData.map(item => dayjs(item.date).format('DD MMM'));
   } else if (range === 'yearly') {
@@ -42,9 +42,14 @@ export default function TripsChart({ apiData, status, range }) {
     },
     grid: { borderColor: theme.palette.divider },
     tooltip: {
+      theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
       shared: true,
+      style: {
+        fontSize: '12px',
+        color: theme.palette.mode === 'dark' ? '#fff' : '#000'
+      },
       x: {
-        formatter: function(val, opts) {
+        formatter: function (val, opts) {
           if (range === 'weekly') {
             const idx = opts.dataPointIndex;
             const date = apiData[idx].date;
