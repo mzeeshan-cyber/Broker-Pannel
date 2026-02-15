@@ -1,190 +1,171 @@
-import { useState } from 'react';
-
-// material-ui
+import { useEffect, useState } from 'react';
 import List from '@mui/material/List';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
-import Divider from '@mui/material/Divider';
 import Checkbox from '@mui/material/Checkbox';
 import ListItem from '@mui/material/ListItem';
 import Typography from '@mui/material/Typography';
 import ListItemText from '@mui/material/ListItemText';
-
-// project-imports
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import MainCard from 'components/MainCard';
+import { fetcher, fetcherPost } from 'utils/axios';
+import { openSnackbar } from 'api/snackbar';
 
-// ==============================|| ACCOUNT PROFILE - SETTINGS ||============================== //
+const mapApiToState = (data = []) => {
+  return data.reduce((acc, item) => {
+    acc[item.id] = {
+      label: item.label,
+      email: item.email ?? false,
+      sms: item.sms ?? false,
+      panel: item.panel ?? false
+    };
+    return acc;
+  }, {});
+};
+
 
 export default function TabSettings() {
-  const [checked, setChecked] = useState(['en', 'email-1', 'email-3', 'order-1', 'order-3']);
+  const [settings, setSettings] = useState({});
+  const [isFetching, setIsFetching] = useState(true);
 
-  const handleToggle = (value) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
-
-    if (currentIndex === -1) {
-      newChecked.push(value);
-    } else {
-      newChecked.splice(currentIndex, 1);
+  const getNotifications = async () => {
+    try {
+      const response = await fetcher(["/get-notification-settings"]);
+      if (response.status === true) {
+        setSettings(mapApiToState(response.data));
+      }
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setIsFetching(false);
     }
+  };
 
-    setChecked(newChecked);
+  useEffect(() => {
+    getNotifications();
+  }, []);
+
+  const handleChange = (type, channel) => (e) => {
+    setSettings((prev) => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        [channel]: e.target.checked
+      }
+    }));
+  };
+  const preparePayload = (settings) => {
+    return Object.entries(settings).map(([id, value]) => ({
+      id,
+      label: value.label,
+      email: value.email,
+      sms: value.sms,
+      panel: value.panel
+    }))
+  };
+
+  const handleSubmit = async () => {
+    const payload = preparePayload(settings);
+    try {
+      const response = await fetcherPost([
+        "/notification-settings",
+        payload 
+      ]);
+
+      if (response.status === true) {
+        openSnackbar({
+          open: true,
+          message: 'Notification settings updated',
+          variant: 'alert',
+          alert: { color: 'success' }
+        });
+      }
+    } catch (err) {
+      openSnackbar({
+        open: true,
+        message: 'Notification settings not updated',
+        variant: 'alert',
+        alert: { color: 'error' }
+      });
+    }
   };
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={6}>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <MainCard title="Email Settings">
-              <Stack spacing={2.5}>
-                <Typography variant="subtitle1">Setup Email Notification</Typography>
-                <List sx={{ p: 0, '& .MuiListItem-root': { p: 0, py: 0.25 } }}>
-                  <ListItem>
-                    <ListItemText id="switch-list-label-en" primary={<Typography color="secondary">Email Notification</Typography>} />
-                    <Switch
-                      edge="end"
-                      onChange={handleToggle('en')}
-                      checked={checked.indexOf('en') !== -1}
-                      inputProps={{ 'aria-labelledby': 'switch-list-label-en' }}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      id="switch-list-label-sctp"
-                      primary={<Typography color="secondary">Send Copy To Personal Email</Typography>}
-                    />
-                    <Switch
-                      edge="end"
-                      onChange={handleToggle('sctp')}
-                      checked={checked.indexOf('sctp') !== -1}
-                      inputProps={{ 'aria-labelledby': 'switch-list-label-sctp' }}
-                    />
-                  </ListItem>
-                </List>
-              </Stack>
-            </MainCard>
-          </Grid>
-          <Grid item xs={12}>
-            <MainCard title="Updates from System Notification">
-              <Stack spacing={2.5}>
-                <Typography variant="subtitle1">Email you with?</Typography>
-                <List sx={{ p: 0, '& .MuiListItem-root': { p: 0, py: 0.25 } }}>
-                  <ListItem>
-                    <ListItemText primary={<Typography color="secondary">News about PCT-themes products and feature updates</Typography>} />
-                    <Checkbox defaultChecked />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={<Typography color="secondary">Tips on getting more out of PCT-themes</Typography>} />
-                    <Checkbox defaultChecked />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary={<Typography color="secondary">Things you missed since you last logged into PCT-themes</Typography>}
-                    />
-                    <Checkbox />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={<Typography color="secondary">News about products and other services</Typography>} />
-                    <Checkbox />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={<Typography color="secondary">Tips and Document business products</Typography>} />
-                    <Checkbox />
-                  </ListItem>
-                </List>
-              </Stack>
-            </MainCard>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <MainCard title="Activity Related Emails">
+      <Grid item xs={12}>
+        <MainCard title="Updates from System Notification">
           <Stack spacing={2.5}>
-            <Typography variant="subtitle1">When to email?</Typography>
-            <List sx={{ p: 0, '& .MuiListItem-root': { p: 0, py: 0.25 } }}>
-              <ListItem>
-                <ListItemText id="switch-list-label-email-1" primary={<Typography color="secondary">Have new notifications</Typography>} />
-                <Switch
-                  edge="end"
-                  onChange={handleToggle('email-1')}
-                  checked={checked.indexOf('email-1') !== -1}
-                  inputProps={{ 'aria-labelledby': 'switch-list-label-email-1' }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  id="switch-list-label-email-2"
-                  primary={<Typography color="secondary">You&apos;re sent a direct message</Typography>}
-                />
-                <Switch
-                  edge="end"
-                  onChange={handleToggle('email-2')}
-                  checked={checked.indexOf('email-2') !== -1}
-                  inputProps={{ 'aria-labelledby': 'switch-list-label-email-2' }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  id="switch-list-label-email-3"
-                  primary={<Typography color="secondary">Someone adds you as a connection</Typography>}
-                />
-                <Switch
-                  edge="end"
-                  onChange={handleToggle('email-3')}
-                  checked={checked.indexOf('email-3') !== -1}
-                  inputProps={{ 'aria-labelledby': 'switch-list-label-email-3' }}
-                />
-              </ListItem>
-            </List>
-            <Divider />
-            <Typography variant="subtitle1">When to escalate emails?</Typography>
-            <List sx={{ p: 0, '& .MuiListItem-root': { p: 0, py: 0.25 } }}>
-              <ListItem>
-                <ListItemText id="switch-list-label-order-1" primary={<Typography color="secondary.400">Upon new order</Typography>} />
-                <Switch
-                  edge="end"
-                  onChange={handleToggle('order-1')}
-                  checked={checked.indexOf('order-1') !== -1}
-                  disabled
-                  inputProps={{ 'aria-labelledby': 'switch-list-label-order-1' }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  id="switch-list-label-order-2"
-                  primary={<Typography color="secondary.400">New membership approval</Typography>}
-                />
-                <Switch
-                  edge="end"
-                  disabled
-                  onChange={handleToggle('order-2')}
-                  checked={checked.indexOf('order-2') !== -1}
-                  inputProps={{ 'aria-labelledby': 'switch-list-label-order-2' }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText id="switch-list-label-order-3" primary={<Typography color="secondary">Member registration</Typography>} />
-                <Switch
-                  edge="end"
-                  onChange={handleToggle('order-3')}
-                  checked={checked.indexOf('order-3') !== -1}
-                  inputProps={{ 'aria-labelledby': 'switch-list-label-order-3' }}
-                />
-              </ListItem>
-            </List>
+
+            <Typography variant="subtitle1">
+              Patient Notifications
+            </Typography>
+
+            {isFetching ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <List sx={{ p: 0 }}>
+                {Object.entries(settings).map(([id, item]) => (
+                  <ListItem key={id} sx={{ py: 1 }}>
+                    <ListItemText
+                      primary={
+                        <Typography color="secondary">
+                          {item.label}
+                        </Typography>
+                      }
+                    />
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.email}
+                            onChange={handleChange(id, 'email')}
+                          />
+                        }
+                        label="Email"
+                      />
+
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.sms}
+                            onChange={handleChange(id, 'sms')}
+                          />
+                        }
+                        label="SMS"
+                      />
+
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.panel}
+                            onChange={handleChange(id, 'panel')}
+                          />
+                        }
+                        label="Panel"
+                      />
+                    </Box>
+                  </ListItem>
+                ))}
+              </List>
+            )}
           </Stack>
         </MainCard>
       </Grid>
-      <Grid item xs={12}>
-        <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
-          <Button variant="outlined" color="secondary">
-            Cancel
-          </Button>
-          <Button variant="contained">Update Profile</Button>
-        </Stack>
+
+      <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={isFetching}
+        >
+          Update Notifications
+        </Button>
       </Grid>
     </Grid>
   );

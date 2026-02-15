@@ -35,8 +35,8 @@ export default function PatientCard({ data }) {
             >
               <ListItemAvatar>
                 <Avatar
-                  alt={data.name}
-                  src={getImageUrl(`avatar-${!data.image ? 1 : data.image}.png`, ImagePath.USERS)}
+                  alt={data?.name}
+                  src={getImageUrl(`avatar-${!data?.image ? 1 : data?.image}.png`, ImagePath.USERS)}
                 />
               </ListItemAvatar>
               <ListItemText
@@ -44,7 +44,7 @@ export default function PatientCard({ data }) {
                 secondary={<Typography color="text.secondary">{data?.country}</Typography>}
               />
               <Chip
-                label={capitalize(data.status)}
+                label={capitalize(data?.status)}
                 size="small"
                 color={getStatusColor(data?.status)}
               />
@@ -95,7 +95,7 @@ export default function PatientCard({ data }) {
                   <ListItemIcon>
                     <Location size={18} />
                   </ListItemIcon>
-                  <ListItemText primary={<Typography color="text.secondary">{data.address}</Typography>} />
+                  <ListItemText primary={<Typography color="text.secondary">{data?.address}</Typography>} />
                 </ListItem>
               </List>
             </Grid>

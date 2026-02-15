@@ -16,13 +16,19 @@ import MainCard from "components/MainCard";
 import IconButton from "components/@extended/IconButton";
 import Transitions from "components/@extended/Transitions";
 import Avatar from "components/@extended/Avatar";
-import { Notification, Gift } from "iconsax-react";
-import { fetcher } from "utils/axios";
+import { Notification } from "iconsax-react";
+import { fetcher, fetcherPost } from "utils/axios";
 import { decryptToken } from "utils/tokenUtils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Pusher from "pusher-js";
 import { useSnackbar } from "notistack";
+import { openSnackbar } from "api/snackbar";
+import { MdPeople } from "react-icons/md";
+import { HiUserGroup } from "react-icons/hi";
+import { BsPersonPlus } from "react-icons/bs";
+import { useNavigate } from "react-router";
+
 
 dayjs.extend(relativeTime);
 
@@ -33,17 +39,14 @@ export default function NotificationPage() {
   const theme = useTheme();
   const matchesXs = useMediaQuery(theme.breakpoints.down("md"));
   const { enqueueSnackbar } = useSnackbar();
-
   const anchorRef = useRef(null);
-
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-
   const token = decryptToken(localStorage.getItem("token"));
-
   const auth = JSON.parse(localStorage.getItem("persist:auth"));
   const user = JSON.parse(auth.user);
   const userId = user.id;
+  const navigate = useNavigate();
 
 
   const getNotifications = async () => {
@@ -114,16 +117,36 @@ export default function NotificationPage() {
     );
   };
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, read_at: n.read_at || now }))
-    );
+    try {
+      const response = await fetcherPost([`/mark-as-read`]);
+      if (response.status === true) {
+        setNotifications(prev =>
+          prev.map(n => ({ ...n, read_at: n.read_at || now }))
+        );
+        openSnackbar({
+          open: true,
+          message: 'Notifications marked as read!',
+          variant: 'alert',
+          alert: { color: 'success' }
+        });
+      }
+    } catch (error) {
+      openSnackbar({
+        open: true,
+        message: error.message || 'Notifications Error!',
+        variant: 'alert',
+        alert: { color: 'error' }
+      });
+    }
   };
 
   const handleClick = (item) => {
     markRead(item.id);
-    if (item.action_url) window.open(item.action_url, "_blank");
+    console.log(item)
+    navigate(`${item.action_url}`)
+    // if (item.action_url) window.open(item.action_url, "_blank");
   };
 
   const handleToggle = () => setOpen(prev => !prev);
@@ -131,7 +154,7 @@ export default function NotificationPage() {
     if (anchorRef.current?.contains(e.target)) return;
     setOpen(false);
   };
-
+  console.log(notifications)
   return (
     <Box sx={{ ml: 0.5 }}>
       <IconButton
@@ -149,6 +172,7 @@ export default function NotificationPage() {
         open={open}
         anchorEl={anchorRef.current}
         transition
+        sx={{ position: 'relative', zIndex: 3 }}
       >
         {({ TransitionProps }) => (
           <Transitions in={open} {...TransitionProps}>
@@ -164,10 +188,11 @@ export default function NotificationPage() {
                     <Typography variant="h5">
                       Notifications
                     </Typography>
-
-                    <Link component="button" onClick={markAllRead}>
-                      Mark all read
-                    </Link>
+                    {unreadCount ?
+                      <Link component="button" onClick={markAllRead}>
+                        Mark all read
+                      </Link> : ''
+                    }
                   </Stack>
 
                   <List sx={{
@@ -204,7 +229,15 @@ export default function NotificationPage() {
                         >
                           <ListItemAvatar>
                             <Avatar>
-                              <Gift size={18} />
+                              {item.type === "reimbursement_driver" ?
+                                <HiUserGroup size={18} />
+                                : item.type === "patient_profile" ?
+                                  <BsPersonPlus size={18} />
+                                  : item.type === "patient_attendant" ?
+                                    <MdPeople  size={18} />
+                                    :
+                                    <Notification size={18} />
+                              }
                             </Avatar>
                           </ListItemAvatar>
 
